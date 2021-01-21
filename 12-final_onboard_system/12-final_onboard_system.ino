@@ -24,17 +24,13 @@ float gyro_y;
 float gyro_z;
 
 /* Objects for SD card */
-int fileName;
+unsigned int fileName;
 const String fileExtension = ".txt";
 File file;
 
 /* Set up input pins */
 //int deletePin = 2; //D2
 //int transmitPin = 3; //D3
-
-/* Variables for tracking activity completion */
-//bool deleted = true;
-//bool transmitted = true;
 
 /* Set up transmitter */
 //RH_ASK driver(2000, 4, 5, 5); //bit rate, Rx_pin, Tx_pin
@@ -76,8 +72,6 @@ void setup(void) {
   //if (!driver.init())
     //#ifdef RH_HAVE_SERIAL
       //Serial.println("init failed");
-
-//  generateFileName();
 
   searchDirectory();
   
@@ -130,19 +124,8 @@ void loop(void) {
   }  
 }
 
-
-//void generateFileName() {
-//  //generates the file name 
-//  searchDirectory();
-//  
-//  fileName++;
-//  Serial.println(fileName);
-//}
-
 void searchDirectory() {
-
   fileName = 1;
-
   File dir = SD.open("/");
 
   while (true) {
@@ -156,20 +139,19 @@ void searchDirectory() {
       Serial.print('\t');
     //}
 
-    Serial.println(entry.name());
-    if (!entry.isDirectory()) {
+    Serial.print(entry.name());
+    if (entry.isDirectory()) {
       Serial.println("/");
       //searchDirectory(entry, numTabs + 1);
-    //} else {
+    } else {
       // files have sizes, directories do not
       Serial.print("\t\t");
       Serial.println(entry.size(), DEC);
       fileName ++;
-    }
+    } 
     
     entry.close();
   }
-  
   dir.close();
 }
 
@@ -190,8 +172,8 @@ void deleteFiles() {
     
     entry.close();
   }
-  
   dir.close();
+  
   while (true) {}
 }
 
@@ -208,7 +190,6 @@ void transmitFiles(){
     }
 
     if (!entry.isDirectory()) { 
-      Serial.println();
       Serial.println(entry.name());
       //while (entry.available()) {
         //Serial.write(entry.read());
@@ -216,12 +197,11 @@ void transmitFiles(){
         //driver.waitPacketSent();
       //}
     }
+    
     entry.close();
   }
-  
   dir.close();
 
   Serial.println("end");
-  
   while (true) {}
 }
