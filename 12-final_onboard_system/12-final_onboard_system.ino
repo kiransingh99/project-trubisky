@@ -35,10 +35,13 @@ File file;
 /* Set up transmitter */
 //RH_ASK driver(2000, 4, 5, 5); //bit rate, Rx_pin, Tx_pin
 
+void (* reset) (void) = 0;
 
 void setup(void) {
   Serial.begin(9600);
   Serial.println("12-final_onboard_system");
+
+  pinMode(4, INPUT_PULLUP);
 
   /* accelerometer set up */
   if(!accel.begin()) {
@@ -121,7 +124,12 @@ void loop(void) {
     } else {
       //Serial.print("Error opening "); Serial.println(fileName + fileExtension);
     }
-  }  
+  }
+
+  if (!digitalRead(4)) {
+    Serial.println("Reset");
+    reset();
+  }
 }
 
 void searchDirectory() {
