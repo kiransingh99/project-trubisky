@@ -4,36 +4,17 @@
 
 #include <SD.h>
 
-//z#include <RH_ASK.h>
-//#ifdef RH_HAVE_HARDWARE_SPI
-//#include <SPI.h> // Not actually used but needed to compile
-//#endif
+#include <RH_ASK.h>
+#ifdef RH_HAVE_HARDWARE_SPI
+  #include <SPI.h> // Not actually used but needed to compile
+#endif
 
 /* Assign unique IDs to each of the the sensors */
 Adafruit_ADXL345_Unified accel = Adafruit_ADXL345_Unified(12345);
 Adafruit_L3GD20_Unified gyro = Adafruit_L3GD20_Unified(20);
 
-unsigned int sys_time;
-
-/* Sensor data */
-float accel_x;
-float accel_y;
-float accel_z;
-float gyro_x;
-float gyro_y;
-float gyro_z;
-
 /* Objects for SD card */
 unsigned int fileName;
-const String fileExtension = ".txt";
-File file;
-
-/* Set up input pins */
-//int deletePin = 2; //D2
-//int transmitPin = 3; //D3
-
-/* Set up transmitter */
-//RH_ASK driver(2000, 4, 5, 5); //bit rate, Rx_pin, Tx_pin
 
 void (* reset) (void) = 0;
 
@@ -71,11 +52,6 @@ void setup(void) {
   pinMode(2, INPUT_PULLUP);
   pinMode(3, INPUT_PULLUP);
 
-  /* transmitter set up */
-  //if (!driver.init())
-    //#ifdef RH_HAVE_SERIAL
-      //Serial.println("init failed");
-
   searchDirectory();
   
   fileName++;
@@ -86,29 +62,30 @@ void loop(void) {
   if (!digitalRead(2)) {
     Serial.println("Delete everything");
     deleteFiles();
-  }  else if (!digitalRead(3)) {
+  } else if (!digitalRead(3)) {
     Serial.println("Transmit everything");
     transmitFiles();
   } else {
     /* Get system time */
-    sys_time = millis();
+    unsigned int sys_time = millis();
+    const String fileExtension = ".txt";
         
     /* Get sensor readings (acceleration is measured in m/s^2, angular velocity is measured in rad/s) */
     sensors_event_t event;
   
     accel.getEvent(&event);
-    accel_x = event.acceleration.x;
-    accel_y = event.acceleration.y;
-    accel_z= event.acceleration.z;
+    float accel_x = event.acceleration.x;
+    float accel_y = event.acceleration.y;
+    float accel_z= event.acceleration.z;
   
     gyro.getEvent(&event);
-    gyro_x = event.gyro.x;
-    gyro_y = event.gyro.y;
-    gyro_z= event.gyro.z;
+    float gyro_x = event.gyro.x;
+    float gyro_y = event.gyro.y;
+    float gyro_z= event.gyro.z;
   
     /* Write sensor data to file*/
   
-    file = SD.open(fileName + fileExtension, FILE_WRITE);
+    File file = SD.open(fileName + fileExtension, FILE_WRITE);
     if (file) {
       //Serial.print("Writing to "); Serial.println(fileName + fileExtension);
       
@@ -127,7 +104,9 @@ void loop(void) {
   }
 
   if (!digitalRead(4)) {
+    while (!digitalRead(4)) {}
     Serial.println("Reset");
+    delay(100);
     reset();
   }
 }
@@ -137,7 +116,7 @@ void searchDirectory() {
   File dir = SD.open("/");
 
   while (true) {
-    File entry =  dir.openNextFile();
+    File entry = dir.openNextFile();
     if (! entry) {
       // no more files
       break;
@@ -167,13 +146,13 @@ void deleteFiles() {
   File dir = SD.open("/");
   
   while (true) {
-    File entry =  dir.openNextFile();
+    File entry = dir.openNextFile();
     if (! entry) {
       // no more files
       break;
     }
 
-    if (!entry.isDirectory()) {      
+    if (!entry.isDirectory()) {
       Serial.println(entry.name());
       SD.remove(entry.name());
     }
@@ -182,16 +161,33 @@ void deleteFiles() {
   }
   dir.close();
   
-  while (true) {}
+  while (true) {
+    if (!digitalRead(4)) {
+      while (!digitalRead(4)) {}
+      Serial.println("Reset");
+      delay(100);
+      reset();
+    }
+  }
 }
 
 void transmitFiles(){
+  /* Set up transmitter */
+//  RH_ASK driver(2000, 4, 5, 5); //bit rate, Rx_pin, Tx_pin
+
+//  if (!driver.init())
+//    #ifdef RH_HAVE_SERIAL
+//      Serial.println("init failed");
+//    #else
+//      ;
+//    #endif
+  
   Serial.println("init");
   
   File dir = SD.open("/");
   
   while (true) {
-    File entry =  dir.openNextFile();
+    File entry = dir.openNextFile();
     if (! entry) {
       // no more files
       break;
@@ -211,5 +207,16 @@ void transmitFiles(){
   dir.close();
 
   Serial.println("end");
-  while (true) {}
+  
+  while (true) {
+    if (!digitalRead(2)) {
+      Serial.println("Delete everything");
+      deleteFiles();
+    } else if (!digitalRead(4)) {
+      while (!digitalRead(4)) {}
+      Serial.println("Reset");
+      delay(100);
+      reset();
+    }
+  }
 }

@@ -4,21 +4,21 @@ from datetime import datetime
 
 def waitForInput():
     restart = input("Ready to start?").lower()
-    
+
     if restart == "n":
         sys.exit("Script terminated successfully")
 
 def openSerial():
-    serialPort = serial.Serial(port = "COM3",
+    serialPort = serial.Serial(port = "COM4",
                                baudrate = 9600,
                                bytesize = 8,
                                timeout = 2,
-                               stopbits = serial.STOPBITS_ONE) 
+                               stopbits = serial.STOPBITS_ONE)
     return serialPort
 
 def readSerial(serialPort):
     serialString = ""
-    
+
     #wait until there is data waiting in the serial buffer
     if(serialPort.in_waiting > 0):
 
@@ -39,15 +39,16 @@ receivingData = False
 waitForInput();
 serialPort = openSerial()
 
-while True: 
-    
+while True:
+
     if (serialPort.isOpen()):
         serialString = readSerial(serialPort)
     """else:
         print("waiting to open serial port...")"""
-    
+
     if serialString != None:
-        
+        print(serialString)
+        """
         if "init" in serialString: #start of transmission
             if not receivingData:
                 print("init")
@@ -61,10 +62,10 @@ while True:
                 waitForInput() #don't open serial/new file until ready
                 receivingData = False
                 serialPort = openSerial() #open serialPort here to ensure port is already closed
-                
+
         else: #normal data transmission
             if receivingData:
                 print(serialString)
                 f.write(serialString)
             else:
-                print("Waiting to begin...")
+                print("Waiting to begin...")"""
