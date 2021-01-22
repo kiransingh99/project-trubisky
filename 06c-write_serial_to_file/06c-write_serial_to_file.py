@@ -9,7 +9,7 @@ def waitForInput():
         sys.exit("Script terminated successfully")
 
 def openSerial():
-    serialPort = serial.Serial(port = "COM4",
+    serialPort = serial.Serial(port = "COM3",
                                baudrate = 9600,
                                bytesize = 8,
                                timeout = 2,
@@ -47,8 +47,7 @@ while True:
         print("waiting to open serial port...")"""
 
     if serialString != None:
-        print(serialString)
-        """
+
         if "init" in serialString: #start of transmission
             if not receivingData:
                 print("init")
@@ -68,4 +67,4 @@ while True:
                 print(serialString)
                 f.write(serialString)
             else:
-                print("Waiting to begin...")"""
+                print("Waiting to begin...")
