@@ -3,7 +3,7 @@
 #include <SPI.h> // Not actually used but needed to compile
 #endif
 
-RH_ASK driver(2000, 2, 5, 5);
+RH_ASK driver(2000, 2, 0, 0);
 
 
 void setup()
@@ -27,8 +27,8 @@ void loop()
   uint8_t buflen = sizeof(buf);
 
   if (driver.recv(buf, &buflen)) { // Non-blocking
-    // Message with a good checksum received, dump it.
-	  //driver.printBuffer("Got:", buf, buflen);
+//     Message with a good checksum received, dump it.
+//	  driver.printBuffer("Got:", buf, buflen);
 
     String received;
     
@@ -36,6 +36,6 @@ void loop()
       received += (char)buf[i];
     }
 
-    Serial.println(received);
+    Serial.print(received);
   }
 }
