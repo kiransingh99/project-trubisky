@@ -1,0 +1,3 @@
+#Don't track data while it's only being used for testing
+#Delete this reference when real data is being collected
+data/
