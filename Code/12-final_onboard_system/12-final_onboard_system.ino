@@ -29,9 +29,19 @@ unsigned int fileName; //index for unique file names
 void (* reset) (void) = 0; //points to 0 position in memory
 
 void setup(void) {
+  /*
+   *  description: set up GPIO pins, sensors and SD card. Determine
+   *               file name for storing data on SD card
+   *
+   *  params: none
+   *
+   *  returns: none
+   */
+
   Serial.begin(9600);
-  Serial.println("12-final_onboard_system");
-  
+  Serial.println("12-final_onboard_system"); //file name to identify file from serial monitor
+
+  //set up GPIO pins
   pinMode(deletePin, INPUT_PULLUP);
   pinMode(transmitPin, INPUT_PULLUP);
   pinMode(resetPin, INPUT_PULLUP);
@@ -67,6 +77,16 @@ void setup(void) {
 }
 
 void loop(void) {
+  /*
+   *  description: check if any input pins are high, and if so, call
+   *               appropriate functions. Then take measuements from
+   *               sensors and write them to a file
+   *
+   *  params: none
+   *
+   *  returns: none
+   */
+
   if (!digitalRead(deletePin)) { //if delete pin is high
     Serial.println("Delete everything");
     deleteFiles();
@@ -115,6 +135,15 @@ void loop(void) {
 }
 
 void searchDirectory() {
+  /*  
+   *  description: count (and list) the filee on the SD card (note 
+   *               that this only searches the root directory)
+   *
+   *  params: none
+   *
+   *  returns: none
+   */
+
   fileName = 1;
   File dir = SD.open("/"); //root directory
 
@@ -143,6 +172,15 @@ void searchDirectory() {
 }
 
 void deleteFiles() {
+  /*  
+   *  description: delete all the files in the root directory of 
+   *               the SD card
+   *
+   *  params: none
+   *
+   *  returns: none
+   */
+   
   File dir = SD.open("/"); //root directory
   
   while (true) {
@@ -173,6 +211,19 @@ void deleteFiles() {
 }
 
 void transmitFiles(){
+  /*
+   *  description: transmit all the files in the root directory of 
+   *               the SD card. Note that all the transmitter objects
+   *               are defined in this function instead of globally
+   *               due to lack of onboard space. These obkects are
+   *               very large and they are only used once in the
+   *               script
+   *
+   *  params: none
+   *
+   *  returns: none
+   */
+   
   /* Set up transmitter */
   RH_ASK driver(2000, 0, 5, 0); //bit rate, Rx_pin, Tx_pin, pttPin
 
