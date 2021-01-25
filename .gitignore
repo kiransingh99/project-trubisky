@@ -3,4 +3,4 @@
 data/*
 
 # just to store the folder on git
-!somefolder/.gitkeep
+!data/.gitkeep
