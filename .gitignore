@@ -1,3 +1,6 @@
-#Don't track data while it's only being used for testing
-#Delete this reference when real data is being collected
-data/
+# don't track data while it's only being used for testing
+# delete this reference when real data is being collected
+data/*
+
+# just to store the folder on git
+!somefolder/.gitkeep
