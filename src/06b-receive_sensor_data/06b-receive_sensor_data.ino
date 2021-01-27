@@ -6,10 +6,9 @@
 RH_ASK driver(2000, 2, 0, 0);
 
 
-void setup()
-{
+void setup() {
   #ifdef RH_HAVE_SERIAL
-    Serial.begin(9600);	  // Debugging only
+    Serial.begin(9600);
   #endif
   if (!driver.init())
     #ifdef RH_HAVE_SERIAL
