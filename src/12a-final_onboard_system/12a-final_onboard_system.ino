@@ -1,4 +1,4 @@
-/* Sensor libraries */
+/* sensor libraries */
 #include <Adafruit_Sensor.h>
 #include <Adafruit_ADXL345_U.h>
 #include <Adafruit_L3GD20_U.h>
@@ -6,26 +6,26 @@
 /* SD card module */
 #include <SD.h>
 
-/* RF Transmitter Library */
+/* RF transmitter library */
 #include <RH_ASK.h>
 #ifdef RH_HAVE_HARDWARE_SPI
-  #include <SPI.h> // Not actually used but needed to compile
+  #include <SPI.h> //not actually used but needed to compile
 #endif
 
-/* Define pins */
+/* define pins */
 const int deletePin = 2;
 const int transmitPin = 3;
 const int resetPin = 4;
 const int SDpin = 53; //10 for nano, 53 for mega
 
-/* Assign unique IDs to each of the the sensors */
+/* assign unique IDs to each of the the sensors */
 Adafruit_ADXL345_Unified accel = Adafruit_ADXL345_Unified(12345);
 Adafruit_L3GD20_Unified gyro = Adafruit_L3GD20_Unified(20);
 
-/* Objects for SD card */
+/* objects for SD card */
 unsigned int fileName; //index for unique file names
 
-/* Software reset function */
+/* software reset function */
 void (* reset) (void) = 0; //points to 0 position in memory
 
 void setup(void) {
@@ -39,7 +39,7 @@ void setup(void) {
    */
 
   Serial.begin(9600);
-  Serial.println("12-final_onboard_system"); //file name to identify file from serial monitor
+  Serial.println("12a-final_onboard_system"); //file name to identify file from serial monitor
 
   //set up GPIO pins
   pinMode(deletePin, INPUT_PULLUP);
@@ -63,7 +63,7 @@ void setup(void) {
   
 //  Serial.println("Sensors set up successfully");
 
-  /* Set up SD card */
+  /* set up SD card */
   if (!SD.begin(SDpin)) {
 //    Serial.println("SD card initialisation failed");
     while(1);
@@ -115,7 +115,7 @@ void loop(void) {
   float gyro_y = event.gyro.y;
   float gyro_z= event.gyro.z;
 
-  /* Write sensor data to file*/
+  /* write sensor data to file*/
   File file = SD.open(fileName + fileExtension, FILE_WRITE);
   if (file) {
     //Serial.print("Writing to "); Serial.println(fileName + fileExtension);
@@ -134,7 +134,7 @@ void loop(void) {
   }
 }
 
-void searchDirectory() {
+void searchDirectory(void) {
   /*  
    *  description: count (and list) the filee on the SD card (note 
    *               that this only searches the root directory)
@@ -150,7 +150,7 @@ void searchDirectory() {
   while (true) {
     File entry = dir.openNextFile();
     if (! entry) {
-      // no more files
+      //no more files
       break;
     }
 
@@ -160,7 +160,7 @@ void searchDirectory() {
     if (entry.isDirectory()) {
       Serial.println("/");
     } else {
-      // files have sizes, directories do not
+      //files have sizes, directories do not
       Serial.print("\t\t");
       Serial.println(entry.size(), DEC); //print file size (decimal)
       fileName ++;
@@ -171,7 +171,7 @@ void searchDirectory() {
   dir.close();
 }
 
-void deleteFiles() {
+void deleteFiles(void) {
   /*  
    *  description: delete all the files in the root directory of 
    *               the SD card
@@ -186,7 +186,7 @@ void deleteFiles() {
   while (true) {
     File entry = dir.openNextFile();
     if (! entry) {
-      // no more files
+      //no more files
       break;
     }
 
@@ -210,7 +210,7 @@ void deleteFiles() {
   }
 }
 
-void transmitFiles(){
+void transmitFiles(void){
   /*
    *  description: transmit all the files in the root directory of 
    *               the SD card. Note that all the transmitter objects
@@ -224,7 +224,7 @@ void transmitFiles(){
    *  returns: none
    */
    
-  /* Set up transmitter */
+  /* set up transmitter */
   RH_ASK driver(2000, 0, 5, 0); //bit rate, Rx_pin, Tx_pin, pttPin
 
   if (!driver.init()) {
@@ -237,7 +237,7 @@ void transmitFiles(){
   while (true) {
     File entry = dir.openNextFile();
     if (! entry) {
-      // no more files
+      //no more files
       break;
     }
 
@@ -245,16 +245,16 @@ void transmitFiles(){
     if (!entry.isDirectory()) { 
       Serial.println(entry.name());
       
-      /* Transmit flag for new file ("s") */
+      /* transmit flag for new file ("s") */
       driver.send((uint8_t *)"s", 1);
       driver.waitPacketSent();
       
       while (entry.available()) {
         msg[0] = entry.read(); //get next character of file
         
-        Serial.print (msg[0]);
+        //Serial.print (msg[0]);
         
-        /* Transmit data */
+        /* transmit data */
         driver.send((uint8_t *)msg, 1);
         driver.waitPacketSent();
       }
@@ -266,7 +266,7 @@ void transmitFiles(){
 
   Serial.println("end");
   
-  /* Transmit flag for end of transmission("n") */
+  /* transmit flag for end of transmission("n") */
   driver.send((uint8_t *)"n", 1);
   driver.waitPacketSent();
   
