@@ -29,14 +29,10 @@ unsigned int fileName; //index for unique file names
 void (* reset) (void) = 0; //points to 0 position in memory
 
 void setup(void) {
-  /*
-   *  description: set up GPIO pins, sensors and SD card. Determine
-   *               file name for storing data on SD card
-   *
-   *  params: none
-   *
-   *  returns: none
-   */
+  /**
+    Sets up GPIO pins, sensors and SD card. Determine file name for
+    storing data on SD card.
+  */
 
   Serial.begin(9600);
   Serial.println("12a-final_onboard_system"); //file name to identify file from serial monitor
@@ -77,16 +73,12 @@ void setup(void) {
 }
 
 void loop(void) {
-  /*
-   *  description: check if any input pins are high, and if so, call
-   *               appropriate functions. Then take measuements from
-   *               sensors and write them to a file
-   *
-   *  params: none
-   *
-   *  returns: none
-   */
-
+  /**
+    Checks if any input pins are high, and if so, calls the
+    appropriate functions. Then takes measuements from the sensors
+    and writes them to a file.
+  */
+  
   if (!digitalRead(deletePin)) { //if delete pin is high
     Serial.println("Delete everything");
     deleteFiles();
@@ -135,14 +127,10 @@ void loop(void) {
 }
 
 void searchDirectory(void) {
-  /*  
-   *  description: count (and list) the filee on the SD card (note 
-   *               that this only searches the root directory)
-   *
-   *  params: none
-   *
-   *  returns: none
-   */
+  /**  
+    Counts (and lists) the filee on the SD card. Note that this only
+    searches the root directory).
+  */
 
   fileName = 1;
   File dir = SD.open("/"); //root directory
@@ -172,14 +160,9 @@ void searchDirectory(void) {
 }
 
 void deleteFiles(void) {
-  /*  
-   *  description: delete all the files in the root directory of 
-   *               the SD card
-   *
-   *  params: none
-   *
-   *  returns: none
-   */
+  /**  
+    Deletes all the files in the root directory of the SD card.
+  */
    
   File dir = SD.open("/"); //root directory
   
@@ -211,18 +194,13 @@ void deleteFiles(void) {
 }
 
 void transmitFiles(void){
-  /*
-   *  description: transmit all the files in the root directory of 
-   *               the SD card. Note that all the transmitter objects
-   *               are defined in this function instead of globally
-   *               due to lack of onboard space. These obkects are
-   *               very large and they are only used once in the
-   *               script
-   *
-   *  params: none
-   *
-   *  returns: none
-   */
+  /**
+    Transmits all the files in the root directory of the SD card.
+    Note that all the transmitter objects are defined in this
+    function instead of globally due to lack of onboard space. These
+    obkects are very large and they are only used once in the
+    script.
+  */
    
   /* set up transmitter */
   RH_ASK driver(2000, 0, 5, 0); //bit rate, Rx_pin, Tx_pin, pttPin
@@ -266,8 +244,8 @@ void transmitFiles(void){
 
   Serial.println("end");
   
-  /* transmit flag for end of transmission("n") */
-  driver.send((uint8_t *)"n", 1);
+  /* transmit flag for end of transmission("e") */
+  driver.send((uint8_t *)"e", 1);
   driver.waitPacketSent();
   
   while (true) {

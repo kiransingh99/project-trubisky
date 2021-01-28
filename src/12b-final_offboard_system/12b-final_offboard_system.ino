@@ -8,13 +8,9 @@
 RH_ASK driver(2000, 2, 0, 0); //bit rate, Rx_pin, Tx_pin, pttPin
 
 void setup(void) {
-  /*
-   *  description: set up receiver and serial
-   *
-   *  params: none
-   *
-   *  returns: none
-   */
+  /**
+    Sets up receiver and serial port.
+  */
    
   #ifdef RH_HAVE_SERIAL
     Serial.begin(9600);
@@ -31,13 +27,9 @@ void setup(void) {
 
 void loop(void) {
   /*
-   *  description: receive message from transmitter and print it to
-   *               serial
-   *
-   *  params: none
-   *
-   *  returns: none
-   */
+    When a message is received via the transmitter, it writes it to
+    the serial porr.
+  */
 
   /* buffer to store received message */
   uint8_t buf[RH_ASK_MAX_MESSAGE_LEN]; //maximum length of array
