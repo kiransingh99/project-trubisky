@@ -121,7 +121,8 @@ This is only an increase of 0.18%, and therefore will have a negligible effect o
 ## To Do
 - Off board code
 - Post processing code
-	- get individual metrics and write them to a global tracker file (track file names too)
+	- check if file is okay as a csv (i.e. it is healthy) - print out any issues - only check previously unchecked files
+	- get individual metrics and write them to a global tracker file (track file names too) - only check healthy files
 	- figure out how to add different types of information to global tracker (and ensure that any files added later also collect this information)
 	- figure out how to add info from more files to global tracker
 	- use global tracker to 
