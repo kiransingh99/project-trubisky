@@ -1,4 +1,3 @@
-
 # Project Trubisky
 Git repo for Masters project - Modelling Dynamics of an American Football
 
@@ -119,9 +118,8 @@ This is only an increase of 0.18%, and therefore will have a negligible effect o
 	- **README.md**
 
 ## To Do
-- Off board code
 - Post processing code
-	- check if file is okay as a csv (i.e. it is healthy) - print out any issues - only check previously unchecked files
+	- check if file is okay as a csv (i.e. it is healthy) - print out any issues - only check previously unchecked files - include negative change in time or no value present as an issue (can correct this using average of two readings, and then check again
 	- get individual metrics and write them to a global tracker file (track file names too) - only check healthy files
 	- figure out how to add different types of information to global tracker (and ensure that any files added later also collect this information)
 	- figure out how to add info from more files to global tracker

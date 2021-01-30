@@ -230,7 +230,7 @@ void transmitFiles(void){
       while (entry.available()) {
         msg[0] = entry.read(); //get next character of file
         
-        //Serial.print (msg[0]);
+        Serial.print (msg[0]);
         
         /* transmit data */
         driver.send((uint8_t *)msg, 1);
