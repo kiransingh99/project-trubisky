@@ -1,6 +1,7 @@
 # don't track data while it's only being used for testing
 # delete this reference when real data is being collected
 data/*
+__pycache__/
 
 # just to store the folder on git
 !data/.gitkeep
