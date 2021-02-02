@@ -1,4 +1,4 @@
-import global_tracker
+#from . import global_tracker
 
 class RawData:
     #handles everything to do with raw data files
