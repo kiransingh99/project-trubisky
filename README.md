@@ -19,14 +19,12 @@ This system is embedded into the ball. It is comprised of:
 - ADXL345 (triple-axis accelerometer): measures linear acceleration
 - L3GD20H (triple axis gyroscope): measures angular velocity
 - Micro SD Breakout Board: stores data onboard
-- Seeed 113990010: RF transmitter
 
 This system collectes data from the two sensors and writes it to a file on the SD card. Each throw of the ball requires the corresponding data to be saved in a new file. Using user inputs, the system can be reset, and the data can be transmitted or deleted. The data is saved to a file as this is faster than transmitting it as it is measured, so this allows for a higher frequency of data readings. The accelerometer and gyroscope together track 6 degrees of freedom, which completely describes a rigid body; therefore these sensors are sufficient to fully monitor the ball's motion.
 
 ### Offboard system
 This system is not connected to the ball, but is connected to a PC. It is comprised of:
 - Arduino Uno: processor
-- Seeed 113990010: RF receiver
 - PC: stores data for future processing
 
 This system simply receives the transmitted data and writes it to the Serial monitor. A python script running on the same PC reads the serial port, and writes the data received to csv files.
@@ -47,11 +45,7 @@ This system is just made up of Python scripts running on a PC, with access to al
 Each file can be passed to a function which generates data about the throws and adds relevant data to another csv file, which summarises all the data, so it doesnt need to be recalculated every time a graph summarising all the data is generated.
 
 ## Hardware requirements
-The onboard system is intended for a Arduino Nano Every, though it has yet to be tested on one. It will not work in its current state on a standard Arduino Nano as the inbuilt storage is not sufficient, and some parts of the code do not fit in the available space. It may be theoretically possible to compress the compiled code to make it fit but currently this has not been done. An Arduino Uno would not solve the memory issue, as it has the same storage capacity as an Arduino Nano. An Arduino Mega does solve this problem, but significantly increases the mass of the onboard system.
-
-The offboard system functions without problem on an Arduino Uno.
-
-The post-processing system should function without problem on any commercial PC.
+The onboard system is intended for a Arduino Nano Every, though it will work on a standard Arduino Nano. The offboard system functions without problem on an Arduino Uno. The post-processing system should function without problem on any commercial PC.
 
 ### Wiring diagram
 
@@ -73,11 +67,10 @@ The post-processing system should function without problem on any commercial PC.
 | **D11**          | *Micro SD Module* **DI**  |
 | **D12**          | *Micro SD Module* **DO**  |
 | **D13**          | *Micro SD Module* **CLK** |
-| **5V**           | *113990010 Tx* **Vcc**    |
-| **GND**          | *113990010 Tx* **GND**    |
-| **D5**           | *113990010 Tx* **DATA**   |
+| **A4**           | *Arduino Uno* **A4**  |
+| **A5**           | *Arduino Uno* **A5**  |
 
-Note that you can add a 17cm antenna onto the transmitter. This diagram does not include the onboard power supply.
+Note that this diagram does not include the onboard power supply.
 
 #### Offboard system
 
@@ -86,6 +79,8 @@ Note that you can add a 17cm antenna onto the transmitter. This diagram does not
 | **5V**          | *113990010 Rx* **Vcc**    |
 | **GND**         | *113990010 Rx* **GND**    |
 | **D2**          | *113990010 Rx* **DATA**   |
+| **A4**           | *Arduino Nano* **A4**  |
+| **A5**           | *Arduino Nano* **A5**  |
 
 ### Effect of mass of additional components
 Adding components with finite mass to the ball will affect the mechanics. The main concerns include the changes in the ball's mass, centre of mass, and its moment of inertia.
@@ -120,7 +115,6 @@ This is only an increase of 0.18%, and therefore will have a negligible effect o
 ## To Do
 - Post processing code
 	- check if file is okay as a csv (i.e. it is healthy) - print out any issues - only check previously unchecked files - include negative change in time or no value present as an issue (can correct this using average of two readings, and then check again
-	- get individual metrics and write them to a global tracker file (track file names too) - only check healthy files
+	- get individual metrics and write them to a global tracker file (track file names too) - only check healthy files, include length (time) of throw
 	- figure out how to add different types of information to global tracker (and ensure that any files added later also collect this information)
-	- figure out how to add info from more files to global tracker
-	- use global tracker to 
+	- function to update global tracker - add new files, deleted files
