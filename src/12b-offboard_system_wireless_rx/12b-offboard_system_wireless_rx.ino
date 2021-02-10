@@ -22,7 +22,7 @@ void setup(void) {
   	;
   #endif
 
-  Serial.println("12b-final_offboard_system"); //file name to identify file from serial monitor
+  Serial.println("12b-offboard_system_wireless_rx"); //file name to identify file from serial monitor
 }
 
 void loop(void) {

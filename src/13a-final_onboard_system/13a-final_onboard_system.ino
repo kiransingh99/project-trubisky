@@ -6,17 +6,17 @@
 /* SD card module */
 #include <SD.h>
 
-/* RF transmitter library */
-#include <RH_ASK.h>
-#ifdef RH_HAVE_HARDWARE_SPI
-  #include <SPI.h> //not actually used but needed to compile
-#endif
+/* Software serial */
+#include <Wire.h>
 
 /* define pins */
 const int deletePin = 2;
 const int transmitPin = 3;
 const int resetPin = 4;
-const int SDpin = 53; //10 for nano, 53 for mega
+const int SDpin = 10; //10 for nano, 53 for mega
+
+const int slaveAddress = 9;
+const int answerSize = 5;
 
 /* assign unique IDs to each of the the sensors */
 Adafruit_ADXL345_Unified accel = Adafruit_ADXL345_Unified(12345);
@@ -34,8 +34,10 @@ void setup(void) {
     storing data on SD card.
   */
 
+  Wire.begin();
+
   Serial.begin(9600);
-  Serial.println("12a-final_onboard_system"); //file name to identify file from serial monitor
+  Serial.println("13a-final_onboard_system"); //file name to identify file from serial monitor
 
   //set up GPIO pins
   pinMode(deletePin, INPUT_PULLUP);
@@ -195,20 +197,9 @@ void deleteFiles(void) {
 
 void transmitFiles(void){
   /**
-    Transmits all the files in the root directory of the SD card.
-    Note that all the transmitter objects are defined in this
-    function instead of globally due to lack of onboard space. These
-    obkects are very large and they are only used once in the
-    script.
+    Transmits all the files in the root directory of the SD card 
+    via I2C
   */
-   
-  /* set up transmitter */
-  RH_ASK driver(2000, 0, 5, 0); //bit rate, Rx_pin, Tx_pin, pttPin
-
-  if (!driver.init()) {
-    Serial.println("init failed");
-    while(1) {};
-  }
   
   File dir = SD.open("/"); //root directory
   
@@ -220,12 +211,23 @@ void transmitFiles(void){
     }
 
     char msg[1]="";
+    
     if (!entry.isDirectory()) { 
       Serial.println(entry.name());
       
       /* transmit flag for new file ("s") */
-      driver.send((uint8_t *)"s", 1);
-      driver.waitPacketSent();
+      Wire.beginTransmission(slaveAddress);
+      Wire.write("s");
+      Wire.endTransmission();
+      Wire.requestFrom(slaveAddress, answerSize); //I2C requires a response
+
+      String response = "";
+      while (Wire.available()) {
+        char b = Wire.read();
+        response += b;
+      }
+
+      Serial.println(response);
       
       while (entry.available()) {
         msg[0] = entry.read(); //get next character of file
@@ -233,8 +235,10 @@ void transmitFiles(void){
         Serial.print (msg[0]);
         
         /* transmit data */
-        driver.send((uint8_t *)msg, 1);
-        driver.waitPacketSent();
+        Wire.beginTransmission(slaveAddress);
+        Wire.write(msg[0]);
+        Wire.endTransmission();
+        Wire.requestFrom(slaveAddress, answerSize);
       }
     }
     
@@ -245,8 +249,10 @@ void transmitFiles(void){
   Serial.println("end");
   
   /* transmit flag for end of transmission("e") */
-  driver.send((uint8_t *)"e", 1);
-  driver.waitPacketSent();
+  Wire.beginTransmission(slaveAddress);
+  Wire.write("e");
+  Wire.endTransmission();
+  Wire.requestFrom(slaveAddress, answerSize);
   
   while (true) {
     if (!digitalRead(deletePin)) { //if delete pin triggerred
