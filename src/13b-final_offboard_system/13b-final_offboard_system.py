@@ -111,7 +111,7 @@ def createFile():
     """
     #find path to 'data' folder
     my_path = os.path.abspath(os.path.dirname(__file__))
-    path = path = os.path.join(my_path, "..\\..\\data\\") 
+    path = os.path.join(my_path, "..\\..\\data\\") 
     
     #use current date and time to generate unique file name
     now = datetime.now()
@@ -163,7 +163,7 @@ while True:
         #else: #normal data transmission
         
         if receivingData:
-            print(serialString)
-            f.write(serialString) #write string to file
+            print(serialString.strip('\n'))
+            f.write(serialString.strip('\n')) #write string to file without new line
         else: #if starting flag ('s') has not been read:
             print("Waiting to begin")
