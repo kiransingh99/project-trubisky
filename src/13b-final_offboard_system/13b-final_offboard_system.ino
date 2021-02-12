@@ -11,7 +11,7 @@ void setup(void) {
     Sets up Serial and initialises I2C functinos.
   */
   
-  Serial.begin(9600)
+  Serial.begin(9600);
   Serial.println("13b-final_offboard_system"); //file name to identify file from serial monitor
 
   //initialize I2C communications as slave
