@@ -15,6 +15,10 @@ const int transmitPin = 3;
 const int resetPin = 4;
 const int SDpin = 10; //10 for nano, 53 for mega
 
+/* misc constants */
+const unsigned int TIMER_CUTOFF = 30000; //maximum time allowed for a throw
+
+/* I2C constants */
 const int slaveAddress = 9;
 const int answerSize = 5;
 
@@ -81,20 +85,23 @@ void loop(void) {
     and writes them to a file.
   */
   
-  if (!digitalRead(deletePin)) { //if delete pin is high
-    Serial.println("Delete everything");
-    deleteFiles();
-  } else if (!digitalRead(transmitPin)) { //if transmit pin is high
-    Serial.println("Transmit everything");
-    transmitFiles();
-  } else if (!digitalRead(resetPin)) { //if reset pin is high
-    while (!digitalRead(resetPin)) {} //wait until reset pin no longer high
-    Serial.println("Reset");
-    delay(100);
-    reset();
-  }
-  
   unsigned int sys_time = millis(); //get system time
+  
+  do {
+    if (!digitalRead(deletePin)) { //if delete pin is high
+      Serial.println("Delete everything");
+      deleteFiles();
+    } else if (!digitalRead(transmitPin)) { //if transmit pin is high
+      Serial.println("Transmit everything");
+      transmitFiles();
+    } else if (!digitalRead(resetPin)) { //if reset pin is high
+      while (!digitalRead(resetPin)) {} //wait until reset pin no longer high
+      Serial.println("Reset");
+      delay(100);
+      reset();
+    }
+  } while (sys_time > TIMER_CUTOFF); //if timer > threshold, stop reading sensor data
+
   const String fileExtension = ".txt";
       
   sensors_event_t event; //get sensor readings

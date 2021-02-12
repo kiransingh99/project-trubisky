@@ -113,8 +113,6 @@ This is only an increase of 0.18%, and therefore will have a negligible effect o
 	- **README.md**
 
 ## To Do
-- Onboard code
-	- Stop reading from file if time > 30 seconds
 - Post processing code
 	- check if file is okay as a csv (i.e. it is healthy) - print out any issues - only check previously unchecked files - include negative change in time or no value present as an issue (can correct this using average of two readings, and then check again
 	- get individual metrics and write them to a global tracker file (track file names too) - only check healthy files, include length (time) of throw
