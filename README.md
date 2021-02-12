@@ -51,8 +51,8 @@ The onboard system is intended for a Arduino Nano Every, though it will work on 
 
 #### Onboard system
 
-| Arduino Nano | Device name and pin |
-|--------------|---------------------|
+|   Arduino Nano   |    Device name and pin    |
+|------------------|---------------------------|
 | **5V**           | *ADXL345* **Vin**         |
 | **GND**          | *ADXL345* **GND**         |
 | **A4**           | *ADXL345* **SDA**         |
@@ -67,20 +67,20 @@ The onboard system is intended for a Arduino Nano Every, though it will work on 
 | **D11**          | *Micro SD Module* **DI**  |
 | **D12**          | *Micro SD Module* **DO**  |
 | **D13**          | *Micro SD Module* **CLK** |
-| **A4**           | *Arduino Uno* **A4**  |
-| **A5**           | *Arduino Uno* **A5**  |
+| **A4**           | *Arduino Uno* **A4**      |
+| **A5**           | *Arduino Uno* **A5**      |
 
 Note that this diagram does not include the onboard power supply.
 
 #### Offboard system
 
-| Arduino Uno | Device name and pin |
-|-------------|---------------------|
-| **5V**          | *113990010 Rx* **Vcc**    |
-| **GND**         | *113990010 Rx* **GND**    |
-| **D2**          | *113990010 Rx* **DATA**   |
-| **A4**           | *Arduino Nano* **A4**  |
-| **A5**           | *Arduino Nano* **A5**  |
+|   Arduino Uno    |    Device name and pin    |
+|------------------|---------------------------|
+| **5V**           | *113990010 Rx* **Vcc**    |
+| **GND**          | *113990010 Rx* **GND**    |
+| **D2**           | *113990010 Rx* **DATA**   |
+| **A4**           | *Arduino Nano* **A4**     |
+| **A5**           | *Arduino Nano* **A5**     |
 
 ### Effect of mass of additional components
 Adding components with finite mass to the ball will affect the mechanics. The main concerns include the changes in the ball's mass, centre of mass, and its moment of inertia.
