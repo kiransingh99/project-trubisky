@@ -3,13 +3,22 @@ class GlobalFile:
     def __init__(self, globalTracker):
         self.__globalFile = globalTracker
 
+    def __del__(self):
+        print("GlobalFile object destroyed")
+
     @property
     def globalFile(self):
         return self.__globalFile
 
-    def add_files(self, file):
-        #add metrics from untracked files to global tracker file and mark health
-        #as 'True'
+    def add_file(self, fileName):
+        #check if file is already listed. If it is, return false, if not, aadd
+        #metrics from untracked files to global tracker file and mark health
+        #as 'False' (and return True)
+        pass
+
+    def mark_file_as_healthy(self, fileName):
+        #find given file in the document and mark it as healthy if it is not
+        #already. Return True if completed, return False if no change mad
         pass
 
     def add_metric(self, file):

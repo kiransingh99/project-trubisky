@@ -1,5 +1,5 @@
 from . import functions
-#from . import global_tracker
+from . import global_tracker
 import os.path
 import csv
 
@@ -25,6 +25,9 @@ class RawData:
         self.__warningsRaised = False
 
         print("raw data initialised at", self.RAW_DATA_DIRECTORY, "\n")
+
+    def __del__(self):
+        print("RawData object destroyed")
 
     @property
     def RAW_DATA_DIRECTORY(self):
@@ -82,6 +85,8 @@ class RawData:
         
         fileName = filePath[len(self.RAW_DATA_DIRECTORY)-6:]
 
+        self.__add_file_to_global(fileName)
+
         with open(filePath) as f:
             csv_file = csv.reader(f, delimiter=',')
             print("Testing {}... ".format(fileName), end="")
@@ -100,6 +105,7 @@ class RawData:
 
         if self.__warningsRaised:
             print("\nAll tests passed\n") #adjust formatting if warnings have been raised
+            self.__warningsRaised = False
         else:
             print("All tests passed")
 
@@ -154,9 +160,11 @@ class RawData:
                 .format(row, row[0], previousTime)
         return int(row[0])
 
-    def __add_file_to_global(self, file):
+    def __add_file_to_global(self, fileName):
         #sends the names of the files to the GlobalFile class to get added
-        pass
+        G = global_tracker.GlobalFile()
+        G.add_file(fileName)
+        del G
 
     def add_metrics_to_global(self, metric):
         #sends the relevant files and data to GlobalFile class to get added

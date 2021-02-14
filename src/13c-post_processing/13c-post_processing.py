@@ -5,7 +5,7 @@ from obj import functions
 
 def main():
     R = raw_data.RawData(showWarnings=False)
-    R.check_health_all_files()
+    #R.check_health_all_files()
 
 
 
