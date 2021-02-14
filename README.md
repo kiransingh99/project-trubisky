@@ -118,3 +118,5 @@ This is only an increase of 0.18%, and therefore will have a negligible effect o
 	- get individual metrics and write them to a global tracker file (track file names too) - only check healthy files, include length (time) of throw
 	- figure out how to add different types of information to global tracker (and ensure that any files added later also collect this information)
 	- function to update global tracker - add new files, deleted files
+	- tidy up imports
+	- comments
