@@ -57,11 +57,10 @@ void setup(void) {
   accel.setRange(ADXL345_RANGE_16_G); //set range
 
   /* gyroscope set up */
-  if(!gyro.begin()) {
+  if(!gyro.begin(gyro.L3DS20_RANGE_2000DPS)) {
 //    Serial.println("No L3GD20 detected");
     while(1);
   }
-  gyro.enableAutoRange(true); //enable auto-ranging
   
 //  Serial.println("Sensors set up successfully");
 
