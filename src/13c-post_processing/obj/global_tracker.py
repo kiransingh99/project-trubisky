@@ -22,6 +22,11 @@ class GlobalFile:
         pass
 
     def add_metric(self, file):
+        #add another column to global tracker and populate it using
+        #write_to_file function
+        pass
+
+    def __add_column(self, file):
         #add another column to global tracker
         pass
     
