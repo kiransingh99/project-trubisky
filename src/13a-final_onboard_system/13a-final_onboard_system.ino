@@ -20,7 +20,7 @@ const unsigned int TIMER_CUTOFF = 30000; //maximum time allowed for a throw
 
 /* I2C constants */
 const int slaveAddress = 9;
-const int answerSize = 5;
+const int answerSize = 1;
 
 /* assign unique IDs to each of the the sensors */
 Adafruit_ADXL345_Unified accel = Adafruit_ADXL345_Unified(12345);
@@ -57,11 +57,10 @@ void setup(void) {
   accel.setRange(ADXL345_RANGE_16_G); //set range
 
   /* gyroscope set up */
-  if(!gyro.begin()) {
+  if(!gyro.begin(GYRO_RANGE_2000DPS)) {
 //    Serial.println("No L3GD20 detected");
     while(1);
   }
-  gyro.enableAutoRange(true); //enable auto-ranging
   
 //  Serial.println("Sensors set up successfully");
 
@@ -234,7 +233,7 @@ void transmitFiles(void){
         response += b;
       }
 
-      Serial.println(response);
+      //Serial.println(response);
       
       while (entry.available()) {
         msg[0] = entry.read(); //get next character of file
