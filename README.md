@@ -114,9 +114,10 @@ This is only an increase of 0.18%, and therefore will have a negligible effect o
 
 ## To Do
 - Post processing code
+	- separate rawData object into 'health' and 'individual' functions
 	- check if file is okay as a csv (i.e. it is healthy) - print out any issues - only check previously unchecked files - include no value present as an issue
 	- get individual metrics and write them to a global tracker file (track file names too) - only check healthy files, include length (time) of throw
 	- figure out how to add different types of information to global tracker (and ensure that any files added later also collect this information)
 	- function to update global tracker - add new files, deleted files
-	- tidy up imports
+	- tidy up imports and dunctions
 	- comments
