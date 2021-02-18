@@ -113,6 +113,8 @@ This is only an increase of 0.18%, and therefore will have a negligible effect o
 	- **README.md**
 
 ## To Do
+- README
+	- add section about how to interpret tracker file: errorStatus
 - Post processing code
 	- check if file is okay as a csv (i.e. it is healthy) - print out any issues - only check previously unchecked files - include no value present as an issue
 	- get individual metrics and write them to a global tracker file (track file names too) - only check healthy files, include length (time) of throw
