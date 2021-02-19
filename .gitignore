@@ -4,4 +4,5 @@ data/*
 __pycache__/
 
 # just to store the folder on git
-!data/.gitkeep
+# !data/.gitkeep
+!data/globalTracker.csv
