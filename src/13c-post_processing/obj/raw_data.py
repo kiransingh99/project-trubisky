@@ -482,8 +482,8 @@ class _SingleRawDataFile:
             f = open(filePath)
         except FileNotFoundError as e:
             print("\n\nFatal:", e)
-            print("Code exited with status 0")
-            sys.exit(0)
+            print("Code exited with status 1")
+            sys.exit(1)
         else:
             # do stuff
                 

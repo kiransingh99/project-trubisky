@@ -10,8 +10,8 @@ class GlobalFile:
             f = open(const.TRACKER_FILEPATH)
         except FileNotFoundError as e:
             print("\n\nFatal:", e)
-            print("Code exited with status 0")
-            sys.exit(0)
+            print("Code exited with status 1")
+            sys.exit(1)
         else:
             #print("Found global tracker file", const.TRACKER_FILENAME)
             self.__TRACKER_EXISTS = True
@@ -27,7 +27,6 @@ class GlobalFile:
             self.set_TRACKER_COUNT_COLUMNS(len(next(tracker_file)))
                 
             f.close()
-
 
     def __del__(self):
         #print("GlobalFile object destroyed")
