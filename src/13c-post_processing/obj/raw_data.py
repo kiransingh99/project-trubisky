@@ -16,9 +16,6 @@ class RawData:
     'individual' methods.
 
     Attributes:
-        __NUMBER_OF_COLUMNS (int): constant to store the expected number of 
-            columns in the raw data files. Takes its value from the const.py 
-            file
         overWrite (bool): set as 'True' if data in the global tracker file 
             should be overwritten if it is incorrect, otherwise set as 'False'
         showWarnings (bool): should be 'True' if the user wants any warnings 
@@ -48,7 +45,6 @@ class RawData:
         """
         
         # define class variables            
-        self.__NUMBER_OF_COLUMNS = const.NUMBER_OF_COLUMNS
         self.overwrite = overwrite
         self.showWarnings = showWarnings
 
@@ -95,9 +91,6 @@ class _RawDataHealthChecker:
     manipulated to get useful data output.
 
     Attributes:
-        __NUMBER_OF_COLUMNS (int): constant to store the expected number of 
-            columns in the raw data files. Takes its value from the const.py 
-            file
         __THROW_TIME_WARNING_THRESHOLD (int): constant to store the threshold 
             for throw time, that, if exceeded, raises a warning
         __ACCELEROMETER_WARNING_THRESHOLD (int): constant to store the threshold 
@@ -116,7 +109,12 @@ class _RawDataHealthChecker:
     Methods:
         __init__ : class constructor
         __del__ : class destructor
-        NUMBER_OF_COLUMNS : property which returns the constant of the same name
+        DATA_DIRECTORY : property which returns the constant which stores to 
+            store the path to the directory that stores the data files. Takes 
+            its value from the const.py file
+        NUMBER_OF_COLUMNS : property which returns the constant which stores the 
+            expected number of columns in the raw data files. Takes its value 
+            from the const.py file
         THROW_TIME_WARNING_THRESHOLD : property which returns the constant of 
             the same name
         ACCELEROMETER_WARNING_THRESHOLD : property which returns the constant of 
@@ -147,7 +145,6 @@ class _RawDataHealthChecker:
         """
 
         # set class constants
-        self.__NUMBER_OF_COLUMNS = const.NUMBER_OF_COLUMNS
         self.__THROW_TIME_WARNING_THRESHOLD = 25000 
         self.__ACCELEROMETER_WARNING_THRESHOLD = 150 # accelerometer set to 16G
         self.__GYRO_WARNING_THRESHOLD = 1900 # gyro set to 2000dps
@@ -157,7 +154,7 @@ class _RawDataHealthChecker:
         self.overwrite = overwrite
         self.__warningsRaised = False
 
-        print("Raw data initialised at", const.DATA_DIRECTORY, "\n")
+        print("Raw data initialised at", self.DATA_DIRECTORY, "\n")
 
     def __del__(self):
         """Destructor for class.
@@ -166,44 +163,54 @@ class _RawDataHealthChecker:
         print("RawData object destroyed")
 
     @property
+    def DATA_DIRECTORY(self):
+        """Getter for constant of the same name.
+
+        Returns:
+            str: the path to the directory that stores the data files
+        """
+        
+        return const.DATA_DIRECTORY
+
+    @property
     def NUMBER_OF_COLUMNS(self):
-        """Getter for constant
+        """Getter for constant of the same name.
 
         Returns:
             int: expected number of columns in the raw data files
         """
         
-        return self.__NUMBER_OF_COLUMNS
+        return const.NUMBER_OF_COLUMNS
 
     @property
     def THROW_TIME_WARNING_THRESHOLD(self):
-        """Getter for constant
+        """Getter for constant of the same name.
 
         Returns:
             int: constant to store the threshold for throw time, that, if 
-            exceeded, raises a warning
+                exceeded, raises a warning
         """
 
         return self.__THROW_TIME_WARNING_THRESHOLD
 
     @property
     def ACCELEROMETER_WARNING_THRESHOLD(self):
-        """Getter for constant
+        """Getter for constant of the same name.
 
         Returns:
             int: constant to store the threshold for acceleration across each 
-            axis, that, if exceeded, raises a warning
+                axis, that, if exceeded, raises a warning
         """
         
         return self.__ACCELEROMETER_WARNING_THRESHOLD
 
     @property
     def GYRO_WARNING_THRESHOLD(self):
-        """Getter for constant
+        """Getter for constant of the same name.
 
         Returns:
             int: constant to store the threshold for angular velocity across 
-            each axis, that, if exceeded, raises a warning
+                each axis, that, if exceeded, raises a warning
         """
 
         return self.__GYRO_WARNING_THRESHOLD
@@ -231,8 +238,8 @@ class _RawDataHealthChecker:
         tests_failed = [] # the corresponding tests that the files failed on
 
         # iterate through each file in directory where data files are kept
-        for entry in os.listdir(const.DATA_DIRECTORY):
-            filePath = os.path.join(const.DATA_DIRECTORY, entry)
+        for entry in os.listdir(self.DATA_DIRECTORY):
+            filePath = os.path.join(self.DATA_DIRECTORY, entry)
             fileName = filePath[const.PATH_LENGTH_TO_DATA_DIR:]
             
             if entry.endswith(".csv"): # only check CSV files
@@ -341,10 +348,10 @@ class _RawDataHealthChecker:
 
         Returns:
             int: returns 1 if the file has been recorded, and 0 if the file has 
-            not been recorded, or if the tracker file cannot be found.
+                not been recorded, or if the tracker file cannot be found.
         """
 
-        G = global_tracker.GlobalFile()
+        G = global_tracker.GlobalFile(fullInitialisation = False)
         if G.TRACKER_EXISTS:
             return G.is_file_recorded(fileName)
         return 0
@@ -365,15 +372,12 @@ class _RawDataHealthChecker:
             int: returns 1 if completed successfully, 0 otherwise
         """
 
-        G = global_tracker.GlobalFile()
-        if G.TRACKER_EXISTS:
-            if self.is_in_tracker(fileName):
-                return G.change_error_status(fileName, errorStatus)
-            else:
-                return G.add_file(fileName, errorStatus)
+        G = global_tracker.GlobalFile(fullInitialisation = False)
+
+        if self.is_in_tracker(fileName):
+            return G.change_error_status(fileName, errorStatus)
         else:
-            print("Could not find tracker file")
-        return 0
+            return G.add_file(fileName, errorStatus)
 
     def __check_columns(self, row):
         """Private function to check how many columns there are in a given row 
@@ -473,7 +477,11 @@ class _RawDataHealthChecker:
 
 
 class _SingleRawDataFile:
+    # ADD DOCSTRING
+
     def __init__(self, fileName):
+        # ADD DOCSTRING
+
         # test if filename can be opened and raise error if not
         
         filePath = os.path.join(const.DATA_DIRECTORY, fileName)
@@ -491,23 +499,28 @@ class _SingleRawDataFile:
 
     
     def __add_file_to_tracker(self, fileName):
+        # ADD DOCSTRING
+
         # sends the names of the files to the GlobalFile class to get added
         errorStatus = 0
-        G = global_tracker.GlobalFile()
+        G = global_tracker.GlobalFile(fullInitialisation = False)
         G.add_file(fileName, errorStatus)
         del G
 
     def add_metrics_to_tracker(self, metric):
+        # ADD DOCSTRING
         # sends the relevant files and data to GlobalFile class to get added
         # metric is the name of the metric (string)
         # call populate_metric
         pass
 
     def __write_to_tracker(self, file, metric, data):
+        # ADD DOCSTRING
         # iterate through all the raw files, and calculate metric, and then 
         # write it to global tracker file under the appropriate metric heading
         pass
 
-    def isHealthy(self, file):
+    def is_healthy(self, file):
+        # ADD DOCSTRING
         # returns True if file is healthy
         pass
