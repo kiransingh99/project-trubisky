@@ -9,7 +9,7 @@ class GlobalFile:
         try:
             f = open(const.TRACKER_FILEPATH)
         except FileNotFoundError as e:
-            print("\n\nFatal:", e)
+            print("\n\nFatal (global tracker file does not exist):", e)
             print("Code exited with status 1")
             sys.exit(1)
         else:
@@ -20,8 +20,18 @@ class GlobalFile:
 
             self.set_TRACKER_COUNT_ROWS(sum(1 for row in tracker_file))
 
-            assert self.TRACKER_COUNT_ROWS != 0,\
-                "Fatal: tracker file has no header row."
+            if self.TRACKER_COUNT_ROWS == 0:
+                print("Global tracker file has no header row.")
+                
+                f.close()
+                
+                f = open(const.TRACKER_FILEPATH, "w")
+                f.write(const.TRACKER_BARE_MINIMUM)
+                f.close()
+                
+                print("Header row added.")
+                f = open(const.TRACKER_FILEPATH)
+                tracker_file = csv.reader(f)
             
             f.seek(0)
             self.set_TRACKER_COUNT_COLUMNS(len(next(tracker_file)))

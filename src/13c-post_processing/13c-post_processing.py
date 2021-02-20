@@ -1,10 +1,11 @@
-from obj import raw_data
 #from obj import global_tracker
 from obj import functions
+from obj import raw_data
 
 def main():
-    R = raw_data.RawData(showWarnings=False, overwrite=True)
+    R = raw_data.RawData(overwrite=True, showWarnings=False)
     R.health.check_all_files()
+    #R.individual
 
 
 

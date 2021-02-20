@@ -116,10 +116,9 @@ This is only an increase of 0.18%, and therefore will have a negligible effect o
 - README
 	- add section about how to interpret tracker file: errorStatus
 - Post processing code
-	- catch error if _RawDataHealthChecker.check_one_file is called and file doesn't open
 	- get individual metrics and write them to a global tracker file (track file names too) - only check healthy files, include length (time) of throw
 	- figure out how to add different types of information to global tracker (and ensure that any files added later also collect this information)
 	- function to update global tracker - deleted files
-	- tidy up imports and dunctions
+	- tidy up imports and functions
 	- documentation
-	- create interface
+	- create interface for main (13c-post_processing) python file
