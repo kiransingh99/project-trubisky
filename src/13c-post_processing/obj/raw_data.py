@@ -280,7 +280,7 @@ class _RawDataHealthChecker:
 
             for i in range(0, len(files_failed)):
                 print("  {} : {}\n".format(files_failed[i], error[i]))
-        
+
         return 1
 
     def check_one_file(self, filePath):
@@ -379,7 +379,7 @@ class _RawDataHealthChecker:
             errorStatus (int): the error status to be written. Defaults to 0.
 
         Returns:
-            int: returns 1 if completed successfully, 0 otherwise
+            int: returns 1 if completed successfully
         """
 
         G = global_tracker.GlobalFile(fullInitialisation = False)
@@ -510,8 +510,21 @@ class _SingleRawDataFile: #DOCSTRING, COMPLETE
         pass
 
     @property
-    def operations(self, fileName=""):
+    def operations(self, fileName=""): #DOCSTRING, COMPLETE
+
         return _MetricCalculator(fileName)
+
+    def add_metrics_to_tracker(self, metric): #DOCSTRING, COMPLETE
+
+        # sends the relevant files and data to GlobalFile class to get added
+        # metric is the name of the metric (string)
+        # call populate_metric
+        pass
+
+    def is_healthy(self, file): #DOCSTRING, COMPLETE
+
+        # returns True if file is healthy
+        pass
 
     def __add_file_to_tracker(self, fileName): #DOCSTRING, COMPLETE
 
@@ -522,46 +535,70 @@ class _SingleRawDataFile: #DOCSTRING, COMPLETE
         G.add_file(fileName, errorStatus)
         del G
 
-    def add_metrics_to_tracker(self, metric): #DOCSTRING, COMPLETE
-
-        # sends the relevant files and data to GlobalFile class to get added
-        # metric is the name of the metric (string)
-        # call populate_metric
-        pass
-
     def __write_to_tracker(self, file, metric, data): #DOCSTRING, COMPLETE
 
         # iterate through all the raw files, and calculate metric, and then 
         # write it to global tracker file under the appropriate metric heading
         pass
 
-    def is_healthy(self, file): #DOCSTRING, COMPLETE
-
-        # returns True if file is healthy
-        pass
 
 class _MetricCalculator:
+    """Object that calculates all the metrics.
+
+    Attributes:
+        fileName (str) : name of the file to calculate the metric for
+
+    Methods:
+        __init__ : constructor for class
+        file_path : property that returns the attribute of the same name
+        set_file_name : setter for the attribute of the same name
+        all : runs all methods in this class that calculate a metric
+        total_time : metric calculator for the time of the throw recorded
+    """
+
     def __init__(self, fileName):
+        """Constructor for class. Sets class attribute.
+
+        Args:
+            fileName (str): the name of the file to calculate a metric for
+        """
         
         self.fileName = fileName
-        self.DATA_DIRECTORY = const.DATA_DIRECTORY
         
     @property
     def file_path(self):
-        print(os.path.join(self.DATA_DIRECTORY, self.fileName))
-        return os.path.join(self.DATA_DIRECTORY, self.fileName)
+        """Getter for the full path to a raw data file.
+
+        Returns:
+            str: path to the raw data file
+        """
+        
+        return const.DATA_DIRECTORY + self.fileName[const.LENGTH_OF_DATA_DIR:]
         
     def set_file_name(self, value):
+        """Setter for the class attribute of the same name.
+
+        Args:
+            value (str): name of the file to calculate metric(s) for
+
+        Returns:
+            str: the new value of the attribute
+        """
+
         self.fileName = value
         return self.fileName
 
     def all(self):
+        """Executes all the methods in this class, except for setup ones.
+        """
 
+        # get a list of the methods in this class
         attrs = (getattr(self, name) for name in dir(self))
         methods = filter(inspect.ismethod, attrs)
+
+        # run the methods except the set up ones
         for method in methods:
             try:
-                print(method)
                 if method == self.__init__:
                     continue
                 elif method == self.all:
@@ -570,22 +607,41 @@ class _MetricCalculator:
                     continue
                 elif method == self.set_file_name:
                     continue
-                method()
+                method() # execute method if not one of the above
             except TypeError:
-                # Can't handle methods with required arguments.
-                pass
+                # can't handle methods with required arguments
+                print("Couldn't execute method:", method)
 
-    def total_time(self, fileName):
+    def total_time(self, fileName, heading=False):
+        """Calculates a metric (total time of recording for a given throw)
 
+        If the 'heading' parameter is 'True', the method simply returns the 
+        heading for this column. Otherwise, each file listed is found, and the 
+        metric is calculated for it.
 
-        filePath = const.DATA_DIRECTORY + fileName[const.LENGTH_OF_DATA_DIR:]
-        print(filePath)
-        
-        
-        with open(filePath) as f:
-            csv_file = csv.reader(f)
-            for row in csv_file:
-                pass
-            time = int(row[0])
+        Args:
+            fileName (str): name of the file to calculate the metric for
+            heading (bool): set this to 'True' if only the heading title is 
+                wanted. Set 'False' to actually calculate the value. Defaults to 
+                False.
+
+        Returns:
+            int: value of metric
+        """
+
+        if heading:
+            return "time of throw" # title of column in tracker file
+
+        self.fileName = fileName
+    
+        try:
+            with open(self.file_path) as f:
+                csv_file = csv.reader(f)
+                # get to end of file
+                for row in csv_file:
+                    pass
+                time = int(row[0])
+        except:
+            print("Couldn't open file: ", fileName)
         
         return time
