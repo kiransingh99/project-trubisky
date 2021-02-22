@@ -128,4 +128,6 @@ This is only an increase of 0.18%, and therefore will have a negligible effect o
 
 ## To Do
 - Post processing code
+	- add more operations
+	- code for individual throw stats
 	- create interface for main (13c-post_processing) python file
