@@ -44,6 +44,20 @@ This system is just made up of Python scripts running on a PC, with access to al
 
 Each file can be passed to a function which generates data about the throws and adds relevant data to another csv file, which summarises all the data, so it doesnt need to be recalculated every time a graph summarising all the data is generated.
 
+## Interpreting the data
+
+### Global tracker file
+
+The global tracker file is the summary of the data of each of the throws of the ball. Each column gives the value of another metric for each file listed in the tracker. An explanation of the columns are as follows:
+
+- **name**: the name of the raw data file, starting with its parent directory
+- **error status**: a code explaining the result of the last health check done on the raw data file, where:
+	- 0 means untested
+	- 1 means failed
+	- 2 means passed with warnings
+	- 3 means passed without warnings
+- **time of throw**: the total time of recording for each file (milliseconds)
+
 ## Hardware requirements
 The onboard system is intended for a Arduino Nano Every, though it will work on a standard Arduino Nano. The offboard system functions without problem on an Arduino Uno. The post-processing system should function without problem on any commercial PC.
 
@@ -113,8 +127,6 @@ This is only an increase of 0.18%, and therefore will have a negligible effect o
 	- **README.md**
 
 ## To Do
-- README
-	- add section about how to interpret tracker file: errorStatus
 - Post processing code
 	- create function to build global tracker from empty: get individual metrics and write them to a global tracker file (track file names too) - only check healthy files, include length (time) of throw
 	- update global tracker by completely overwriting data for a certain metric
