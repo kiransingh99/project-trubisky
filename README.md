@@ -128,6 +128,4 @@ This is only an increase of 0.18%, and therefore will have a negligible effect o
 
 ## To Do
 - Post processing code
-	- ensure that any files added late also collect information for all the available metrics
-	- function to update global tracker - deleted files
 	- create interface for main (13c-post_processing) python file

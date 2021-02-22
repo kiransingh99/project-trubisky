@@ -245,6 +245,38 @@ class GlobalFile:
 
         return True
 
+    def remove_deleted(self): #DOCSTRING, COMPLETE
+
+        with open(const.TRACKER_FILEPATH) as f: #read only
+            tracker_file = csv.reader(f)
+
+            # for tracking during loop
+            fileData = []
+
+            for row in tracker_file:
+                if tracker_file.line_num > 1:
+
+                    fileName = row[0]
+                    filePath = const.DATA_DIRECTORY + fileName[const.LENGTH_OF_DATA_DIR:]
+
+                    if len(row) == 0:
+                        continue
+                    try:
+                        g = open(filePath)
+                    except FileNotFoundError:
+                        pass
+                    else:
+                        g.close()
+                        fileData.append(list(row))
+                else:
+                    fileData.append(list(row))
+
+
+        with open(const.TRACKER_FILEPATH, "w", newline="") as f: # writeable
+            tracker_file = csv.writer(f)
+            tracker_file.writerows(fileData) # rewrite data to tracker file
+        return True
+
     def change_error_status(self, fileName, errorStatus):
         """Changes the error status of a given file in the tracker.
 
@@ -309,9 +341,12 @@ class GlobalFile:
                 # ignore blank rows
                 if len(row) == 0:
                     continue
+
                 fileData.append(list(row))
+                
+                # count non-blank rows until match is found
                 if fileData[rowNumber][0] != fileName:
-                    rowNumber += 1 # count non-blank rows until match is found
+                    rowNumber += 1
 
             fileData[rowNumber][columnNumber] = data
 
