@@ -24,6 +24,8 @@ class GlobalFile:
         set_TRACKER_COUNT_COLUMNS : setter for variable of the same name
         add_file : lists a raw data file in the global tracker
         add_metric : adds a new column to the global tracker file
+        populate_metric : populates/ updates an existing column in the global 
+            tracker file
         change_error_status : change the error status of an entry already logged
         is_file_recorded : checks if a given file has been recorded in the 
             tracker already
@@ -152,7 +154,7 @@ class GlobalFile:
             self.write_to_file(fileName, 1, errorStatus)
         return True
 
-    def add_metric(self, heading, operation):
+    def add_metric(self, operation):
         """Adds a column to the global tracker file and populates it with values 
         returned from the 'operation' function.
 
@@ -162,21 +164,74 @@ class GlobalFile:
         tracker file.
 
         Args:
-            heading (str): name of heading of new column
             operation (method (str)): the method that calculates the metric for 
                 the entry
 
         Returns:
             bool: 'True' to signify function completion
         """
-        
-        # add operation on each row
 
         with open(const.TRACKER_FILEPATH) as f: # read only
             tracker_file = csv.reader(f)
-            
-            # for tracking during loop
-            fileData = []
+
+            if operation(fileName=None, heading=True) in f.read():
+                self.populate_metric(operation)
+                
+            else:
+                f.seek(0)
+
+                # for tracking during loop
+                fileData = []
+
+                for row in tracker_file:
+
+                    # ignore blank rows
+                    if len(row) == 0:
+                        continue
+
+                    # add new heading if on first line
+                    if tracker_file.line_num == 1:
+                        fileData.append(list(row))
+                        fileData[0].append(operation(fileName=None, heading=True))
+                    elif int(row[1]) >= 3: # check if error status is 3 or 4
+                        i = tracker_file.line_num-1
+                        fileData.append(list(row))
+                        fileData[i].append(operation(fileData[i][0]))
+
+                with open(const.TRACKER_FILEPATH, "w", newline="") as f: # writeable
+                    tracker_file = csv.writer(f)
+                    tracker_file.writerows(fileData) # write amended data to tracker file
+
+        return True
+
+    def populate_metric(self, operation):
+        """Populates/updates an existing metric column in the global tracker 
+        file with values returned from the 'operation' function.
+
+        First determines which column needs to be updated by reading the header. 
+        Then iterates through each line and overwrites the data in the relevant 
+        column.
+
+        Args:
+            operation (method (str)): the method that calculates the metric for 
+                the entry
+
+        Returns:
+            bool: 'True' to signify function completion
+        """
+
+        with open(const.TRACKER_FILEPATH) as f: # read only
+            tracker_file = csv.reader(f)
+
+            # find column number
+            columnNumber = 0
+            for row in tracker_file:
+                for heading in row:
+                    if heading == operation(fileName=None, heading=True):
+                        break # exit loop when column is found
+                    else:
+                        columnNumber += 1
+                break
 
             for row in tracker_file:
 
@@ -184,18 +239,9 @@ class GlobalFile:
                 if len(row) == 0:
                     continue
 
-                # add new heading if on first line
-                if tracker_file.line_num == 1:
-                    fileData.append(list(row))
-                    fileData[0].append(heading)
-                else: # add data velue if on any other line
-                    i = tracker_file.line_num-1
-                    fileData.append(list(row))
-                    fileData[i].append(operation(fileData[i][0]))
-
-            with open(const.TRACKER_FILEPATH, "w", newline="") as f: # writeable
-                tracker_file = csv.writer(f)
-                tracker_file.writerows(fileData) # write amended data to tracker file
+                # update metric if error status is 3 or 4
+                if int(row[1]) >= 3:
+                    self.write_to_file(row[0], columnNumber, operation(row[0]))
 
         return True
 
