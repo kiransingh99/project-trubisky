@@ -7,7 +7,8 @@ __relativeToDataDirectory = "..\\..\\.." + __dataDirectory
 
 # path to directory where data files are stored
 DATA_DIRECTORY = os.path.join(__currentPath, __relativeToDataDirectory) # full absolute path
-PATH_LENGTH_TO_DATA_DIR = len(DATA_DIRECTORY)-len(__dataDirectory) # relative to project folder
+LENGTH_OF_DATA_DIR = len(__dataDirectory)
+PATH_LENGTH_TO_DATA_DIR = len(DATA_DIRECTORY)-LENGTH_OF_DATA_DIR # relative to project folder
 
 # for the global tracker file
 TRACKER_FILENAME = "globalTracker.csv"

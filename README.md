@@ -118,6 +118,6 @@ This is only an increase of 0.18%, and therefore will have a negligible effect o
 - Post processing code
 	- create function to build global tracker from empty: get individual metrics and write them to a global tracker file (track file names too) - only check healthy files, include length (time) of throw
 	- update global tracker by completely overwriting data for a certain metric
-	- figure out how to add different types of information to global tracker (and ensure that any files added later also collect this information)
+	- ensure that any files added late also collect information for all the available metrics
 	- function to update global tracker - deleted files
 	- create interface for main (13c-post_processing) python file

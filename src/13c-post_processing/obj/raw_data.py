@@ -2,6 +2,7 @@ from . import const
 from . import functions
 from . import global_tracker
 import csv
+import inspect
 import os.path
 import sys
 
@@ -109,9 +110,9 @@ class _RawDataHealthChecker:
     Methods:
         __init__ : class constructor
         __del__ : class destructor
-        DATA_DIRECTORY : property which returns the constant which stores to 
-            store the path to the directory that stores the data files. Takes 
-            its value from the const.py file
+        DATA_DIRECTORY : property which returns the constant which stores the 
+            path to the directory that stores the data files. Takes its value 
+            from the const.py file
         NUMBER_OF_COLUMNS : property which returns the constant which stores the 
             expected number of columns in the raw data files. Takes its value 
             from the const.py file
@@ -155,6 +156,15 @@ class _RawDataHealthChecker:
         self.__warningsRaised = False
 
         print("Raw data initialised at", self.DATA_DIRECTORY, "\n")
+        if self.showWarnings == True:
+            print("Warrnings are on")
+        else:
+            print("Warnings are off")
+        if self.overwrite == True:
+            print("Overwrite is on")
+        else:
+            print("Overwrite is off")
+        print("\n\n")
 
     def __del__(self):
         """Destructor for class.
@@ -476,14 +486,14 @@ class _RawDataHealthChecker:
 
 
 
-class _SingleRawDataFile:
-    # ADD DOCSTRING
+class _SingleRawDataFile: #DOCSTRING, COMPLETE
 
-    def __init__(self, fileName):
-        # ADD DOCSTRING
+
+    def __init__(self, fileName): #DOCSTRING, COMPLETE
+
 
         # test if filename can be opened and raise error if not
-        
+        """
         filePath = os.path.join(const.DATA_DIRECTORY, fileName)
         
         try:
@@ -495,11 +505,16 @@ class _SingleRawDataFile:
         else:
             # do stuff
                 
-            f.close()
+            f.close()"""
 
-    
-    def __add_file_to_tracker(self, fileName):
-        # ADD DOCSTRING
+        pass
+
+    @property
+    def operations(self, fileName=""):
+        return _MetricCalculator(fileName)
+
+    def __add_file_to_tracker(self, fileName): #DOCSTRING, COMPLETE
+
 
         # sends the names of the files to the GlobalFile class to get added
         errorStatus = 0
@@ -507,20 +522,70 @@ class _SingleRawDataFile:
         G.add_file(fileName, errorStatus)
         del G
 
-    def add_metrics_to_tracker(self, metric):
-        # ADD DOCSTRING
+    def add_metrics_to_tracker(self, metric): #DOCSTRING, COMPLETE
+
         # sends the relevant files and data to GlobalFile class to get added
         # metric is the name of the metric (string)
         # call populate_metric
         pass
 
-    def __write_to_tracker(self, file, metric, data):
-        # ADD DOCSTRING
+    def __write_to_tracker(self, file, metric, data): #DOCSTRING, COMPLETE
+
         # iterate through all the raw files, and calculate metric, and then 
         # write it to global tracker file under the appropriate metric heading
         pass
 
-    def is_healthy(self, file):
-        # ADD DOCSTRING
+    def is_healthy(self, file): #DOCSTRING, COMPLETE
+
         # returns True if file is healthy
         pass
+
+class _MetricCalculator:
+    def __init__(self, fileName):
+        
+        self.fileName = fileName
+        self.DATA_DIRECTORY = const.DATA_DIRECTORY
+        
+    @property
+    def file_path(self):
+        print(os.path.join(self.DATA_DIRECTORY, self.fileName))
+        return os.path.join(self.DATA_DIRECTORY, self.fileName)
+        
+    def set_file_name(self, value):
+        self.fileName = value
+        return self.fileName
+
+    def all(self):
+
+        attrs = (getattr(self, name) for name in dir(self))
+        methods = filter(inspect.ismethod, attrs)
+        for method in methods:
+            try:
+                print(method)
+                if method == self.__init__:
+                    continue
+                elif method == self.all:
+                    continue
+                elif method == self.file_path:
+                    continue
+                elif method == self.set_file_name:
+                    continue
+                method()
+            except TypeError:
+                # Can't handle methods with required arguments.
+                pass
+
+    def total_time(self, fileName):
+
+
+        filePath = const.DATA_DIRECTORY + fileName[const.LENGTH_OF_DATA_DIR:]
+        print(filePath)
+        
+        
+        with open(filePath) as f:
+            csv_file = csv.reader(f)
+            for row in csv_file:
+                pass
+            time = int(row[0])
+        
+        return time
