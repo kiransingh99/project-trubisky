@@ -1,0 +1,11 @@
+{
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/13c-post_processing/main.py",
+            "console": "integratedTerminal"
+        }
+    ]
+}
