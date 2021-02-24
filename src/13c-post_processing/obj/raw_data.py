@@ -125,14 +125,14 @@ class _RawDataHealthChecker:
         check_all_files : iterates through all files in the folder and passes 
             each one through to 'check_one_file'
         check_one_file : runs each test on each row of the given raw data file
-        is_in_tracker : determines if a given file has already been logged in 
-            the global tracker
         __add_file_to_tracker : adds a given file and its health status to the 
             global tracker, after testing it and determining its health status
         __check_columns : asserts that the number of columns in each row is 
             correct
         __check_values : asserts that the values in the raw data file are usable 
         __check_times : asserts that the recorded time strictly increases 
+        __is_in_tracker : determines if a given file has already been logged in 
+            the global tracker
     """
 
     def __init__(self, overwrite, showWarnings):
@@ -238,7 +238,7 @@ class _RawDataHealthChecker:
         displayed.
 
         Returns:
-            int: returns 1 if function completed successfully
+            int: returns 1 if method completed successfully
         """
 
         # variables for keeping track during the loop
@@ -258,7 +258,7 @@ class _RawDataHealthChecker:
 
                 # if overwrite is False, it doesn't matter if the file has already been recorded
                 if not self.overwrite:
-                    if self.is_in_tracker(fileName):
+                    if self.__is_in_tracker(fileName):
                         continue
                 
                 # therefor file is a valid raw data CSV file
@@ -343,35 +343,16 @@ class _RawDataHealthChecker:
                 return(1, None)
 
             finally:
-                # regardless of test outcome, list file in tracker before function returns
+                # regardless of test outcome, list file in tracker before method returns
                 self.__add_file_to_tracker(fileName, healthStatus)
 
-    def is_in_tracker(self, fileName):
-        """Checks if a given raw data file has been logged in the global tracker 
-        file.
-
-        Creates an instance of the globalFile class and calls the equivalent 
-        function in there, and returns the result.
-
-        Args:
-            fileName (str): raw data file to be checked
-
-        Returns:
-            int: returns 1 if the file has been recorded, and 0 if the file has 
-                not been recorded, or if the tracker file cannot be found.
-        """
-
-        G = global_tracker.GlobalFile(fullInitialisation = False)
-        if G.TRACKER_EXISTS:
-            return G.is_file_recorded(fileName)
-        return 0
 
     def __add_file_to_tracker(self, fileName, healthStatus=0):
-        """Private function to add a given file to the global tracker file with 
+        """Private method to add a given file to the global tracker file with 
         a given healthStatus.
 
         Creates an instance of the GlobalFile class and calls the relevant 
-        function in there to update the health status, if the file has already 
+        method in there to update the health status, if the file has already 
         been recorded, or adds the file altogether if it has not been recorded.
 
         Args:
@@ -384,13 +365,13 @@ class _RawDataHealthChecker:
 
         G = global_tracker.GlobalFile(fullInitialisation = False)
 
-        if self.is_in_tracker(fileName):
+        if self.__is_in_tracker(fileName):
             return G.change_health_status(fileName, healthStatus)
         else:
             return G.add_file(fileName, healthStatus)
 
     def __check_columns(self, row):
-        """Private function to check how many columns there are in a given row 
+        """Private method to check how many columns there are in a given row 
         object of a CSV file.
 
         Receives the row from the CSV handler and asserts that the length of it 
@@ -409,7 +390,7 @@ class _RawDataHealthChecker:
         return None
 
     def __check_values(self, row):
-        """Private function to check that the values in each row are valid and 
+        """Private method to check that the values in each row are valid and 
         usable.
 
         Receives the row object from the CSV handler and first checks if it has 
@@ -434,7 +415,7 @@ class _RawDataHealthChecker:
                     "Check values: non-float value ({}) in column {}"\
                     .format(value_str, i)
 
-            # the rest of the function just raises warnings, skip if not needed
+            # the rest of the method just raises warnings, skip if not needed
             if self.showWarnings:
             
                 value = float(value_str)
@@ -461,7 +442,7 @@ class _RawDataHealthChecker:
         return None
 
     def __check_times(self, line_num, row, previousTime):
-        """Private function to check that the time strictly increases within 
+        """Private method to check that the time strictly increases within 
         the raw data file.
 
         Receives the row object from the CSV handler and first asserts that the 
@@ -484,6 +465,26 @@ class _RawDataHealthChecker:
                 .format(line_num, row[0])
         return int(row[0])
 
+    def __is_in_tracker(self, fileName):
+        """Checks if a given raw data file has been logged in the global tracker 
+        file.
+
+        Creates an instance of the globalFile class and calls the equivalent 
+        method in there, and returns the result.
+
+        Args:
+            fileName (str): raw data file to be checked
+
+        Returns:
+            int: returns 1 if the file has been recorded, and 0 if the file has 
+                not been recorded, or if the tracker file cannot be found.
+        """
+
+        G = global_tracker.GlobalFile(fullInitialisation = False)
+        if G.TRACKER_EXISTS:
+            return G.is_file_recorded(fileName)
+        return 0
+
 
 
 class _SingleRawDataFile:
@@ -493,9 +494,8 @@ class _SingleRawDataFile:
         __init__ : constructor for class
         operations : the property which groups the methods that calculate 
             metrics for the global tracker
-        is_healthy : checks if a file has been marked as healthy in the tracker
+        get_health_status : checks if a file has been marked as healthy in the tracker
     """
-
 
     def __init__(self, fileName):
         """[summary]
@@ -526,7 +526,7 @@ class _SingleRawDataFile:
         return _MetricCalculator(fileName)
 
 
-    def is_healthy(self, fileName):
+    def get_health_status(self, fileName):
         """Checks if a file has been marked as healthy.
 
         Healthy means health status of 3 or 4.
@@ -535,11 +535,11 @@ class _SingleRawDataFile:
             fileName (str): name of file to check
 
         Returns:
-            bool: 'True' if the file has been marked as healthy
+            int: Health code of a file
         """
 
         G = global_tracker.GlobalFile(fullInitialisation = False)
-        return G.is_healthy(fileName)
+        return G.get_health_status(fileName)
 
 
 class _MetricCalculator:
