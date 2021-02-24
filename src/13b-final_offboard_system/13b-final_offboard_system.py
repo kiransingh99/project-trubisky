@@ -1,7 +1,7 @@
-from datetime import datetime #used to give files a unique name
-import os.path #for finding relative file path
-import serial #for serial port comms
-import signal, sys #used to safely exit script
+from datetime import datetime # used to give files a unique name
+import os.path # for finding relative file path
+import serial # for serial port comms
+import signal, sys # used to safely exit script
 
 def keyboardInterruptHandler(signal, frame):
     """
@@ -127,43 +127,42 @@ def createFile():
 signal.signal(signal.SIGINT, keyboardInterruptHandler)
 
 receivingData = False #tracks state of loop below
-waitForInput() #wait until user is ready to start script
+waitForInput() # wait until user is ready to start script
 serialPort = openSerial()
 
 while True:
 
-    #read from serial port if available
+    # read from serial port if available
     if (serialPort.isOpen()):
         serialString = readSerial(serialPort)
     else:
         print("waiting to open serial port...")
 
-    #if there is content in serialString
+    # if there is content in serialString
     if serialString != None:
         print(serialString)
 
-        if serialString[0] == "s": #start of file
-            #close any file if one already exists
+        if serialString[0] == "s": # start of file
+            # close any file if one already exists
             try:
                 f.close()
                 print("Starting new file")
             except:
                 pass
             f = createFile()
-            serialString = serialString[1:] #remove 's' from beginning of string
+            serialString = serialString[1:] # remove 's' from beginning of string
             receivingData = True
             continue
-        elif serialString == "e": #end of transmission
+        elif serialString == "e": # end of transmission
             print("end")
-            f.close() #close csv file for writing
+            f.close() # close csv file for writing
             serialPort.close()
             receivingData = False
             break
 
-        #else: #normal data transmission
-        
+        # normal data transmission
         if receivingData:
             print(serialString.strip('\n'))
-            f.write(serialString.strip('\n')) #write string to file without new line
-        else: #if starting flag ('s') has not been read:
+            f.write(serialString.strip('\n')) # write string to file without new line
+        else: # if starting flag ('s') has not been read:
             print("Waiting to begin")

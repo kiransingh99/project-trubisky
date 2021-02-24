@@ -24,11 +24,16 @@ class GlobalFile:
         set_TRACKER_COUNT_COLUMNS : setter for variable of the same name
         add_file : lists a raw data file in the global tracker
         add_metric : adds a new column to the global tracker file
+        get_column_number : returns the column number of a given heading
         populate_metric : populates/ updates an existing column in the global 
             tracker file
-        change_error_status : change the error status of an entry already logged
+        remove_deleted : removes a file from the tracker if the file has been 
+            deleted
+        change_health_status : change the health status of an entry already 
+            logged
         is_file_recorded : checks if a given file has been recorded in the 
             tracker already
+        is_healthy : checks if a file is marked as healthy in the global tracker
         write_to_file : overwrites a metric for an entry already listed in the 
             file
         __check_tracker_full : sets up the tracker fully - required for in-depth 
@@ -65,7 +70,7 @@ class GlobalFile:
         """Destructor for class.
         """
 
-        #print("GlobalFile object destroyed")
+        # print("GlobalFile object destroyed")
         pass
 
     @property
@@ -130,15 +135,15 @@ class GlobalFile:
         return self.__TRACKER_COUNT_COLUMNS
 
 
-    def add_file(self, fileName, errorStatus=0):
-        """Adds a given file with an error code to the tracker file.
+    def add_file(self, fileName, healthStatus=0):
+        """Adds a given file with an health status to the tracker file.
 
         Checks if the file has already been recorded. If not then the file gets 
         added. If it has already been recorded, the entry is updated.
 
         Args:
             fileName (str): name of file to be added to the tracker file
-            errorStatus (int, optional): Error status associated with the file. 
+            healthStatus (int, optional): health status associated with the file. 
                 Defaults to 0.
 
         Returns:
@@ -148,10 +153,10 @@ class GlobalFile:
         if self.is_file_recorded(fileName):
             print("File has already been recorded, repeated entry not added: ", 
                     fileName)
-            self.change_error_status(fileName, errorStatus)
+            self.change_health_status(fileName, healthStatus)
         else:
             self.__add_row(fileName)
-            self.write_to_file(fileName, 1, errorStatus)
+            self.write_to_file(fileName, 1, healthStatus)
         return True
 
     def add_metric(self, operation):
@@ -193,7 +198,7 @@ class GlobalFile:
                     if tracker_file.line_num == 1:
                         fileData.append(list(row))
                         fileData[0].append(operation(fileName=None, heading=True))
-                    elif int(row[1]) >= 3: # check if error status is 3 or 4
+                    elif int(row[1]) >= 3: # check if health status is 3 or 4
                         i = tracker_file.line_num-1
                         fileData.append(list(row))
                         fileData[i].append(operation(fileData[i][0]))
@@ -203,6 +208,36 @@ class GlobalFile:
                     tracker_file.writerows(fileData) # write amended data to tracker file
 
         return True
+
+    def get_column_number(self, columnHeading):
+        """Returns the column number associated with a given heading.
+
+        Opens the tracker file, and iterates through the first row to find a 
+        match. If found, the index of the column is returned. Else, a 
+        ValueError is raised.
+
+        Args:
+            columnHeading (str): name of column to be found
+
+        Raises:
+            ValueError: raised if the column is not found in the header
+
+        Returns:
+            int: index of column
+        """
+
+        with open(const.TRACKER_FILEPATH) as f:
+            tracker_file = csv.reader(f)
+
+            # find column number
+            columnNumber = 0
+            for row in tracker_file:
+                for heading in row:
+                    if heading == columnHeading:
+                        return columnNumber # stop when heading is found
+                    else:
+                        columnNumber += 1
+                raise ValueError("Column heading not found")
 
     def populate_metric(self, operation):
         """Populates/updates an existing metric column in the global tracker 
@@ -217,21 +252,20 @@ class GlobalFile:
                 the entry
 
         Returns:
-            bool: 'True' to signify function completion
+            int: 'True' to signify completion of method, 'False' otherwise
         """
 
         with open(const.TRACKER_FILEPATH) as f: # read only
             tracker_file = csv.reader(f)
 
-            # find column number
-            columnNumber = 0
-            for row in tracker_file:
-                for heading in row:
-                    if heading == operation(fileName=None, heading=True):
-                        break # exit loop when column is found
-                    else:
-                        columnNumber += 1
-                break
+            columnHeading = operation(fileName=None, heading=True)
+    
+            # get column number of given header
+            try:
+                columnNumber = self.get_column_number(columnHeading)
+            except ValueError as e: # if column not found
+                print(e)
+                return 0
 
             for row in tracker_file:
 
@@ -239,37 +273,52 @@ class GlobalFile:
                 if len(row) == 0:
                     continue
 
-                # update metric if error status is 3 or 4
+                # update metric if health status is 3 or 4
                 if int(row[1]) >= 3:
                     self.write_to_file(row[0], columnNumber, operation(row[0]))
 
         return True
 
-    def remove_deleted(self): #DOCSTRING, COMPLETE
+    def remove_deleted(self):
+        """Removes any files from the tracker file if they have been deleted 
+        from the data directory.
 
-        with open(const.TRACKER_FILEPATH) as f: #read only
+        Iterates through the tracker file, and for each file recorded in the 
+        global tracker, attempts to find it within the data directory. If 
+        successful, the row in the tracker file gets appended to a list. At the 
+        end, the list gets written back to the file.
+
+        Returns:
+            bool: signifies completion of method
+        """
+
+        with open(const.TRACKER_FILEPATH) as f: # read only
             tracker_file = csv.reader(f)
 
             # for tracking during loop
             fileData = []
 
             for row in tracker_file:
-                if tracker_file.line_num > 1:
+                # skip blank lines
+                if len(row) == 0:
+                        continue
 
+                if tracker_file.line_num > 1: # don't try to locate header
+
+                    # get file name from row
                     fileName = row[0]
                     filePath = const.DATA_DIRECTORY + fileName[const.LENGTH_OF_DATA_DIR:]
 
-                    if len(row) == 0:
-                        continue
+                    # try to open file
                     try:
                         g = open(filePath)
                     except FileNotFoundError:
                         pass
                     else:
                         g.close()
-                        fileData.append(list(row))
+                        fileData.append(list(row)) # if found, add it to list
                 else:
-                    fileData.append(list(row))
+                    fileData.append(list(row)) # add header to list
 
 
         with open(const.TRACKER_FILEPATH, "w", newline="") as f: # writeable
@@ -277,18 +326,18 @@ class GlobalFile:
             tracker_file.writerows(fileData) # rewrite data to tracker file
         return True
 
-    def change_error_status(self, fileName, errorStatus):
-        """Changes the error status of a given file in the tracker.
+    def change_health_status(self, fileName, healthStatus):
+        """Changes the health status of a given file in the tracker.
 
         Args:
             fileName (str): name of file whose entry is to be updated
-            errorStatus (int): error status associated with the file
+            healthStatus (int): health status associated with the file
 
         Returns:
             int: indicates successful completion of method
         """
 
-        self.write_to_file(fileName, 1, errorStatus)
+        self.write_to_file(fileName, 1, healthStatus)
         return 1
     
     def is_file_recorded(self, fileName):
@@ -311,6 +360,33 @@ class GlobalFile:
             for row in tracker_file:
                 if row[0] == fileName:
                     return True # stop looking when you find the correct file
+            return False
+
+    def is_healthy(self, fileName):
+        """Checks if a file is marked as healthy in the global tracker file.
+
+        Healthy is defined as having an health status of 3 or 4. That is, that 
+        the file has passed all tests, but may or may not have had warnings 
+        raised.
+
+        Args:
+            fileName (str): name of the file to check health status of
+
+        Returns:
+            bool: 'True' if given file is marked as healthy, 'False' if file not 
+                marked as healthy, or not found in tracker file
+        """
+    
+        with open(const.TRACKER_FILEPATH) as f: 
+            tracker_file = csv.reader(f)
+            
+            # check each line of tracker file to find file - stops when the file has been found
+            for row in tracker_file:
+                if row[0] == fileName:
+                    return int(row[1]) >= 3 # 'True' if health status greater than 3
+                    
+            print("File '{}' not found".format(fileName))
+
             return False
 
     def write_to_file(self, fileName, columnNumber, data):

@@ -127,8 +127,8 @@ class _RawDataHealthChecker:
         check_one_file : runs each test on each row of the given raw data file
         is_in_tracker : determines if a given file has already been logged in 
             the global tracker
-        __add_file_to_tracker : adds a given file and its error status to the 
-            global tracker, after testing it and determining its error status
+        __add_file_to_tracker : adds a given file and its health status to the 
+            global tracker, after testing it and determining its health status
         __check_columns : asserts that the number of columns in each row is 
             correct
         __check_values : asserts that the values in the raw data file are usable 
@@ -310,7 +310,7 @@ class _RawDataHealthChecker:
             csv_file = csv.reader(f)
             print("Testing {}... ".format(fileName), end="")
 
-            errorStatus = 0 # errorStatus 0 means untested
+            healthStatus = 0 # healthStatus 0 means untested
             previousTime = 0 # to ensure time on each row always increases
 
             try:
@@ -326,7 +326,7 @@ class _RawDataHealthChecker:
                 print("Test failed on line {}:".format(csv_file.line_num))
                 print("  {}\n".format(e.args[0]))
                 
-                errorStatus = 1 # errorStatus 1 means tested but failed
+                healthStatus = 1 # healthStatus 1 means tested but failed
                 
                 return(0, e.args[0].split(":"))
 
@@ -335,16 +335,16 @@ class _RawDataHealthChecker:
                     # adjust output formatting if warnings have been raised
                     print("\nAll tests passed\n")
                     self.__warningsRaised = False
-                    errorStatus = 2 # errorStatus 2 means passed with warnings
+                    healthStatus = 2 # healthStatus 2 means passed with warnings
                 else:
                     print("All tests passed")
-                    errorStatus = 3 # errorStatus 3 means passed without warnings
+                    healthStatus = 3 # healthStatus 3 means passed without warnings
 
                 return(1, None)
 
             finally:
                 # regardless of test outcome, list file in tracker before function returns
-                self.__add_file_to_tracker(fileName, errorStatus)
+                self.__add_file_to_tracker(fileName, healthStatus)
 
     def is_in_tracker(self, fileName):
         """Checks if a given raw data file has been logged in the global tracker 
@@ -366,17 +366,17 @@ class _RawDataHealthChecker:
             return G.is_file_recorded(fileName)
         return 0
 
-    def __add_file_to_tracker(self, fileName, errorStatus=0):
+    def __add_file_to_tracker(self, fileName, healthStatus=0):
         """Private function to add a given file to the global tracker file with 
-        a given errorStatus.
+        a given healthStatus.
 
         Creates an instance of the GlobalFile class and calls the relevant 
-        function in there to update the error status, if the file has already 
+        function in there to update the health status, if the file has already 
         been recorded, or adds the file altogether if it has not been recorded.
 
         Args:
             fileName (str): raw data file to be added
-            errorStatus (int): the error status to be written. Defaults to 0.
+            healthStatus (int): the health status to be written. Defaults to 0.
 
         Returns:
             int: returns 1 if completed successfully
@@ -385,9 +385,9 @@ class _RawDataHealthChecker:
         G = global_tracker.GlobalFile(fullInitialisation = False)
 
         if self.is_in_tracker(fileName):
-            return G.change_error_status(fileName, errorStatus)
+            return G.change_health_status(fileName, healthStatus)
         else:
-            return G.add_file(fileName, errorStatus)
+            return G.add_file(fileName, healthStatus)
 
     def __check_columns(self, row):
         """Private function to check how many columns there are in a given row 
@@ -486,60 +486,60 @@ class _RawDataHealthChecker:
 
 
 
-class _SingleRawDataFile: #DOCSTRING, COMPLETE
+class _SingleRawDataFile:
+    """Handler for processing of individual raw data files.
+
+    Methods:
+        __init__ : constructor for class
+        operations : the property which groups the methods that calculate 
+            metrics for the global tracker
+        is_healthy : checks if a file has been marked as healthy in the tracker
+    """
 
 
-    def __init__(self, fileName): #DOCSTRING, COMPLETE
+    def __init__(self, fileName):
+        """[summary]
 
-
-        # test if filename can be opened and raise error if not
+        Args:
+            fileName ([type]): [description]
         """
-        filePath = os.path.join(const.DATA_DIRECTORY, fileName)
-        
-        try:
-            f = open(filePath)
-        except FileNotFoundError as e:
-            print("\n\nFatal (raw data file does not exist):", e)
-            print("Code exited with status 1")
-            sys.exit(1)
-        else:
-            # do stuff
-                
-            f.close()"""
-
         pass
 
     @property
-    def operations(self, fileName=""): #DOCSTRING, COMPLETE
+    def operations(self, fileName=""):
+        """Creates instance of _MetricCalculator as an object of 
+        _SingleRawDataFile.
+
+        Creates an instance of the '_MetricCalculator' class as an object 
+        called 'self.operations', where 'self' is the name of the instance of 
+        '_SingleRawDataFile'.
+
+        Args:
+            fileName (str, optional): name of the file to operate on. None that 
+                this must be passed to the operations sub-method at some point. 
+                Defaults to "".
+
+        Returns:
+            _MetricCalculator object: instance of class
+        """
 
         return _MetricCalculator(fileName)
 
-    def add_metrics_to_tracker(self, metric): #DOCSTRING, COMPLETE
 
-        # sends the relevant files and data to GlobalFile class to get added
-        # metric is the name of the metric (string)
-        # call populate_metric
-        pass
+    def is_healthy(self, fileName):
+        """Checks if a file has been marked as healthy.
 
-    def is_healthy(self, file): #DOCSTRING, COMPLETE
+        Healthy means health status of 3 or 4.
 
-        # returns True if file is healthy
-        pass
+        Args:
+            fileName (str): name of file to check
 
-    def __add_file_to_tracker(self, fileName): #DOCSTRING, COMPLETE
+        Returns:
+            bool: 'True' if the file has been marked as healthy
+        """
 
-
-        # sends the names of the files to the GlobalFile class to get added
-        errorStatus = 0
         G = global_tracker.GlobalFile(fullInitialisation = False)
-        G.add_file(fileName, errorStatus)
-        del G
-
-    def __write_to_tracker(self, file, metric, data): #DOCSTRING, COMPLETE
-
-        # iterate through all the raw files, and calculate metric, and then 
-        # write it to global tracker file under the appropriate metric heading
-        pass
+        return G.is_healthy(fileName)
 
 
 class _MetricCalculator:
