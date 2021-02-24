@@ -156,15 +156,15 @@ class _RawDataHealthChecker:
         self.__warningsRaised = False
 
         print("Raw data initialised at", self.DATA_DIRECTORY, "\n")
-        if self.showWarnings == True:
-            print("Warrnings are on")
-        else:
-            print("Warnings are off")
         if self.overwrite == True:
             print("Overwrite is on")
         else:
             print("Overwrite is off")
-        print("\n\n")
+        if self.showWarnings == True:
+            print("Warrnings are on")
+        else:
+            print("Warnings are off")
+        print("\n")
 
     def __del__(self):
         """Destructor for class.
@@ -265,7 +265,7 @@ class _RawDataHealthChecker:
                 files_total += 1
                 allTestsPassed, error = self.check_one_file(filePath)
                 
-                if allTestsPassed:
+                if allTestsPassed >= 2:
                     files_passed += 1
                 else:
                     # record file name and error
@@ -299,8 +299,8 @@ class _RawDataHealthChecker:
             filePath (str): full absolute file path to the file to be checked
 
         Returns:
-            int: 1 if all tests passed, 0 otherwise
-            str: error message if test failed, NoneType otherwise
+            int: health status, which summarises the results of the tests
+            str: failure message if test failed, NoneType otherwise
         """
 
         # shorten file path
@@ -332,15 +332,16 @@ class _RawDataHealthChecker:
 
             else:
                 if self.__warningsRaised:
-                    # adjust output formatting if warnings have been raised
-                    print("\nAll tests passed\n")
-                    self.__warningsRaised = False
                     healthStatus = 2 # healthStatus 2 means passed with warnings
+                    # adjust output formatting if warnings have been raised
+                    print("\nAll tests passed with healtstatus {}\n"
+                            .format(healthStatus))
+                    self.__warningsRaised = False
                 else:
-                    print("All tests passed")
                     healthStatus = 3 # healthStatus 3 means passed without warnings
+                    print("All tests passed with healthstatus", healthStatus)
 
-                return(1, None)
+                return(healthStatus, None)
 
             finally:
                 # regardless of test outcome, list file in tracker before method returns
