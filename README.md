@@ -51,7 +51,7 @@ Each file can be passed to a function which generates data about the throws and 
 The global tracker file is the summary of the data of each of the throws of the ball. Each column gives the value of another metric for each file listed in the tracker. An explanation of the columns are as follows:
 
 - **name**: the name of the raw data file, starting with its parent directory
-- **error status**: a code explaining the result of the last health check done on the raw data file, where:
+- **health status**: a code explaining the result of the last health check done on the raw data file, where:
 	- 0 means untested
 	- 1 means failed
 	- 2 means passed with warnings

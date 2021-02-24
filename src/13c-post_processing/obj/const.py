@@ -13,7 +13,7 @@ PATH_LENGTH_TO_DATA_DIR = len(DATA_DIRECTORY)-LENGTH_OF_DATA_DIR # relative to p
 # for the global tracker file
 TRACKER_FILENAME = "globalTracker.csv"
 TRACKER_FILEPATH = os.path.join(DATA_DIRECTORY, TRACKER_FILENAME) # full file path
-TRACKER_BARE_MINIMUM = "name,error status" # bare minimum content of the tracker file (just the header)
+TRACKER_BARE_MINIMUM = "name,health status" # bare minimum content of the tracker file (just the header)
 
 # for raw data files
 NUMBER_OF_COLUMNS = 7 # number of columns in raw data csv files
