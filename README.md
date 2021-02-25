@@ -121,6 +121,7 @@ This is only an increase of 0.18%, and therefore will have a negligible effect o
 ## Structure of repository
 
 - **project-trubisky/** *#root directory*
+	- **.vscode/** *#config files for running system from VS Code*
 	- **data/** *#both raw and processed data are saved here*
 	- **src/** *#code is stored here*
 	- **.gitignore**
@@ -130,4 +131,4 @@ This is only an increase of 0.18%, and therefore will have a negligible effect o
 - Post processing code
 	- add more operations
 	- code for individual throw stats
-	- create interface for main (13c-post_processing) python file
+	- finish interface for main (main) python file
