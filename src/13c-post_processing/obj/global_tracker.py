@@ -136,7 +136,7 @@ class GlobalFile:
         return self.__TRACKER_COUNT_COLUMNS
 
 
-    def add_file(self, fileName, healthStatus=0):
+    def add_file(self, fileName, healthStatus=const.untested):
         """Adds a given file with an health status to the tracker file.
 
         Checks if the file has already been recorded. If not then the file gets 
@@ -145,7 +145,7 @@ class GlobalFile:
         Args:
             fileName (str): name of file to be added to the tracker file
             healthStatus (int, optional): health status associated with the file. 
-                Defaults to 0.
+                Defaults to const.untested.
 
         Returns:
             bool: 'True' if file has been added successfully. 'False' otherwise
@@ -158,7 +158,8 @@ class GlobalFile:
         else:
             self.__add_row(fileName)
             self.write_to_file(fileName, 1, healthStatus)
-        return True
+            return True
+        return False
 
     def add_metric(self, operation):
         """Adds a column to the global tracker file and populates it with values 
@@ -199,10 +200,12 @@ class GlobalFile:
                     if tracker_file.line_num == 1:
                         fileData.append(list(row))
                         fileData[0].append(operation(fileName=None, heading=True))
-                    elif int(row[1]) >= 3: # check if health status is 3 or 4
-                        i = tracker_file.line_num-1
+                    else:
                         fileData.append(list(row))
-                        fileData[i].append(operation(fileData[i][0]))
+                        if int(row[1]) >= const.passedWithWarnings: # check if health checks were passed
+                            fileData[-1].append(operation(fileData[-1][0]))
+                        else:
+                            fileData[-1].append("")
 
                 with open(const.TRACKER_FILEPATH, "w", newline="") as f: # writeable
                     tracker_file = csv.writer(f)
@@ -260,7 +263,7 @@ class GlobalFile:
             tracker_file = csv.reader(f)
 
             columnHeading = operation(fileName=None, heading=True)
-    
+            
             # get column number of given header
             try:
                 columnNumber = self.get_column_number(columnHeading)
@@ -268,14 +271,16 @@ class GlobalFile:
                 print(e)
                 return 0
 
+            next(f)
+
             for row in tracker_file:
 
                 # ignore blank rows
                 if len(row) == 0:
                     continue
 
-                # update metric if health status is 3 or 4
-                if int(row[1]) >= 3:
+                # update metric if health checks were passeed
+                if int(row[1]) >= const.passedWithWarnings:
                     self.write_to_file(row[0], columnNumber, operation(row[0]))
 
         return True
@@ -298,6 +303,7 @@ class GlobalFile:
 
             # for tracking during loop
             fileData = []
+            deleted = 0
 
             for row in tracker_file:
                 # skip blank lines
@@ -314,13 +320,15 @@ class GlobalFile:
                     try:
                         g = open(filePath)
                     except FileNotFoundError:
-                        pass
+                        print("Deleted: ", filePath)
+                        deleted += 1
                     else:
                         g.close()
                         fileData.append(list(row)) # if found, add it to list
                 else:
                     fileData.append(list(row)) # add header to list
 
+        print("Deleted {} files".format(deleted))
 
         with open(const.TRACKER_FILEPATH, "w", newline="") as f: # writeable
             tracker_file = csv.writer(f)
@@ -347,9 +355,10 @@ class GlobalFile:
         """
 
         # check that the first two columns are not targeted
-        if columnNumber < 2:
-            raise ValueError("Parameter 'columnNumber' cannot be less than 2")
-        elif columnNumber >= self.TRACKER_COUNT_COLUMNS:
+        if columnNumber < len(const.TRACKER_BARE_MINIMUM.split(",")):
+            raise ValueError("Parameter 'columnNumber' cannot be less than {}"
+                                .format(len(const.TRACKER_BARE_MINIMUM.split(","))))
+        elif columnNumber > self.TRACKER_COUNT_COLUMNS:
             raise ValueError("Parameter 'columnNumber' must be less than {}"
                                 .format(self.TRACKER_COUNT_COLUMNS))
 
@@ -392,9 +401,8 @@ class GlobalFile:
     def get_health_status(self, fileName):
         """Checks if a file is marked as healthy in the global tracker file.
 
-        Healthy is defined as having an health status of 3 or 4. That is, that 
-        the file has passed all tests, but may or may not have had warnings 
-        raised.
+        Healthy is defined as the file having passed all tests, but may or may 
+        not have had warnings raised.
 
         Args:
             fileName (str): name of the file to check health status of
