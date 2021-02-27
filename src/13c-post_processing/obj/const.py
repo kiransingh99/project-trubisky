@@ -17,3 +17,11 @@ TRACKER_BARE_MINIMUM = "name,health status" # bare minimum content of the tracke
 
 # for raw data files
 NUMBER_OF_COLUMNS = 7 # number of columns in raw data csv files
+RAW_DATA_TITLE_FORMAT = "RAW-yyyy.mm.dd-hh.mm.ss"
+RAW_DATA_FILE_TYPE = ".csv"
+
+# for health check values
+untested = 0
+failed = 1
+passedWithWarnings = 2
+passed = 3
