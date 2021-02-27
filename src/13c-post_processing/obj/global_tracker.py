@@ -29,7 +29,7 @@ class GlobalFile:
             tracker file
         remove_deleted : removes a file from the tracker if the file has been 
             deleted
-        remove_metric removes a column from the tracker file
+        remove_metric : removes a column from the tracker file
         change_health_status : change the health status of an entry already 
             logged
         get_health_status : checks if a file is marked as healthy in the global tracker

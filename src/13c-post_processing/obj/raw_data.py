@@ -501,7 +501,10 @@ class _SingleRawDataFile:
         operations : the property which groups the methods that calculate 
             metrics for the global tracker
         set_file_name : setter for the attribute of the same name
-        get_health_status : checks if a file has been marked as healthy in the tracker
+        get_health_status : checks if a file has been marked as healthy in the 
+            tracker
+        graph_sensor_data : DOCSTRING
+        graph_flight_path : DOCSTRING
     """
 
     def __init__(self, fileName):
@@ -562,6 +565,9 @@ class _SingleRawDataFile:
         return G.get_health_status(fileName)
 
     def graph_sensor_data(self): #COMPLETE, DOCSTRING
+        print("TO DO THIS FUNCTION STILL")
+
+    def graph_flight_path(self): #COMPLETE, DOCSTRING
         print("TO DO THIS FUNCTION STILL")
 
 class _MetricCalculator:
