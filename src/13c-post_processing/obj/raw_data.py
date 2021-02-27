@@ -265,7 +265,7 @@ class _RawDataHealthChecker:
                 files_total += 1
                 allTestsPassed, error = self.check_one_file(filePath)
                 
-                if allTestsPassed >= 2:
+                if allTestsPassed >= const.passedWithWarnings:
                     files_passed += 1
                 else:
                     # record file name and error
@@ -285,8 +285,8 @@ class _RawDataHealthChecker:
 
     def check_one_file(self, filePath):
         """Checks health of one file and adds it to the global tracker file. 
-        Returns a tuple with 1 as the first element if all tests were passed, 
-        and 0 otherwise.
+        Returns a tuple with the health status as the first element and failure 
+        messages, if any, as the second.
 
         Runs the following tests on each row:
             - ensures the number of columns are correct
@@ -306,49 +306,53 @@ class _RawDataHealthChecker:
         # shorten file path
         fileName = filePath[const.PATH_LENGTH_TO_DATA_DIR:]
 
-        with open(filePath) as f:
-            csv_file = csv.reader(f)
-            print("Testing {}... ".format(fileName), end="")
+        try:
+            with open(filePath) as f:
+                csv_file = csv.reader(f)
+                print("Testing {}... ".format(fileName), end="")
 
-            healthStatus = 0 # healthStatus 0 means untested
-            previousTime = 0 # to ensure time on each row always increases
+                healthStatus = const.untested
+                previousTime = 0 # to ensure time on each row always increases
 
-            try:
-                # run tests on each row
-                for row in csv_file:
-                    self.__check_columns(row)
-                    self.__check_values(row)
-                    previousTime = self.__check_times(csv_file.line_num, 
-                                                        row,
-                                                        previousTime)
-                
-            except AssertionError as e: # test failed
-                print("Test failed on line {}:".format(csv_file.line_num))
-                print("  {}\n".format(e.args[0]))
-                
-                healthStatus = 1 # healthStatus 1 means tested but failed
-                
-                return(0, e.args[0].split(":"))
+                try:
+                    # run tests on each row
+                    for row in csv_file:
+                        self.__check_columns(row)
+                        self.__check_values(row)
+                        previousTime = self.__check_times(csv_file.line_num, 
+                                                            row,
+                                                            previousTime)
+                    
+                except AssertionError as e: # test failed
+                    print("Test failed on line {}:".format(csv_file.line_num))
+                    print("  {}\n".format(e.args[0]))
+                    
+                    healthStatus = const.failed
+                    
+                    return(const.untested, e.args[0].split(":"))
 
-            else:
-                if self.__warningsRaised:
-                    healthStatus = 2 # healthStatus 2 means passed with warnings
-                    # adjust output formatting if warnings have been raised
-                    print("\nAll tests passed with healtstatus {}\n"
-                            .format(healthStatus))
-                    self.__warningsRaised = False
                 else:
-                    healthStatus = 3 # healthStatus 3 means passed without warnings
-                    print("All tests passed with healthstatus", healthStatus)
+                    if self.__warningsRaised:
+                        healthStatus = const.passedWithWarnings
+                        # adjust output formatting if warnings have been raised
+                        print("\nAll tests passed with healtstatus {}\n"
+                                .format(healthStatus))
+                        self.__warningsRaised = False
+                    else:
+                        healthStatus = const.passed
+                        print("All tests passed with healthstatus", healthStatus)
 
-                return(healthStatus, None)
+                    return(healthStatus, None)
 
-            finally:
-                # regardless of test outcome, list file in tracker before method returns
-                self.__add_file_to_tracker(fileName, healthStatus)
+                finally:
+                    # regardless of test outcome, list file in tracker before method returns
+                    self.__add_file_to_tracker(fileName, healthStatus)
+            
+        except FileNotFoundError as e:
+            print("Raw data file could not be found:", e)     
 
 
-    def __add_file_to_tracker(self, fileName, healthStatus=0):
+    def __add_file_to_tracker(self, fileName, healthStatus=const.untested):
         """Private method to add a given file to the global tracker file with 
         a given healthStatus.
 
@@ -358,7 +362,8 @@ class _RawDataHealthChecker:
 
         Args:
             fileName (str): raw data file to be added
-            healthStatus (int): the health status to be written. Defaults to 0.
+            healthStatus (int): the health status to be written. Defaults to 
+                const.untested.
 
         Returns:
             int: returns 1 if completed successfully
@@ -495,6 +500,7 @@ class _SingleRawDataFile:
         __init__ : constructor for class
         operations : the property which groups the methods that calculate 
             metrics for the global tracker
+        set_file_name : setter for the attribute of the same name
         get_health_status : checks if a file has been marked as healthy in the tracker
     """
 
@@ -504,7 +510,7 @@ class _SingleRawDataFile:
         Args:
             fileName ([type]): [description]
         """
-        pass
+        self.fileName = fileName
 
     @property
     def operations(self, fileName=""):
@@ -526,22 +532,37 @@ class _SingleRawDataFile:
 
         return _MetricCalculator(fileName)
 
+    def set_file_name(self, value):
+        """Setter for the class attribute of the same name.
 
-    def get_health_status(self, fileName):
-        """Checks if a file has been marked as healthy.
+        Args:
+            value (str): name of the file to calculate metric(s) for
 
-        Healthy means health status of 3 or 4.
+        Returns:
+            str: the new value of the attribute
+        """
+
+        self.fileName = value
+        return self.fileName
+
+
+    def get_health_status(self):
+        """Checks if a file has been marked as healthy..
 
         Args:
             fileName (str): name of file to check
 
         Returns:
-            int: Health code of a file
+            int: Health status of a file
         """
+
+        fileName = self.fileName
 
         G = global_tracker.GlobalFile(fullInitialisation = False)
         return G.get_health_status(fileName)
 
+    def graph_sensor_data(self): #COMPLETE, DOCSTRING
+        print("TO DO THIS FUNCTION STILL")
 
 class _MetricCalculator:
     """Object that calculates all the metrics.
@@ -588,6 +609,7 @@ class _MetricCalculator:
 
         self.fileName = value
         return self.fileName
+
 
     def all(self):
         """Executes all the methods in this class, except for setup ones.
