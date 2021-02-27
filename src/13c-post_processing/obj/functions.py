@@ -1,15 +1,31 @@
+from . import const
+
 def isFloat(value):
-  """Checks if a string can be converted into a floating point value.
+    """Checks if a string can be converted into a floating point value.
 
-  Args:
-      value (str): test if this object can be converted into a float
+    Args:
+	    value (str): test if this object can be converted into a float
 
-  Returns:
-      bool: true if 'value' can be converted into a float, false otherwise
-  """
+    Returns:
+	    bool: true if 'value' can be converted into a float, false otherwise
+    """
   
-  try:
-    float(value)
-    return True
-  except ValueError:
-    return False
+    try:
+	    float(value)
+	    return True
+    except ValueError:
+    	return False
+
+def add_data_directory(fileName):
+    """Prepends the data directory to a given file name.
+
+    Args:
+        fileName (str): name of file
+
+    Returns:
+        str: file with prepended data directory
+    """
+
+    dataDirectory = const.DATA_DIRECTORY[-const.LENGTH_OF_DATA_DIR:]
+    path = dataDirectory + fileName
+    return path
