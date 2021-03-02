@@ -70,13 +70,16 @@ def sanitise_file_name(addDataDirectory = False):
         str: sanitised file name
     """
     print("Enter file name (in format '{}')".format(const.RAW_DATA_TITLE_FORMAT))
-    userinput = input().strip().split(sep="\\")[-1]
+    # remove white space and everything before the last "\"
+    userinput = input().strip().split(sep="\\")[-1] 
 
+    # remove file extension if already included, and add it (back) on in lower case
     if userinput[-len(const.RAW_DATA_FILE_TYPE):].lower() == const.RAW_DATA_FILE_TYPE:
         fileName = userinput[:-len(const.RAW_DATA_FILE_TYPE)].upper() + const.RAW_DATA_FILE_TYPE
     else:
         fileName = userinput.upper() + const.RAW_DATA_FILE_TYPE
     
+    # add parent folder 
     if addDataDirectory:
         fileName = functions.add_data_directory(fileName)
     
@@ -216,31 +219,50 @@ def main():
             G.remove_deleted()
             level = level[:-1]
         elif level == "1cd": # add/update a metric to tracker
-            while True:
-                column_header = input("Enter name of operation: ").lower()
-                if column_header in operation.keys():
-                    G.add_metric(operation[column_header])
-                    break
-                elif column_header == "q":
-                    break
-                else:
-                    print("Invalid function. Try again or enter q to quit")
+            # print menu and store user's input
+            print("Enter name of operation, or 'q' to quit")
+            for key in operation.keys():
+                print(" -", key)
+
+            column_header = get_input(operation.keys())
+            if column_header == "q":
+                pass
+            elif column_header == "all":
+                for key in operation.keys():
+                    if key == "all" or key == "q":
+                        continue
+                    print("Calculating '{}'...".format(key))
+                    G.add_metric(operation[key])
+            else:
+                G.add_metric(operation[column_header])
+            
             level = level[:-1]
         elif level == "1ce": # remove a metric from the tracker
-            while True:
-                column_header = input("Enter header title to be removed: ").lower()
-                if column_header in operation.keys():
+            # print menu and store user's input
+            print("Enter name of operation, or 'q' to quit")
+            for key in operation.keys():
+                print(" -", key)
+
+            column_header = get_input(operation.keys())
+            if column_header == "q":
+                pass
+            elif column_header == "all":
+                for key in operation.keys():
+                    if key == "all" or key == "q":
+                        continue
                     try:
                         columnNumber = G.get_column_number(column_header)
                     except ValueError as e: # if column not found
                         print(e)
-                        return 0
-                    G.remove_metric(columnNumber)
-                    break
-                elif column_header == "q":
-                    break
                 else:
-                    print("Invalid function. Try again or enter q to quit")
+                    G.remove_metric(columnNumber)
+            else:
+                try:
+                    columnNumber = G.get_column_number(column_header)
+                except ValueError as e: # if column not found
+                    print(e)
+                else:
+                    G.remove_metric(columnNumber)
             level = level[:-1]
         elif level == "1d": # analysis
             pass
@@ -268,10 +290,10 @@ def main():
                         .format(fileName))
             level = level[:-1]
         elif level == "1dab": # graph of raw sensor values
-            I.graph_sensor_data(filePath)
+            I.graph_sensor_data()
             level = level[:-1]
         elif level == "1dac": # graph flight path
-            I.graph_flight_path(filePath)
+            I.graph_flight_path()
             level = level[:-1]
         elif level == "1db": # population analysis
             G = global_tracker.GlobalFile(True)
@@ -295,7 +317,9 @@ def main():
 
 # operations
 operation = {
-    "time of throw": raw_data.RawData().individual.operations.total_time
+    "all": None,
+    "time of throw": raw_data.RawData().individual.operations.total_time,
+    "q": None
 }
 
 # menus
