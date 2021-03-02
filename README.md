@@ -128,7 +128,26 @@ This is only an increase of 0.18%, and therefore will have a negligible effect o
 	- **README.md**
 
 ## To Do
+- Off-board system
+	- add one second delay between each new file to make sure files don't get overwritten
 - Post processing code
-	- add more operations
-	- code for individual throw stats
-	- finish interface for main (main) python file
+	- make raw data handler only read files starting with "RAW"
+	- create a class which converts raw data into processed data files - similar to global_tracker code. It will need to:
+		- remove gravity from acceleration
+		- calculate speed in x-y coordinates
+		- calculate spiral rate
+		- calculate position in x-y coordinates
+		- calculate angle of elevation
+		- calculate angle wrt direction of throw
+		- include a function that updates files already listed
+	- add more operations (metrics) - dependent on processed data
+		- time of launch (when acceleration (without g) stops increasing)
+		- launch speed
+		- spiral rate
+		- angle of attack (at launch)
+		- angle wrt direction of throw (at launch)
+	- add more functions for individual file analysis
+		- plot speed against time
+		- plot path in x-y coordinates
+		- angle of attack
+	- finish interface for main python file
