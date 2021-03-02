@@ -17,6 +17,12 @@ TRACKER_BARE_MINIMUM = "name,health status" # bare minimum content of the tracke
 
 # for raw data files
 NUMBER_OF_COLUMNS = 7 # number of columns in raw data csv files
+COLUMN_HEADERS = ["time", "acc_x", "acc_y", "acc_z", "w_x", "w_y", "w_z"]
+
+assert len(COLUMN_HEADERS) == NUMBER_OF_COLUMNS, \
+    "Fatal: There are {} listed column headers; there should be {}."\
+        .format(len(COLUMN_HEADERS), NUMBER_OF_COLUMNS)
+
 RAW_DATA_TITLE_FORMAT = "RAW-yyyy.mm.dd-hh.mm.ss"
 RAW_DATA_FILE_TYPE = ".csv"
 
