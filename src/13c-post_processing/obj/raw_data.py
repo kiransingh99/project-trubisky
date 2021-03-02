@@ -3,6 +3,7 @@ from . import functions
 from . import global_tracker
 import csv
 import inspect
+import matplotlib.pyplot as plt
 import os.path
 import sys
 
@@ -26,8 +27,8 @@ class RawData:
 
     Methods:
         __init__ : class constructor
-        health : the property which groups the 'health' methods
-        individual : the property which groups the 'individual' methods
+        health : (property) groups the 'health' methods
+        individual : (property) groups the 'individual' methods
     """
 
     def __init__(self, 
@@ -110,17 +111,15 @@ class _RawDataHealthChecker:
     Methods:
         __init__ : class constructor
         __del__ : class destructor
-        DATA_DIRECTORY : property which returns the constant which stores the 
-            path to the directory that stores the data files. Takes its value 
-            from the const.py file
-        NUMBER_OF_COLUMNS : property which returns the constant which stores the 
-            expected number of columns in the raw data files. Takes its value 
-            from the const.py file
-        THROW_TIME_WARNING_THRESHOLD : property which returns the constant of 
+        DATA_DIRECTORY : {property) returns the constant of the same names. 
+            Takes its value from the const.py file
+        NUMBER_OF_COLUMNS : {property) returns the constant of the same name. 
+            Takes its value from the const.py file
+        THROW_TIME_WARNING_THRESHOLD : {property) returns the constant of 
             the same name
-        ACCELEROMETER_WARNING_THRESHOLD : property which returns the constant of 
+        ACCELEROMETER_WARNING_THRESHOLD : {property) returns the constant of 
             the same name
-        GYRO_WARNING_THRESHOLD : property which returns the constant of the same 
+        GYRO_WARNING_THRESHOLD : {property) returns the constant of the same 
             name
         check_all_files : iterates through all files in the folder and passes 
             each one through to 'check_one_file'
@@ -496,14 +495,19 @@ class _RawDataHealthChecker:
 class _SingleRawDataFile:
     """Handler for processing of individual raw data files.
 
+    Attributes:
+        fileName (str) : name of the file to calculate the metric for
+        filePath (str) : file path to the file which will be operated on
+
     Methods:
         __init__ : constructor for class
-        operations : the property which groups the methods that calculate 
+        operations : {property) groups the methods that calculate 
             metrics for the global tracker
+        file_path : (property) getter for the attribute of the same name
         set_file_name : setter for the attribute of the same name
         get_health_status : checks if a file has been marked as healthy in the 
             tracker
-        graph_sensor_data : DOCSTRING
+        graph_sensor_data : creates a graph of the raw sensor data over time
         graph_flight_path : DOCSTRING
     """
 
@@ -534,9 +538,23 @@ class _SingleRawDataFile:
         """
 
         return _MetricCalculator(fileName)
+    
+    @property
+    def file_path(self):
+        """Getter for the attribute of the same name.
+
+        Assigns the value first, by adding the full file path to 
+        'self.fileName'.
+
+        Returns:
+            str: path to the raw data file
+        """
+        
+        self.filePath = const.DATA_DIRECTORY + self.fileName[const.LENGTH_OF_DATA_DIR:]
+        return self.filePath
 
     def set_file_name(self, value):
-        """Setter for the class attribute of the same name.
+        """Setter for the attribute of the same name.
 
         Args:
             value (str): name of the file to calculate metric(s) for
@@ -564,8 +582,52 @@ class _SingleRawDataFile:
         G = global_tracker.GlobalFile(fullInitialisation = False)
         return G.get_health_status(fileName)
 
-    def graph_sensor_data(self): #COMPLETE, DOCSTRING
-        print("TO DO THIS FUNCTION STILL")
+    def graph_sensor_data(self):
+        """Creates a graph of the raw sensor data over time.
+
+        First, checks the raw data file has passed its health checks. Then 
+        stores the data in each of the columns in its own list, which is used 
+        to generate a graph of all the values together.
+
+        Returns:
+            int: signifies successful completion of the method
+        """
+        
+        healthStatus = self.get_health_status()
+        filePath = self.file_path
+
+        if healthStatus == -1: # not in file
+            print("File not found")
+            return 0
+        elif healthStatus <= const.failed: # failed or untested
+            print("File has not been marked as healthy")
+            return 0
+        else: # healthy
+            with open(filePath) as f:
+                raw_data = csv.reader(f)
+                data = []
+
+                # create blank list of lists to store data
+                for i in range(0, const.NUMBER_OF_COLUMNS):
+                    data.append([])
+
+                for row in raw_data:
+                    for i, entry in enumerate(row):
+                        data[i].append(float(entry))
+
+            time = data[0]
+
+            # plot each dataset against time on the same axes
+            for i in range(1, len(data)):
+                plt.plot(time, data[i], label=const.COLUMN_HEADERS[i])
+
+            plt.title("Raw Sensor Data against Time")
+            plt.xlabel('Time (ms)')
+            plt.ylabel('Sensor values')
+            plt.legend()
+            plt.show()
+
+            return 1
 
     def graph_flight_path(self): #COMPLETE, DOCSTRING
         print("TO DO THIS FUNCTION STILL")
@@ -575,10 +637,11 @@ class _MetricCalculator:
 
     Attributes:
         fileName (str) : name of the file to calculate the metric for
+        filePath (str) : file path to the file which will be operated on
 
     Methods:
         __init__ : constructor for class
-        file_path : property that returns the attribute of the same name
+        file_path : (property) getter for the attribute of the same name
         set_file_name : setter for the attribute of the same name
         all : runs all methods in this class that calculate a metric
         total_time : metric calculator for the time of the throw recorded
@@ -595,16 +658,20 @@ class _MetricCalculator:
         
     @property
     def file_path(self):
-        """Getter for the full path to a raw data file.
+        """Getter for the attribute of the same name.
+
+        Assigns the value first, by adding the full file path to 
+        'self.fileName'.
 
         Returns:
             str: path to the raw data file
         """
         
-        return const.DATA_DIRECTORY + self.fileName[const.LENGTH_OF_DATA_DIR:]
+        self.filePath = const.DATA_DIRECTORY + self.fileName[const.LENGTH_OF_DATA_DIR:]
+        return self.filePath
         
     def set_file_name(self, value):
-        """Setter for the class attribute of the same name.
+        """Setter for the attribute of the same name.
 
         Args:
             value (str): name of the file to calculate metric(s) for
@@ -617,7 +684,7 @@ class _MetricCalculator:
         return self.fileName
 
 
-    def all(self):
+    def all(self, fileName=None, heading=False): # DOCSTRING
         """Executes all the methods in this class, except for setup ones.
         """
 
@@ -636,12 +703,12 @@ class _MetricCalculator:
                     continue
                 elif method == self.set_file_name:
                     continue
-                method() # execute method if not one of the above
+                return method(fileName, heading) # execute method if not one of the above
             except TypeError:
                 # can't handle methods with required arguments
                 print("Couldn't execute method:", method)
 
-    def total_time(self, fileName, heading=False):
+    def total_time(self, fileName = None, heading=False):
         """Calculates a metric (total time of recording for a given throw)
 
         If the 'heading' parameter is 'True', the method simply returns the 
@@ -661,7 +728,10 @@ class _MetricCalculator:
         if heading:
             return "time of throw" # title of column in tracker file
 
-        self.fileName = fileName
+        if fileName == None:
+            fileName = self.fileName
+        else:
+            self.set_file_name(fileName)
     
         try:
             with open(self.file_path) as f:
@@ -670,7 +740,6 @@ class _MetricCalculator:
                 for row in csv_file:
                     pass
                 time = int(row[0])
+                return time
         except:
             print("Couldn't open file: ", fileName)
-        
-        return time
