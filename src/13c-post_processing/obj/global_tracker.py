@@ -1,4 +1,5 @@
 from . import const
+from . import raw_data
 import csv
 import sys
 
@@ -14,14 +15,14 @@ class GlobalFile:
     Methods:
         __init__ : class constructor
         __del__ : class destructor
-        TRACKER_EXISTS : property which returns the variable of the same name 
-        TRACKER_COUNT_ROWS : property which returns the variable of the same 
+        TRACKER_EXISTS : (property) getter for the attribute of the same name
+        TRACKER_COUNT_ROWS : (property) getter for the attribute of the same  
             name
-        TRACKER_COUNT_COLUMNS : property which returns the variable of the same 
+        TRACKER_COUNT_COLUMNS : (property) getter for the attribute of the same  
             name
-        set_TRACKER_EXISTS : setter for variable of the same name
-        set_TRACKER_COUNT_ROWS : setter for variable of the same name
-        set_TRACKER_COUNT_COLUMNS : setter for variable of the same name
+        set_TRACKER_EXISTS : setter for attribute of the same name
+        set_TRACKER_COUNT_ROWS : setter for attribute of the same name
+        set_TRACKER_COUNT_COLUMNS : setter for attribute of the same name
         add_file : lists a raw data file in the global tracker
         add_metric : adds a new column to the global tracker file
         get_column_number : returns the column number of a given heading
@@ -76,7 +77,7 @@ class GlobalFile:
 
     @property
     def TRACKER_EXISTS(self):
-        """Getter for variable of the same name.
+        """Getter for attribute of the same name.
 
         Returns:
             bool: 'True' if tracker file has been open since the initialisation 
@@ -87,7 +88,7 @@ class GlobalFile:
 
     @property
     def TRACKER_COUNT_ROWS(self):
-        """Getter for variable of the same name.
+        """Getter for attribute of the same name.
 
         Returns:
             int: the number of rows in the global tracker file
@@ -97,7 +98,7 @@ class GlobalFile:
 
     @property
     def TRACKER_COUNT_COLUMNS(self):
-        """Getter for variable of the same name.
+        """Getter for attribute of the same name.
 
         Returns:
             int: the number of columns in the global tracker file
@@ -106,7 +107,7 @@ class GlobalFile:
         return self.__TRACKER_COUNT_COLUMNS
 
     def set_TRACKER_EXISTS(self, value):
-        """Setter for variable of the same name.
+        """Setter for attribute of the same name.
 
         Returns:
             bool: the new value of the variable
@@ -116,7 +117,7 @@ class GlobalFile:
         return self.__TRACKER_EXISTS
 
     def set_TRACKER_COUNT_ROWS(self, value):
-        """Setter for variable of the same name.
+        """Setter for attribute of the same name.
 
         Returns:
             int: the new value of the variable
@@ -126,7 +127,7 @@ class GlobalFile:
         return self.__TRACKER_COUNT_ROWS
 
     def set_TRACKER_COUNT_COLUMNS(self, value):
-        """Setter for variable of the same name.
+        """Setter for attribute of the same name.
 
         Returns:
             int: the new value of the variable
@@ -181,7 +182,8 @@ class GlobalFile:
         with open(const.TRACKER_FILEPATH) as f: # read only
             tracker_file = csv.reader(f)
 
-            if operation(fileName=None, heading=True) in f.read():
+            # if heading already in top row
+            if operation(heading=True) in f.read():
                 self.populate_metric(operation)
                 
             else:
@@ -199,17 +201,16 @@ class GlobalFile:
                     # add new heading if on first line
                     if tracker_file.line_num == 1:
                         fileData.append(list(row))
-                        fileData[0].append(operation(fileName=None, heading=True))
+                        fileData[0].append(operation(heading=True))
                     else:
                         fileData.append(list(row))
-                        if int(row[1]) >= const.passedWithWarnings: # check if health checks were passed
-                            fileData[-1].append(operation(fileData[-1][0]))
-                        else:
-                            fileData[-1].append("")
+                        fileData[-1].append("")
 
                 with open(const.TRACKER_FILEPATH, "w", newline="") as f: # writeable
                     tracker_file = csv.writer(f)
                     tracker_file.writerows(fileData) # write amended data to tracker file
+
+        self.populate_metric(operation)
 
         return True
 
@@ -262,7 +263,7 @@ class GlobalFile:
         with open(const.TRACKER_FILEPATH) as f: # read only
             tracker_file = csv.reader(f)
 
-            columnHeading = operation(fileName=None, heading=True)
+            columnHeading = operation(heading=True)
             
             # get column number of given header
             try:
@@ -279,7 +280,7 @@ class GlobalFile:
                 if len(row) == 0:
                     continue
 
-                # update metric if health checks were passeed
+                # update metric only if health checks were passeed
                 if int(row[1]) >= const.passedWithWarnings:
                     self.write_to_file(row[0], columnNumber, operation(row[0]))
 
@@ -408,7 +409,7 @@ class GlobalFile:
             fileName (str): name of the file to check health status of
 
         Returns:
-            int: value of health status, or 0 if file not found
+            int: value of health status, or -1 if file not found
         """
     
         with open(const.TRACKER_FILEPATH) as f: 
@@ -420,7 +421,7 @@ class GlobalFile:
                     return int(row[1]) # get the health status of the file
                     
             print("File '{}' not found".format(fileName))
-            return 0
+            return -1
     
     def is_file_recorded(self, fileName):
         """Checks if a given file is recorded in the tracker file.
