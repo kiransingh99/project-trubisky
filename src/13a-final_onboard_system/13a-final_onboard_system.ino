@@ -40,8 +40,8 @@ void setup(void) {
 
   Wire.begin();
 
-  Serial.begin(9600);
-  Serial.println("13a-final_onboard_system"); //file name to identify file from serial monitor
+  //Serial.begin(9600);
+  //Serial.println("13a-final_onboard_system"); //file name to identify file from serial monitor
 
   //set up GPIO pins
   pinMode(deletePin, INPUT_PULLUP);
@@ -74,7 +74,7 @@ void setup(void) {
   searchDirectory();
   
   fileName++;
-  Serial.println(fileName);
+  //Serial.println(fileName);
 }
 
 void loop(void) {
@@ -88,14 +88,14 @@ void loop(void) {
   
   do {
     if (!digitalRead(deletePin)) { //if delete pin is high
-      Serial.println("Delete everything");
+      //Serial.println("Delete everything");
       deleteFiles();
     } else if (!digitalRead(transmitPin)) { //if transmit pin is high
-      Serial.println("Transmit everything");
+      //Serial.println("Transmit everything");
       transmitFiles();
     } else if (!digitalRead(resetPin)) { //if reset pin is high
       while (!digitalRead(resetPin)) {} //wait until reset pin no longer high
-      Serial.println("Reset");
+      //Serial.println("Reset");
       delay(100);
       reset();
     }
@@ -150,15 +150,15 @@ void searchDirectory(void) {
       break;
     }
 
-    Serial.print('\t');
-    Serial.print(entry.name()); //print file name
+    //Serial.print('\t');
+    //Serial.print(entry.name()); //print file name
     
     if (entry.isDirectory()) {
-      Serial.println("/");
+      //Serial.println("/");
     } else {
       //files have sizes, directories do not
-      Serial.print("\t\t");
-      Serial.println(entry.size(), DEC); //print file size (decimal)
+      //Serial.print("\t\t");
+      //Serial.println(entry.size(), DEC); //print file size (decimal)
       fileName ++;
     } 
     
@@ -182,7 +182,7 @@ void deleteFiles(void) {
     }
 
     if (!entry.isDirectory()) {
-      Serial.println(entry.name());
+      //Serial.println(entry.name());
       SD.remove(entry.name()); //delete file from SD card
     }
     
@@ -194,7 +194,7 @@ void deleteFiles(void) {
     //wait for reset pin trigger
     if (!digitalRead(resetPin)) {
       while (!digitalRead(resetPin)) {}
-      Serial.println("Reset");
+      //Serial.println("Reset");
       delay(100);
       reset();
     }
@@ -219,7 +219,7 @@ void transmitFiles(void){
     char msg[1]="";
     
     if (!entry.isDirectory()) { 
-      Serial.println(entry.name());
+      //Serial.println(entry.name());
       
       /* transmit flag for new file ("s") */
       Wire.beginTransmission(slaveAddress);
@@ -238,7 +238,7 @@ void transmitFiles(void){
       while (entry.available()) {
         msg[0] = entry.read(); //get next character of file
         
-        Serial.print (msg[0]);
+        //Serial.print (msg[0]);
         
         /* transmit data */
         Wire.beginTransmission(slaveAddress);
@@ -249,10 +249,11 @@ void transmitFiles(void){
     }
     
     entry.close();
+    delay(1000)
   }
   dir.close();
 
-  Serial.println("end");
+  //Serial.println("end");
   
   /* transmit flag for end of transmission("e") */
   Wire.beginTransmission(slaveAddress);
@@ -262,11 +263,11 @@ void transmitFiles(void){
   
   while (true) {
     if (!digitalRead(deletePin)) { //if delete pin triggerred
-      Serial.println("Delete everything");
+      //Serial.println("Delete everything");
       deleteFiles();
     } else if (!digitalRead(resetPin)) { //if reset pin triggered
       while (!digitalRead(resetPin)) {}
-      Serial.println("Reset");
+      //Serial.println("Reset");
       delay(100);
       reset();
     }
