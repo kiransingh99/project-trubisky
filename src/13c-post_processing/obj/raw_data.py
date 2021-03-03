@@ -269,7 +269,7 @@ class _RawDataHealthChecker:
                 else:
                     # record file name and error
                     files_failed.append(fileName)
-                    tests_failed.append(error)
+                    tests_failed.append("{} ({})".format(error[0], error[1].strip()))
         
         # output results
         print("\n\nAll tests complete. {}/{} files passed.".format(files_passed, 
@@ -278,7 +278,7 @@ class _RawDataHealthChecker:
             print("The following files failed a test:")
 
             for i in range(0, len(files_failed)):
-                print("  {} : {}\n".format(files_failed[i], error[i]))
+                print("  {} : {}\n".format(files_failed[i], tests_failed[i]))
 
         return 1
 
@@ -323,7 +323,7 @@ class _RawDataHealthChecker:
                                                             previousTime)
                     
                 except AssertionError as e: # test failed
-                    print("Test failed on line {}:".format(csv_file.line_num))
+                    print("\nTest failed on line {}:".format(csv_file.line_num))
                     print("  {}\n".format(e.args[0]))
                     
                     healthStatus = const.failed
@@ -419,30 +419,30 @@ class _RawDataHealthChecker:
             assert functions.isFloat(value_str),\
                     "Check values: non-float value ({}) in column {}"\
                     .format(value_str, i)
-
-            # the rest of the method just raises warnings, skip if not needed
-            if self.showWarnings:
             
-                value = float(value_str)
+            value = int(float(value_str))
 
-                if i == 0: # time
-                    if int(value) > self.THROW_TIME_WARNING_THRESHOLD:
+            if i == 0: # time
+                if value >= self.THROW_TIME_WARNING_THRESHOLD:
+                    if self.showWarnings: # only print if showWarnings is 'True'
                         print("\nWarning: Time of throw exceeds {} ( = {})"
                                 .format(self.THROW_TIME_WARNING_THRESHOLD, value),
                                 end="")
-                        self.__warningsRaised = True
-                elif i <= 3: # acceleration on each axis
-                    if abs(value) > self.ACCELEROMETER_WARNING_THRESHOLD:
+                    self.__warningsRaised = True
+            elif i <= 3: # acceleration on each axis
+                if abs(value) >= self.ACCELEROMETER_WARNING_THRESHOLD:
+                    if self.showWarnings:
                         print("\nWarning: Acceleration exceeds {} in column {} ( = {})"
-                                .format(self.ACCELEROMETER_WARNING_THRESHOLD, i, value),
-                                end="")
-                        self.__warningsRaised = True
-                elif i <= 6: # angular velocity on each axis
-                    if abs(value) > self.GYRO_WARNING_THRESHOLD:
+                            .format(self.ACCELEROMETER_WARNING_THRESHOLD, i, value),
+                            end="")
+                    self.__warningsRaised = True
+            elif i <= 6: # angular velocity on each axis
+                if abs(value) >= self.GYRO_WARNING_THRESHOLD:
+                    if self.showWarnings:
                         print("\nWarning: Acceleration exceeds {} in column {} ( = {})"
-                                .format(self.GYRO_WARNING_THRESHOLD, i, value),
-                                end="")
-                        self.__warningsRaised = True
+                            .format(self.GYRO_WARNING_THRESHOLD, i, value),
+                            end="")
+                    self.__warningsRaised = True
         
         return None
 
