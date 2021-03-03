@@ -251,26 +251,26 @@ class _RawDataHealthChecker:
             filePath = os.path.join(self.DATA_DIRECTORY, entry)
             fileName = filePath[const.PATH_LENGTH_TO_DATA_DIR:]
             
-            if entry.endswith(".csv"): # only check CSV files
-                if entry == const.TRACKER_FILENAME: # ignore global tracker file
-                    continue
+            # only check raw data files saved as a csv 
+            if entry[len(const.RAW_DATA_PREFIX):] == const.RAW_DATA_PREFIX:
+                 if entry.endswith(".csv"): # only check CSV files
 
-                # if overwrite is False, it doesn't matter if the file has already been recorded
-                if not self.overwrite:
-                    if self.__is_in_tracker(fileName):
-                        continue
-                
-                # therefor file is a valid raw data CSV file
-                files_total += 1
-                allTestsPassed, error = self.check_one_file(filePath)
-                
-                if allTestsPassed >= const.passedWithWarnings:
-                    files_passed += 1
-                else:
-                    # record file name and error
-                    files_failed.append(fileName)
-                    tests_failed.append("{} ({})".format(error[0], error[1].strip()))
-        
+                    # if overwrite is False, it doesn't matter if the file has already been recorded
+                    if not self.overwrite:
+                        if self.__is_in_tracker(fileName):
+                            continue
+                    
+                    # therefor file is a valid raw data CSV file
+                    files_total += 1
+                    allTestsPassed, error = self.check_one_file(filePath)
+                    
+                    if allTestsPassed >= const.passedWithWarnings:
+                        files_passed += 1
+                    else:
+                        # record file name and error
+                        files_failed.append(fileName)
+                        tests_failed.append("{} ({})".format(error[0], error[1].strip()))
+            
         # output results
         print("\n\nAll tests complete. {}/{} files passed.".format(files_passed, 
                                                             files_total))
