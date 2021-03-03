@@ -230,11 +230,10 @@ class _RawDataHealthChecker:
         them.
 
         Goes through each file in the directory that stores all the raw data 
-        files. For any CSV file other than the global tracker file, tests are 
-        run, unless the file is already recorded in the tracker file and 
-        'overwrite is set False. This method simply passes each file to the 
-        'check_one_file' method. After testing all the files, results are 
-        displayed.
+        files. For any raw data CSV files, tests are run, unless the file is 
+        already recorded in the tracker file and 'overwrite is set False. This 
+        method simply passes each file to the 'check_one_file' method. After 
+        testing all the files, results are displayed.
 
         Returns:
             int: returns 1 if method completed successfully
