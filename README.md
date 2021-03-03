@@ -129,7 +129,6 @@ This is only an increase of 0.18%, and therefore will have a negligible effect o
 
 ## To Do
 - Post processing code
-	- make raw data handler only read files starting with "RAW"
 	- create a class which converts raw data into processed data files - similar to global_tracker code. It will need to:
 		- remove gravity from acceleration
 		- calculate speed in x-y coordinates

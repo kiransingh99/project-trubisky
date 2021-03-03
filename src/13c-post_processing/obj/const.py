@@ -23,7 +23,8 @@ assert len(COLUMN_HEADERS) == NUMBER_OF_COLUMNS, \
     "Fatal: There are {} listed column headers; there should be {}."\
         .format(len(COLUMN_HEADERS), NUMBER_OF_COLUMNS)
 
-RAW_DATA_TITLE_FORMAT = "RAW-yyyy.mm.dd-hh.mm.ss"
+RAW_DATA_PREFIX = "RAW-"
+RAW_DATA_TITLE_FORMAT = RAW_DATA_PREFIX + "yyyy.mm.dd-hh.mm.ss"
 RAW_DATA_FILE_TYPE = ".csv"
 
 # for health check values
