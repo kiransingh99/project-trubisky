@@ -265,6 +265,9 @@ void transmitFiles(void){
     if (!digitalRead(deletePin)) { //if delete pin triggerred
       //Serial.println("Delete everything");
       deleteFiles();
+    } else if (!digitalRead(transmitPin)) { //if transmit pin is high
+      //Serial.println("Transmit everything");
+      transmitFiles();
     } else if (!digitalRead(resetPin)) { //if reset pin triggered
       while (!digitalRead(resetPin)) {}
       //Serial.println("Reset");
