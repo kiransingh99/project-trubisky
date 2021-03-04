@@ -251,7 +251,7 @@ class _RawDataHealthChecker:
             fileName = filePath[const.PATH_LENGTH_TO_DATA_DIR:]
             
             # only check raw data files saved as a csv 
-            if entry[len(const.RAW_DATA_PREFIX):] == const.RAW_DATA_PREFIX:
+            if entry[:len(const.RAW_DATA_PREFIX)] == const.RAW_DATA_PREFIX:
                  if entry.endswith(".csv"): # only check CSV files
 
                     # if overwrite is False, it doesn't matter if the file has already been recorded
@@ -424,21 +424,21 @@ class _RawDataHealthChecker:
             if i == 0: # time
                 if value >= self.THROW_TIME_WARNING_THRESHOLD:
                     if self.showWarnings: # only print if showWarnings is 'True'
-                        print("\nWarning: Time of throw exceeds {} ( = {})"
+                        print("\n  Warning: Time of throw exceeds {} ( = {})"
                                 .format(self.THROW_TIME_WARNING_THRESHOLD, value),
                                 end="")
                     self.__warningsRaised = True
             elif i <= 3: # acceleration on each axis
                 if abs(value) >= self.ACCELEROMETER_WARNING_THRESHOLD:
                     if self.showWarnings:
-                        print("\nWarning: Acceleration exceeds {} in column {} ( = {})"
+                        print("\n  Warning: Acceleration exceeds {} in column {} ( = {})"
                             .format(self.ACCELEROMETER_WARNING_THRESHOLD, i, value),
                             end="")
                     self.__warningsRaised = True
             elif i <= 6: # angular velocity on each axis
                 if abs(value) >= self.GYRO_WARNING_THRESHOLD:
                     if self.showWarnings:
-                        print("\nWarning: Acceleration exceeds {} in column {} ( = {})"
+                        print("\n  Warning: Acceleration exceeds {} in column {} ( = {})"
                             .format(self.GYRO_WARNING_THRESHOLD, i, value),
                             end="")
                     self.__warningsRaised = True
@@ -581,12 +581,20 @@ class _SingleRawDataFile:
         G = global_tracker.GlobalFile(fullInitialisation = False)
         return G.get_health_status(fileName)
 
-    def graph_sensor_data(self):
+    def graph_sensor_data(self, numberOfPlots=6):
         """Creates a graph of the raw sensor data over time.
 
         First, checks the raw data file has passed its health checks. Then 
         stores the data in each of the columns in its own list, which is used 
         to generate a graph of all the values together.
+
+        Attributes:
+            numberOfPlots (int, optional): the number of separate plots to 
+                create. Accepts the following values:
+                    1. all graphs on one plot
+                    2. separates linear acceleration and angular velocity
+                    6. separate graph for each sensor reading
+                (Defaults to 6)
 
         Returns:
             int: signifies successful completion of the method
@@ -616,15 +624,49 @@ class _SingleRawDataFile:
 
             time = data[0]
 
-            # plot each dataset against time on the same axes
-            for i in range(1, len(data)):
-                plt.plot(time, data[i], label=const.COLUMN_HEADERS[i])
 
-            plt.title("Raw Sensor Data against Time")
-            plt.xlabel('Time (ms)')
-            plt.ylabel('Sensor values')
-            plt.legend()
-            plt.show()
+            if numberOfPlots == 1:
+                # plot each dataset against time on the same axes
+                for i in range(1, len(data)):
+                    plt.plot(time, data[i], label=const.COLUMN_HEADERS[i], color=const.COLOURS[i])
+
+                plt.title("Raw Sensor Data against Time")
+                plt.xlabel('Time (ms)')
+                plt.ylabel('Sensor values')
+                plt.legend()
+                plt.show()
+            elif numberOfPlots == 2:
+                #plot linear acceleration and angular velocity separately
+                fig, (linAcc, angVel) = plt.subplots(2, sharex=True)
+                for i in range(1, len(data)):
+                    if i < 4:
+                        linAcc.plot(time, data[i], label=const.COLUMN_HEADERS[i], color=const.COLOURS[i])
+                    else:
+                        angVel.plot(time, data[i], label=const.COLUMN_HEADERS[i], color=const.COLOURS[i])
+                
+                fig.suptitle("Raw Sensor Data against Time")
+                linAcc.legend()
+                angVel.legend()
+                fig.show()           
+            else:
+                #plot linear acceleration and angular velocity separately
+                fig, (acc_x, acc_y, acc_z, 
+                        w_x, w_y, w_z) = plt.subplots(6, sharex=True)
+                acc_x.plot(time, data[1], label=const.COLUMN_HEADERS[1], color=const.COLOURS[1])
+                acc_y.plot(time, data[2], label=const.COLUMN_HEADERS[2], color=const.COLOURS[2])
+                acc_z.plot(time, data[3], label=const.COLUMN_HEADERS[3], color=const.COLOURS[3])
+                w_x.plot(time, data[4], label=const.COLUMN_HEADERS[4], color=const.COLOURS[4])
+                w_y.plot(time, data[5], label=const.COLUMN_HEADERS[5], color=const.COLOURS[5])
+                w_z.plot(time, data[6], label=const.COLUMN_HEADERS[6], color=const.COLOURS[6])
+                
+                fig.suptitle("Raw Sensor Data against Time")
+                acc_x.legend()
+                acc_y.legend()
+                acc_z.legend()
+                w_x.legend()
+                w_y.legend()
+                w_z.legend()
+                fig.show() 
 
             return 1
 
@@ -741,4 +783,5 @@ class _MetricCalculator:
                 time = int(row[0])
                 return time
         except:
-            print("Couldn't open file: ", fileName)
+            print("Couldn't open file:", fileName)
+            print("Try again if you think this is a mistake.")

@@ -251,11 +251,11 @@ def main():
                     if key == "all" or key == "q":
                         continue
                     try:
-                        columnNumber = G.get_column_number(column_header)
+                        columnNumber = G.get_column_number(key)
                     except ValueError as e: # if column not found
                         print(e)
-                else:
-                    G.remove_metric(columnNumber)
+                    else:
+                        G.remove_metric(columnNumber)
             else:
                 try:
                     columnNumber = G.get_column_number(column_header)
@@ -265,7 +265,7 @@ def main():
                     G.remove_metric(columnNumber)
             level = level[:-1]
         elif level == "1d": # analysis
-            pass
+            n = 6 # number of subplots
         elif level == "1da": # individual file analysis
             print("Set parameters:")
             fileName = sanitise_file_name(True)
@@ -290,7 +290,14 @@ def main():
                         .format(fileName))
             level = level[:-1]
         elif level == "1dab": # graph of raw sensor values
-            I.graph_sensor_data()
+            n_str = input("How many subplots? Default is {} ".format(n))
+            if n_str == "":
+                pass
+            elif functions.isFloat(n_str):
+                n = int(n_str)
+            else:
+                print("Invalid input, using {} subplots".format(n))
+            I.graph_sensor_data(n)
             level = level[:-1]
         elif level == "1dac": # graph flight path
             I.graph_flight_path()
