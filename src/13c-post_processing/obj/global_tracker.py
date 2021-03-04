@@ -195,7 +195,7 @@ class GlobalFile:
                 for row in tracker_file:
 
                     # ignore blank rows
-                    if len(row) == 0:
+                    if len(row) < const.TRACKER_BARE_MINIMUM_LENGTH:
                         continue
 
                     # add new heading if on first line
@@ -277,7 +277,7 @@ class GlobalFile:
             for row in tracker_file:
 
                 # ignore blank rows
-                if len(row) == 0:
+                if len(row) < const.TRACKER_BARE_MINIMUM_LENGTH:
                     continue
 
                 # update metric only if health checks were passeed
@@ -308,7 +308,7 @@ class GlobalFile:
 
             for row in tracker_file:
                 # skip blank lines
-                if len(row) == 0:
+                if len(row) < const.TRACKER_BARE_MINIMUM_LENGTH:
                         continue
 
                 if tracker_file.line_num > 1: # don't try to locate header
@@ -321,7 +321,7 @@ class GlobalFile:
                     try:
                         g = open(filePath)
                     except FileNotFoundError:
-                        print("Deleted: ", filePath)
+                        print("Deleted: ", fileName)
                         deleted += 1
                     else:
                         g.close()
@@ -371,7 +371,7 @@ class GlobalFile:
 
             for row in tracker_file:
                 # skip blank lines
-                if len(row) == 0:
+                if len(row) < const.TRACKER_BARE_MINIMUM_LENGTH:
                         continue
 
                 rowData = list(row)
@@ -383,6 +383,9 @@ class GlobalFile:
         with open(const.TRACKER_FILEPATH, "w", newline="") as f: # writeable
             tracker_file = csv.writer(f)
             tracker_file.writerows(fileData) # rewrite data to tracker file
+        
+        print("Deleted column", columnNumber)
+
         return True
 
     def change_health_status(self, fileName, healthStatus):
@@ -471,7 +474,7 @@ class GlobalFile:
             
             for row in tracker_file:
                 # ignore blank rows
-                if len(row) == 0:
+                if len(row) < const.TRACKER_BARE_MINIMUM_LENGTH:
                     continue
 
                 fileData.append(list(row))
