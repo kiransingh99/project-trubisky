@@ -272,8 +272,12 @@ def main():
             R = raw_data.RawData(fileName = fileName)
             I = R.individual
 
-            if I.get_health_status() >= const.passedWithWarnings:
+            healthStatus = I.get_health_status()
+
+            if healthStatus >= const.passedWithWarnings:
                 print("File selected: ", fileName)
+            elif healthStatus == -1:
+                continue
             else:
                 print("File {} not marked as healthy, choose another or check the file first."
                         .format(fileName))

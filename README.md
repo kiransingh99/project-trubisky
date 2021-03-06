@@ -16,8 +16,7 @@ All software used in this project is available in this Github repository
 ### Onboard system
 This system is embedded into the ball. It is comprised of:
 - Arduino Nano: processor
-- ADXL345 (triple-axis accelerometer): measures linear acceleration
-- L3GD20H (triple axis gyroscope): measures angular velocity
+- BNO055 (9 DOF IMU) measures linear acceleration, angular velocity, orientation
 - Micro SD Breakout Board: stores data onboard
 
 This system collectes data from the two sensors and writes it to a file on the SD card. Each throw of the ball requires the corresponding data to be saved in a new file. Using user inputs, the system can be reset, and the data can be transmitted or deleted. The data is saved to a file as this is faster than transmitting it as it is measured, so this allows for a higher frequency of data readings. The accelerometer and gyroscope together track 6 degrees of freedom, which completely describes a rigid body; therefore these sensors are sufficient to fully monitor the ball's motion.
@@ -56,6 +55,7 @@ The global tracker file is the summary of the data of each of the throws of the 
 	- 1 means failed
 	- 2 means passed with warnings
 	- 3 means passed without warnings
+- **processed file**: name of the processed data file corresponding to the raw data file
 - **time of throw**: the total time of recording for each file (milliseconds)
 
 ## Hardware requirements
@@ -71,18 +71,15 @@ The onboard system is intended for a Arduino Nano Every, though it will work on 
 | **GND**          | *ADXL345* **GND**         |
 | **A4**           | *ADXL345* **SDA**         |
 | **A5**           | *ADXL345* **SCL**         |
-| **3.3V**         | *L3GD20H* **Vin**         |
-| **GND**          | *L3GD20H* **GND**         |
-| **A4**           | *L3GD20H* **SDA**         |
-| **A5**           | *L3GD20H* **SCL**         |
 | **5V**           | *Micro SD Module* **5V**  |
 | **GND**          | *Micro SD Module* **GND** |
 | **D10**          | *Micro SD Module* **CS**  |
 | **D11**          | *Micro SD Module* **DI**  |
 | **D12**          | *Micro SD Module* **DO**  |
 | **D13**          | *Micro SD Module* **CLK** |
-| **A4**           | *Arduino Uno* **A4**      |
-| **A5**           | *Arduino Uno* **A5**      |
+| **A4**           | *Offboard system* **A4**  |
+| **A5**           | *Offboard system* **A5**  |
+| **GND**          | *Offboard system* **GND** |
 
 Note that this diagram does not include the onboard power supply.
 
@@ -93,8 +90,9 @@ Note that this diagram does not include the onboard power supply.
 | **5V**           | *113990010 Rx* **Vcc**    |
 | **GND**          | *113990010 Rx* **GND**    |
 | **D2**           | *113990010 Rx* **DATA**   |
-| **A4**           | *Arduino Nano* **A4**     |
-| **A5**           | *Arduino Nano* **A5**     |
+| **A4**           | *Onboard system* **A4**   |
+| **A5**           | *Onboard system* **A5**   |
+| **GND**          | *Onboard system* **GND**  |
 
 ### Effect of mass of additional components
 Adding components with finite mass to the ball will affect the mechanics. The main concerns include the changes in the ball's mass, centre of mass, and its moment of inertia.
@@ -129,6 +127,7 @@ This is only an increase of 0.18%, and therefore will have a negligible effect o
 
 ## To Do
 - Post processing code
+	- on interface, make sure only raw/processed data files are accepted, as appropriate
 	- create a class which converts raw data into processed data files - similar to global_tracker code. It will need to:
 		- remove gravity from acceleration
 		- calculate speed in x-y coordinates

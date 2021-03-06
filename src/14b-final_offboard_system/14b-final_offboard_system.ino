@@ -12,7 +12,7 @@ void setup(void) {
   */
   
   Serial.begin(9600);
-  Serial.println("13b-final_offboard_system"); //file name to identify file from serial monitor
+  Serial.println("14b-final_offboard_system"); //file name to identify file from serial monitor
 
   //initialize I2C communications as slave
   Wire.begin(SLAVE_ADDR);

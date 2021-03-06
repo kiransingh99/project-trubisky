@@ -41,7 +41,7 @@ void setup(void) {
   Wire.begin();
 
   //Serial.begin(9600);
-  //Serial.println("13a-final_onboard_system"); //file name to identify file from serial monitor
+  //Serial.println("13-onboard_system_separate_sensors"); //file name to identify file from serial monitor
 
   //set up GPIO pins
   pinMode(deletePin, INPUT_PULLUP);

@@ -17,9 +17,11 @@ TRACKER_BARE_MINIMUM = "name,health status" # bare minimum content of the tracke
 TRACKER_BARE_MINIMUM_LENGTH = len(TRACKER_BARE_MINIMUM.split(","))
 
 # for raw data files
-NUMBER_OF_COLUMNS = 7 # number of columns in raw data csv files
-COLUMN_HEADERS = ["time", "acc_x", "acc_y", "acc_z", "w_x", "w_y", "w_z"]
-COLOURS = ['','#1f77b4', '#ff7f0e', '#26a02c', '#d62728', '#9467bd', '#8c564b']
+NUMBER_OF_COLUMNS = 13 # number of columns in raw data csv files
+COLUMN_HEADERS = ["time", "acc_x", "acc_y", "acc_z", "w_x", "w_y", "w_z", 
+                    "euler_x", "euler_y", "euler_z", "mag_x", "mag_y", "mag_z"]
+COLOURS = ['', '#1f77b4', '#ff7f0e', '#26a02c', '#d62728', '#9467bd', '#8c564b',
+            '#e377c2', '#7f7f7f', '#bcbd22', '#17becf', '#00ff00', '#000000']
 
 assert len(COLUMN_HEADERS) == NUMBER_OF_COLUMNS, \
     "Fatal (const.py):There are {} listed column headers; there should be {}."\

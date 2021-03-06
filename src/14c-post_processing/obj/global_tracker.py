@@ -182,11 +182,8 @@ class GlobalFile:
         with open(const.TRACKER_FILEPATH) as f: # read only
             tracker_file = csv.reader(f)
 
-            # if heading already in top row
-            if operation(heading=True) in f.read():
-                self.populate_metric(operation)
-                
-            else:
+            # if heading not in top row, add heading
+            if operation(heading=True) not in f.read():
                 f.seek(0)
 
                 # for tracking during loop
@@ -198,7 +195,7 @@ class GlobalFile:
                     if len(row) < const.TRACKER_BARE_MINIMUM_LENGTH:
                         continue
 
-                    # add new heading if on first line
+                    # add another empty column, and a new heading only if on the first line
                     if tracker_file.line_num == 1:
                         fileData.append(list(row))
                         fileData[0].append(operation(heading=True))
@@ -259,6 +256,8 @@ class GlobalFile:
         Returns:
             int: 'True' to signify completion of method, 'False' otherwise
         """
+
+        self.remove_deleted()
 
         with open(const.TRACKER_FILEPATH) as f: # read only
             tracker_file = csv.reader(f)
@@ -329,7 +328,8 @@ class GlobalFile:
                 else:
                     fileData.append(list(row)) # add header to list
 
-        print("Deleted {} files".format(deleted))
+        if deleted > 0:
+            print("Deleted {} files".format(deleted))
 
         with open(const.TRACKER_FILEPATH, "w", newline="") as f: # writeable
             tracker_file = csv.writer(f)
@@ -464,6 +464,9 @@ class GlobalFile:
         Returns:
             bool: signifies complete execution of method
         """
+
+        if data == None:
+            return
 
         with open(const.TRACKER_FILEPATH, "r") as f: # read only
             tracker_file = csv.reader(f)
