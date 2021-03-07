@@ -4,7 +4,7 @@
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/src/13c-post_processing/main.py",
+            "program": "${workspaceFolder}/src/14c-post_processing/main.py",
             "console": "integratedTerminal"
         }
     ]
