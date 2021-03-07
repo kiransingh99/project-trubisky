@@ -2,23 +2,29 @@ from . import const
 from . import functions
 from . import global_tracker
 import csv
-import inspect
-import matplotlib.pyplot as plt
 import os.path
 
 
-class ProcessedData: # DOCSTRING
-    
-    def __init__(self, overwrite=False, fileName=""): # COMPLETE, DOCSTRING
+
+
+class ProcessedData:
+
+    def __init__(self, overwrite=True, fileName=""):
         self.overwrite = overwrite
         self.fileName = fileName
-        
-    def __del__(self):
-        """Destructor for class.
-        """
 
-        # print("ProcessedData object destroyed")
-        pass
+    @property
+    def individual(self):
+        return _Individual(self.fileName)
+
+    """
+    @property
+    def ensemble(self):
+        return _Ensemble(self)
+    """
+    @property
+    def metrics(self):
+        return _Metrics()
 
     @property
     def DATA_DIRECTORY(self):
@@ -29,30 +35,6 @@ class ProcessedData: # DOCSTRING
         """
         
         return const.DATA_DIRECTORY
-
-    @property
-    def individual(self): #DOCSTRING
-        return _SingleFile(self.fileName)
-
-    @property
-    def ensemble(self, fileName=""): # DOCSTRING
-        """Creates instance of _MetricCalculator as an object of 
-        _SingleRawDataFile.
-
-        Creates an instance of the '_MetricCalculator' class as an object 
-        called 'self.operations', where 'self' is the name of the instance of 
-        '_SingleRawDataFile'.
-
-        Args:
-            fileName (str, optional): name of the file to operate on. None that 
-                this must be passed to the operations sub-method at some point. 
-                Defaults to "".
-
-        Returns:
-            _Ensemble object: instance of class
-        """
-
-        return _Ensemble(fileName)
 
 
     def create_all_processed_data_files(self): # DOCSTRING
@@ -80,7 +62,6 @@ class ProcessedData: # DOCSTRING
                             continue
 
                     self.create_single_processed_data_file(rawFileName)
-
         return 1
 
     def create_single_processed_data_file(self, rawFileName): # DOCSTRING
@@ -89,7 +70,7 @@ class ProcessedData: # DOCSTRING
         processedFileName = "\\" + rawFileName.split("\\")[1] + "\\" + \
                             const.PROCESSED_DATA_PREFIX + fileName
 
-        rawFilePath = const.DATA_DIRECTORY + "\\" + rawFileName[const.LENGTH_OF_DATA_DIR:]
+        rawFilePath = const.DATA_DIRECTORY + rawFileName[const.LENGTH_OF_DATA_DIR:]
         processedFilePath = const.DATA_DIRECTORY + processedFileName[const.LENGTH_OF_DATA_DIR:]
 
         with open(rawFilePath) as f:
@@ -102,38 +83,28 @@ class ProcessedData: # DOCSTRING
             G.write_to_file(rawFileName, 2, processedFileName)
 
         return processedFileName
-        
+      
+    def get_all_processed_files(self): # DOCSTRING
+        files = []
+        for entry in os.listdir(self.DATA_DIRECTORY):
+            # filter by processed data files
+            if entry[:len(const.RAW_DATA_PREFIX)] == const.PROCESSED_DATA_PREFIX:
+                files.append(functions.add_data_directory(entry))
+
+        return files
 
 
 
-
-class _SingleFile:
-    """Handler for processing of individual processed data files.
-
-    Attributes:
-        fileName (str) : name of the file to calculate the metric for
-        filePath (str) : file path to the file which will be operated on
-
-    Methods:
-        __init__ : constructor for class
-        operations : {property) groups the methods that calculate 
-            metrics for the global tracker
-        file_path : (property) getter for the attribute of the same name
-        set_file_name : setter for the attribute of the same name
-        get_health_status : checks if a file has been marked as healthy in the 
-            tracker
-        graph_sensor_data : creates a graph of the raw sensor data over time
-        graph_flight_path : DOCSTRING
-    """
-
+class _Individual:
+    # for writing to and reading from individual pro files
     def __init__(self, fileName):
-        """[summary]
-
-        Args:
-            fileName ([type]): [description]
-        """
         self.fileName = fileName
-    
+
+    @property
+    def calculations(self):
+        return _Calculations(self.fileName)
+
+
     @property
     def file_path(self):
         """Getter for the attribute of the same name.
@@ -147,26 +118,6 @@ class _SingleFile:
         
         self.filePath = const.DATA_DIRECTORY + self.fileName[const.LENGTH_OF_DATA_DIR:]
         return self.filePath
-
-    @property
-    def operations(self, fileName=""):
-        """Creates instance of _MetricCalculator as an object of 
-        _SingleRawDataFile.
-
-        Creates an instance of the '_MetricCalculator' class as an object 
-        called 'self.operations', where 'self' is the name of the instance of 
-        '_SingleRawDataFile'.
-
-        Args:
-            fileName (str, optional): name of the file to operate on. None that 
-                this must be passed to the operations sub-method at some point. 
-                Defaults to "".
-
-        Returns:
-            _MetricCalculator object: instance of class
-        """
-
-        return _MetricCalculator(fileName)
 
     @property
     def raw_file_name(self): # DOCSTRING
@@ -186,6 +137,93 @@ class _SingleFile:
         self.fileName = value
         return self.fileName
 
+    
+    def add_column(self, operation): # DOCSTRING
+
+        with open(self.file_path) as f: # read only
+            processed_file = csv.reader(f)
+
+            # if heading not in top row, add heading
+            if operation(heading=True) not in f.read():
+                f.seek(0)
+
+                # for tracking during loop
+                fileData = []
+
+                for row in processed_file:
+
+                    # ignore blank rows
+                    if len(row) < const.NUMBER_OF_COLUMNS:
+                        continue
+
+                    # add another empty column, and a new heading only if on the first line
+                    fileData.append(list(row))
+                    if processed_file.line_num == 1:
+                        fileData[0].append(operation(heading=True))
+                    else:
+                        fileData[-1].append("")
+
+                with open(self.filePath, "w", newline="") as f: # writeable
+                    processed_file = csv.writer(f)
+                    processed_file.writerows(fileData) # write amended data to tracker file
+
+        return self.populate_column(operation)
+
+
+    def populate_column(self, operation): # DOCSTRING
+
+        values = operation(self.fileName) # needs to return a list with the same length as number of rows in the file
+
+        columnHeading = operation(heading=True)
+        
+        # get column number of given header
+        try:
+            columnNumber = self.get_column_number(columnHeading)
+        except ValueError as e: # if column not found
+            print(e)
+            return 0
+
+        self.write_to_file(columnNumber, values)
+
+        return 1
+
+    def get_column_number(self, columnHeading): # COMPLETE, DOCSTRING
+
+        with open(self.file_path) as f:
+            processed_file = csv.reader(f)
+
+            # find column number
+            columnNumber = 0
+            for row in processed_file:
+                for heading in row:
+                    if heading == columnHeading:
+                        return columnNumber # stop when heading is found
+                    else:
+                        columnNumber += 1
+                raise ValueError("Column heading not found")
+
+
+    def write_to_file(self, columnNumber, data): # COMPLETE, DOCSTRING
+
+        with open(self.file_path, "r") as f: # read only
+            processed_file = csv.reader(f)
+
+            # for tracking during loop
+            fileData = []
+            
+            for i, row in enumerate(processed_file):
+                # ignore blank rows
+                if len(row) < const.NUMBER_OF_COLUMNS:
+                    continue
+
+                fileData.append(list(row))
+                if i > 0: # skip header
+                    fileData[i][-1] = data[i]
+
+        with open(self.file_path, "w", newline="") as f: # writeable
+            tracker_file = csv.writer(f)
+            tracker_file.writerows(fileData) # write amended data to tracker file
+        return True
 
     def get_health_status(self): # DOCSTRING
         """Checks if a file has been marked as healthy..
@@ -202,68 +240,110 @@ class _SingleFile:
         G = global_tracker.GlobalFile(fullInitialisation = False)
         return G.get_health_status(rawFileName)
 
-    def graph_raw_sensor_data(self): # DOCSTRING
-        """Creates a graph of the raw sensor data over time.
 
-        First, checks the raw data file has passed its health checks. Then 
-        stores the data in each of the columns in its own list, which is used 
-        to generate a graph of all the values together.
+class _Calculations:
+    def __init__(self, fileName=""):
+        self.fileName = fileName
+    
+    @property
+    def file_path(self):
+        """Getter for the attribute of the same name.
+
+        Assigns the value first, by adding the full file path to 
+        'self.fileName'.
 
         Returns:
-            int: signifies successful completion of the method
+            str: path to the raw data file
+        """
+        
+        self.filePath = const.DATA_DIRECTORY + self.fileName[const.LENGTH_OF_DATA_DIR:]
+        return self.filePath
+
+    def set_file_name(self, value):
+        """Setter for the attribute of the same name.
+
+        Args:
+            value (str): name of the file to calculate metric(s) for
+
+        Returns:
+            str: the new value of the attribute
         """
 
-        G = global_tracker.GlobalFile(False)
-        healthStatus = G.get_health_status(self.raw_file_name)
-        del G
+        self.fileName = value
+        return self.fileName
 
-        filePath = self.file_path
+    def duplicate(self, fileName=None, heading=False):
+        if heading:
+            return "duplicate" # title of column in tracker file
 
-        if healthStatus == -1: # not in file
-            print("File not found")
-            return 0
-        elif healthStatus <= const.failed: # failed or untested
-            print("File has not been marked as healthy")
-            return 0
-        else: # healthy
-            with open(filePath) as f:
-                raw_data = csv.reader(f)
-                data = []
+        if fileName == None:
+            fileName = self.fileName
+        else:
+            self.set_file_name(fileName)
+    
+        data = []
 
-                # create blank list of lists to store data
-                for i in range(0, const.NUMBER_OF_COLUMNS):
-                    data.append([])
+        try:
+            with open(self.file_path) as f:
+                csv_file = csv.reader(f)
+                # get to end of file
+                for row in csv_file:
+                    data.append(row[0])
+                return data
+        except:
+            print("Couldn't open file:", fileName)
+            print("Try again if you think this is a mistake.")
 
-                next(f)
 
-                for row in raw_data:
-                    for i, entry in enumerate(row):
-                        data[i].append(float(entry))
 
-            time = data[0]
+"""
+class _Ensemble:
+    # for comparing/ analysing data from all files - reads global tracker and 
+    # produces graphs
+    def init(self):
+        pass
 
-            #plot linear acceleration and angular velocity separately
-            fig, (linAcc, angVel, eulerAng) = plt.subplots(3, sharex=True)
-            for i in range(1, len(data)):
-                if i < 4:
-                    linAcc.plot(time, data[i], label=const.COLUMN_HEADERS[i])
-                elif i < 7:
-                    angVel.plot(time, data[i], label=const.COLUMN_HEADERS[i])
-                elif i < 10:
-                    eulerAng.plot(time, data[i], label=const.COLUMN_HEADERS[i])
-            
-            fig.suptitle("Raw Sensor Data against Time")
-            linAcc.legend()
-            angVel.legend()
-            eulerAng.legend()
-            fig.show()           
+"""
 
-            return 1
 
-    def graph_flight_path(self): #COMPLETE, DOCSTRING
-        print("TO DO THIS FUNCTION STILL")
+class _Metrics:
+    # for calculating metrics, accessed via global tracker file
+    def init(self, fileName=""):
 
-    def total_time(self, fileName = None, heading=False):
+        self.fileName = functions.raw_to_processed(fileName)
+    
+    @property
+    def file_path(self):
+        """Getter for the attribute of the same name.
+
+        Assigns the value first, by adding the full file path to 
+        'self.fileName'.
+
+        Returns:
+            str: path to the raw data file
+        """
+        
+        self.filePath = const.DATA_DIRECTORY + self.fileName[const.LENGTH_OF_DATA_DIR:]
+        return self.filePath
+
+
+    def set_file_name(self, value):
+        """Setter for the attribute of the same name.
+
+        Args:
+            value (str): name of the file to calculate metric(s) for
+
+        Returns:
+            str: the new value of the attribute
+        """
+
+        self.fileName = value
+        return self.fileName
+
+
+    # metrics for tracker
+
+    def total_time(self, fileName=None, heading=False):
         """Calculates a metric (total time of recording for a given throw)
 
         If the 'heading' parameter is 'True', the method simply returns the 
@@ -300,76 +380,56 @@ class _SingleFile:
             print("Couldn't open file:", fileName)
             print("Try again if you think this is a mistake.")
 
+    def spiral_rate(self, fileName=None, heading=False): # DOCSTRING
+        if heading:
+            return "spiral rate" # title of column in tracker file
+
+        if fileName == None:
+            fileName = functions.raw_to_processed(self.fileName)
+        else:
+            self.set_file_name(functions.raw_to_processed(fileName))
+    
+        try:
+            with open(self.file_path) as f:
+                csv_file = csv.reader(f)
+                columnNumber = self.get_column_number("w (e_r)")
+                max = 0
+                next(f) # skip header
+                for row in csv_file:
+                    if abs(float(row[columnNumber])) > max:
+                        max = abs(float(row[columnNumber]))
+                return max
+        except FileNotFoundError:
+            print("Couldn't open file:", fileName)
+            print("Try again if you think this is a mistake.")
 
 
+    def get_column_number(self, columnHeading):
+        """Returns the column number associated with a given heading.
 
-class _MetricCalculator:
-    """Object that calculates all the metrics.
-
-    Attributes:
-        fileName (str) : name of the file to calculate the metric for
-        filePath (str) : file path to the file which will be operated on
-
-    Methods:
-        __init__ : constructor for class
-        file_path : (property) getter for the attribute of the same name
-        set_file_name : setter for the attribute of the same name
-        all : runs all methods in this class that calculate a metric
-        total_time : metric calculator for the time of the throw recorded
-    """
-
-    def __init__(self, fileName):
-        """Constructor for class. Sets class attribute.
-
-        Args:
-            fileName (str): the name of the file to calculate a metric for
-        """
-        
-        self.fileName = fileName
-        
-    @property
-    def file_path(self):
-        """Getter for the attribute of the same name.
-
-        Assigns the value first, by adding the full file path to 
-        'self.fileName'.
-
-        Returns:
-            str: path to the raw data file
-        """
-        
-        self.filePath = const.DATA_DIRECTORY + self.fileName[const.LENGTH_OF_DATA_DIR:]
-        return self.filePath
-        
-    def set_file_name(self, value):
-        """Setter for the attribute of the same name.
+        Opens the tracker file, and iterates through the first row to find a 
+        match. If found, the index of the column is returned. Else, a 
+        ValueError is raised.
 
         Args:
-            value (str): name of the file to calculate metric(s) for
+            columnHeading (str): name of column to be found
+
+        Raises:
+            ValueError: raised if the column is not found in the header
 
         Returns:
-            str: the new value of the attribute
+            int: index of column
         """
 
-        self.fileName = value
-        return self.fileName
+        with open(self.filePath) as f:
+            processed_file = csv.reader(f)
 
-
-
-class _Ensemble:
-    """Object that calculates all the metrics.
-
-    Attributes:
-        fileName (str) : name of the file to calculate the metric for
-        filePath (str) : file path to the file which will be operated on
-
-    Methods:
-        __init__ : constructor for class
-        file_path : (property) getter for the attribute of the same name
-        set_file_name : setter for the attribute of the same name
-        all : runs all methods in this class that calculate a metric
-        total_time : metric calculator for the time of the throw recorded
-    """
-
-    def __init__(self, fileName):
-        pass
+            # find column number
+            columnNumber = 0
+            for row in processed_file:
+                for heading in row:
+                    if heading == columnHeading:
+                        return columnNumber # stop when heading is found
+                    else:
+                        columnNumber += 1
+                raise ValueError("Column heading not found")
