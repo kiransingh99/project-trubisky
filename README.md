@@ -128,7 +128,9 @@ This is only an increase of 0.18%, and therefore will have a negligible effect o
 ## To Do
 - Post processing code
 	- on interface, make sure only raw/processed data files are accepted, as appropriate
-	- create a class which converts raw data into processed data files - similar to global_tracker code. It will need to:
+	- processed data files
+		- create a processed data file - create a column for each function listed below and call function to update
+		- update each processed data file - do all functions listed below
 		- remove gravity from acceleration
 		- calculate speed in x-y coordinates
 		- calculate spiral rate
