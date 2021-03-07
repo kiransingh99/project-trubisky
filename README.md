@@ -127,11 +127,15 @@ This is only an increase of 0.18%, and therefore will have a negligible effect o
 
 ## To Do
 - Post processing code
-	- on interface, make sure only raw/processed data files are accepted, as appropriate
+	- interface
+		- make sure only raw/processed data files are accepted, as appropriate
+		- add inputs to create a processed file for one/all raw data file (ie update all files)
 	- processed data files
 		- create a processed data file - create a column for each function listed below and call function to update
 		- update each processed data file - do all functions listed below
-		- remove gravity from acceleration
+		- graph raw sensor data
+		- graph any variables against each other (unspecified number of independent and dependent variables)
+		- smooth/low pass filter data
 		- calculate speed in x-y coordinates
 		- calculate spiral rate
 		- calculate position in x-y coordinates
@@ -148,4 +152,5 @@ This is only an increase of 0.18%, and therefore will have a negligible effect o
 		- plot speed against time
 		- plot path in x-y coordinates
 		- angle of attack
+	- comments and docstrings (assume all docstrings are wrong - especially RE raw vs processed data)
 	- finish interface for main python file
