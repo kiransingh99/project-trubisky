@@ -128,20 +128,17 @@ This is only an increase of 0.18%, and therefore will have a negligible effect o
 ## To Do
 - Post processing code
 	- interface
-		- make sure only raw/processed data files are accepted, as appropriate
 		- add inputs to create a processed file for one/all raw data file (ie update all files)
 	- processed data files
-		- create a processed data file - create a column for each function listed below and call function to update
-		- update each processed data file - do all functions listed below
-		- graph raw sensor data
-		- graph any variables against each other (unspecified number of independent and dependent variables)
+		- remove any given column
 		- smooth/low pass filter data
+		- calculate speed in ball centred coordinates
 		- calculate speed in x-y coordinates
-		- calculate spiral rate
 		- calculate position in x-y coordinates
 		- calculate angle of elevation
 		- calculate angle wrt direction of throw
 		- include a function that updates files already listed
+		- graph any variables against each other (unspecified number of independent and dependent variables)
 	- add more operations (metrics) - dependent on processed data
 		- time of launch (when acceleration (without g) stops increasing)
 		- launch speed
