@@ -176,7 +176,7 @@ class GlobalFile:
                 the entry
 
         Returns:
-            bool: 'True' to signify completion of method
+            int: 1 to signify completion of method
         """
 
         with open(const.TRACKER_FILEPATH) as f: # read only
@@ -196,20 +196,17 @@ class GlobalFile:
                         continue
 
                     # add another empty column, and a new heading only if on the first line
+                    fileData.append(list(row))
                     if tracker_file.line_num == 1:
-                        fileData.append(list(row))
                         fileData[0].append(operation(heading=True))
                     else:
-                        fileData.append(list(row))
                         fileData[-1].append("")
 
                 with open(const.TRACKER_FILEPATH, "w", newline="") as f: # writeable
                     tracker_file = csv.writer(f)
                     tracker_file.writerows(fileData) # write amended data to tracker file
 
-        self.populate_metric(operation)
-
-        return True
+        return self.populate_metric(operation)
 
     def get_column_number(self, columnHeading):
         """Returns the column number associated with a given heading.
@@ -254,7 +251,7 @@ class GlobalFile:
                 the entry
 
         Returns:
-            int: 'True' to signify completion of method, 'False' otherwise
+            int: 1 to signify completion of method, 0 otherwise
         """
 
         self.remove_deleted()
@@ -279,11 +276,9 @@ class GlobalFile:
                 if len(row) < const.TRACKER_BARE_MINIMUM_LENGTH:
                     continue
 
-                # update metric only if health checks were passeed
-                if int(row[1]) >= const.passedWithWarnings:
-                    self.write_to_file(row[0], columnNumber, operation(row[0]))
+                self.write_to_file(row[0], columnNumber, operation(row[0]))
 
-        return True
+        return 1
 
     def remove_deleted(self):
         """Removes any files from the tracker file if they have been deleted 
