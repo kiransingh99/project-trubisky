@@ -1,6 +1,7 @@
 from obj import const
 from obj import global_tracker
 from obj import functions
+from obj import processed_data
 from obj import raw_data
 
 def get_prompt(level):
@@ -203,15 +204,15 @@ def main():
             G = global_tracker.GlobalFile(True)
         elif level == "1ca": # add raw data file to tracker
             fileName = sanitise_file_name(True)
-            if G.add_file(filePath):
+            if G.add_file(fileName):
                 print("File added to tracker successfully")
             else:
                 print("File not added to tracker")
             level = level[:-1]
         elif level == "1cb": # check if a raw data file has been listed in tracker
             fileName = sanitise_file_name(True)
-            if G.is_file_recorded(filePath):
-                print("File ({}) is listed in tracker".format(filePath))
+            if G.is_file_recorded(fileName):
+                print("File ({}) is listed in tracker".format(fileName))
             else:
                 print("File ({}) is not listed in tracker".format(filePath))
             level = level[:-1]
@@ -265,12 +266,12 @@ def main():
                     G.remove_metric(columnNumber)
             level = level[:-1]
         elif level == "1d": # analysis
-            n = 6 # number of subplots
+            pass
         elif level == "1da": # individual file analysis
             print("Set parameters:")
-            fileName = sanitise_file_name(True)
-            R = raw_data.RawData(fileName = fileName)
-            I = R.individual
+            fileName = functions.raw_to_processed(sanitise_file_name(True))
+            P = processed_data.ProcessedData(fileName = fileName)
+            I = P.individual
 
             healthStatus = I.get_health_status()
 
@@ -283,7 +284,7 @@ def main():
                         .format(fileName))
                 level = level[:-1]
         elif level == "1daa": # update parameters
-            fileName = sanitise_file_name(True)
+            fileName = functions.raw_to_processed(sanitise_file_name(True))
 
             I.set_file_name(fileName)
 
@@ -294,14 +295,7 @@ def main():
                         .format(fileName))
             level = level[:-1]
         elif level == "1dab": # graph of raw sensor values
-            n_str = input("How many subplots? Default is {} ".format(n))
-            if n_str == "":
-                pass
-            elif functions.isFloat(n_str):
-                n = int(n_str)
-            else:
-                print("Invalid input, using {} subplots".format(n))
-            I.graph_sensor_data(n)
+            I.graph_raw_sensor_data()
             level = level[:-1]
         elif level == "1dac": # graph flight path
             I.graph_flight_path()
@@ -329,7 +323,7 @@ def main():
 # operations
 operation = {
     "all": None,
-    "time of throw": raw_data.RawData().individual.operations.total_time,
+    "time of throw": processed_data.ProcessedData().individual.total_time,
     "q": None
 }
 
