@@ -27,10 +27,12 @@ def get_prompt(level):
         options = level1c
     elif level == "1d":
         options = level1d
-    elif level == "1da":
-        options = level1da
-    elif level == "1db":
-        options = level1db
+    elif level == "1e":
+        options = level1e
+    elif level == "1ea":
+        options = level1ea
+    elif level == "1eb":
+        options = level1eb
     
     # print menu and store user's input
     for (key, val) in options.items():
@@ -170,6 +172,44 @@ def set_parameters_health(overwrite = True, showWarnings = True):
 
     return overwrite, showWarnings
     
+#1ca
+def set_parameters_processed(overwrite = False):
+    """Allows the user to set parameters to initialise the 'P.health' 
+    object.
+
+    Args:
+        overwrite (bool, optional): value for class. Defaults to True.
+        showWarnings (bool, optional): value for class. Defaults to True.
+
+    Returns:
+        bool: value of overwrite
+    """
+    
+    # set possible values for overwrite
+    options = {
+        "0": False,
+        "1": True
+    }
+
+    print("Set 'overwrite' (default is '{}')".format(overwrite))
+    for (key, val) in options.items():
+        print(str(key) + ") " + str(val))
+    
+    while True:
+        choice = input().lower()
+        if choice == "": # if blank, don't change value
+            break
+        elif choice in options.keys():
+            overwrite = options[choice]
+            break
+        else:
+            print("Invalid input")
+
+    print("Parameters chosen:")
+    print("  - overwrite = {}".format(overwrite))
+
+    return overwrite
+    
 
 def main():
     print("\n\n")
@@ -188,67 +228,115 @@ def main():
             H = R.health
         elif level == "1ba": # set parameters
             overwrite, showWarnings = set_parameters_health(overwrite, showWarnings)
-            # update class attributes instead of recreating object
+            # update class attributes
             H.overWrite = overwrite
             H.showWarnings = showWarnings
             level = level[:-1]
         elif level == "1bb": # assess all files
             H.check_all_files()
             level = level[:-1]
+            print("Recommended to create processed data files. Create? (y/n)")
+            if input() == "y":
+                level = "1c"
+                continue
         elif level == "1bc": # assess a specific file
             fileName = sanitise_file_name(False)
             filePath = const.DATA_DIRECTORY + fileName
             H.check_one_file(filePath)
             level = level[:-1]
-        elif level == "1c": # tracker
+            print("Recommended to create processed data file. Create? (y/n)")
+            if input() == "y":
+                level = "1cc"
+                continue
+        elif level == "1c": # health
+            print("Set parameters:") # set parameters before creating objects
+            overwrite = set_parameters_processed()
+            P = processed_data.ProcessedData(overwrite)
+        elif level == "1ca": # set parameters
+            print("Set parameters:") # set parameters before creating objects
+            overwrite = set_parameters_processed(overwrite)
+            # update class attributes
+            P.overWrite = overwrite
+            level = level[:-1]
+        elif level == "1cb": # create processed data files for all raw data files
+            if P.create_all_processed_data_files():
+                print("Completed successfully")
+            level = level[:-1]
+        elif level == "1cc": # create processed a data file for a specific raw data files
+            fileName = sanitise_file_name(False)
+            print("Added file " + 
+                P.create_single_processed_data_file(functions.add_data_directory(fileName)))
+            level = level[:-1]
+        elif level == "1cd": # calculate an operation for all files
+            I = P.individual
+            print("Enter name of calculation, or 'q' to quit")
+            for key in calculations.keys():
+                print(" -", key)
+
+            column_header = get_input(calculations.keys())
+            if column_header == "q":
+                pass
+            elif column_header == "all":
+                for entry in P.get_all_processed_files():
+                    I.set_file_name(entry)
+                    print("File: " + entry)
+                    for key in calculations.keys():
+                        if key == "all" or key == "q":
+                            continue
+                        print("  Calculating '{}'...".format(key))
+                        I.add_column(calculations[key])
+            else:
+                I.add_column(calculations[column_header])
+            level = level[:-1]
+        elif level == "1d": # tracker
             G = global_tracker.GlobalFile(True)
-        elif level == "1ca": # add raw data file to tracker
+        elif level == "1da": # add raw data file to tracker
             fileName = sanitise_file_name(True)
             if G.add_file(fileName):
                 print("File added to tracker successfully")
             else:
                 print("File not added to tracker")
             level = level[:-1]
-        elif level == "1cb": # check if a raw data file has been listed in tracker
+        elif level == "1db": # check if a raw data file has been listed in tracker
             fileName = sanitise_file_name(True)
             if G.is_file_recorded(fileName):
                 print("File ({}) is listed in tracker".format(fileName))
             else:
                 print("File ({}) is not listed in tracker".format(filePath))
             level = level[:-1]
-        elif level == "1cc": # remove deleted files from tracker
+        elif level == "1dc": # remove deleted files from tracker
             G.remove_deleted()
             level = level[:-1]
-        elif level == "1cd": # add/update a metric to tracker
+        elif level == "1dd": # add/update a metric to tracker
             # print menu and store user's input
-            print("Enter name of operation, or 'q' to quit")
-            for key in operation.keys():
+            print("Enter name of metric, or 'q' to quit")
+            for key in metrics.keys():
                 print(" -", key)
 
-            column_header = get_input(operation.keys())
+            column_header = get_input(metrics.keys())
             if column_header == "q":
                 pass
             elif column_header == "all":
-                for key in operation.keys():
+                for key in metrics.keys():
                     if key == "all" or key == "q":
                         continue
                     print("Calculating '{}'...".format(key))
-                    G.add_metric(operation[key])
+                    G.add_metric(metrics[key])
             else:
-                G.add_metric(operation[column_header])
+                G.add_metric(metrics[column_header])
             
             level = level[:-1]
-        elif level == "1ce": # remove a metric from the tracker
+        elif level == "1de": # remove a metric from the tracker
             # print menu and store user's input
-            print("Enter name of operation, or 'q' to quit")
-            for key in operation.keys():
+            print("Enter name of metric, or 'q' to quit")
+            for key in metrics.keys():
                 print(" -", key)
 
-            column_header = get_input(operation.keys())
+            column_header = get_input(metrics.keys())
             if column_header == "q":
                 pass
             elif column_header == "all":
-                for key in operation.keys():
+                for key in metrics.keys():
                     if key == "all" or key == "q":
                         continue
                     try:
@@ -265,12 +353,12 @@ def main():
                 else:
                     G.remove_metric(columnNumber)
             level = level[:-1]
-        elif level == "1d": # analysis
+        elif level == "1e": # analysis
             pass
-        elif level == "1da": # individual file analysis
+        elif level == "1ea": # individual file analysis
             print("Set parameters:")
             fileName = functions.raw_to_processed(sanitise_file_name(True))
-            P = processed_data.ProcessedData(fileName = fileName)
+            P = processed_data.ProcessedData()
             I = P.individual
 
             healthStatus = I.get_health_status()
@@ -283,7 +371,7 @@ def main():
                 print("File {} not marked as healthy, choose another or check the file first."
                         .format(fileName))
                 level = level[:-1]
-        elif level == "1daa": # update parameters
+        elif level == "1eaa": # update parameters
             fileName = functions.raw_to_processed(sanitise_file_name(True))
 
             I.set_file_name(fileName)
@@ -294,13 +382,13 @@ def main():
                 print("File {} not marked as healthy, choose another or check the file first."
                         .format(fileName))
             level = level[:-1]
-        elif level == "1dab": # graph of raw sensor values
+        elif level == "1eab": # graph of raw sensor values
             I.graph_raw_sensor_data()
             level = level[:-1]
-        elif level == "1dac": # graph flight path
+        elif level == "1eac": # graph flight path
             I.graph_flight_path()
             level = level[:-1]
-        elif level == "1db": # population analysis
+        elif level == "1eb": # population analysis
             G = global_tracker.GlobalFile(True)
 
         print("\n\n")
@@ -320,10 +408,18 @@ def main():
             break
 
 
-# operations
-operation = {
+# calculations
+calculations = {
     "all": None,
-    "time of throw": processed_data.ProcessedData().individual.total_time,
+    "duplicate": processed_data.ProcessedData().individual.calculations.duplicate,
+    "q": None
+}
+
+# metric
+metrics = {
+    "all": None,
+    "time of throw": processed_data.ProcessedData().metrics.total_time,
+    "spiral rate": processed_data.ProcessedData().metrics.spiral_rate,
     "q": None
 }
 
@@ -331,8 +427,9 @@ operation = {
 level1 = {
     "a": "View architecture of interface",
     "b": "Health check",
-    "c": "Tracker",
-    "d": "Analysis",
+    "c": "Processed files",
+    "d": "Tracker",
+    "e": "Analysis",
     "q": "Quit program"
 }
 
@@ -344,6 +441,14 @@ level1b = {
 }
 
 level1c = {
+    "a": "Change parameters",
+    "b": "Create processed data files for all raw data files",
+    "c": "Create processed a data file for a specific raw data files",
+    "d": "Add/update an operation for all files",
+    "q": "Quit 'Processed files'"
+}
+
+level1d = {
     "a": "Add raw data file to tracker",
     "b": "Check if a raw data file has been listed in tracker",
     "c": "Remove deleted files from tracker",
@@ -352,20 +457,20 @@ level1c = {
     "q": "Quit 'Tracker'"
 }
 
-level1d = {
+level1e = {
     "a": "Individual file analysis",
     "b": "Population analysis",
     "q": "Quit 'Analysis'"
 }
 
-level1da = {
+level1ea = {
     "a": "Update parameters",
     "b": "Graph of raw sensor values",
     "c": "Graph flight path",
     "q": "Quit 'Individual file analysis'"
 }
 
-level1db = {
+level1eb = {
     "a": "*Graph metrics against each other",
     "q": "Quit 'Population analysis'"
 }
