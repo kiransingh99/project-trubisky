@@ -206,6 +206,8 @@ class GlobalFile:
                     tracker_file = csv.writer(f)
                     tracker_file.writerows(fileData) # write amended data to tracker file
 
+                self.set_TRACKER_COUNT_COLUMNS(self.TRACKER_COUNT_COLUMNS + 1)
+
         return self.populate_metric(operation)
 
     def get_column_number(self, columnHeading):
@@ -324,11 +326,14 @@ class GlobalFile:
                     fileData.append(list(row)) # add header to list
 
         if deleted > 0:
+            with open(const.TRACKER_FILEPATH, "w", newline="") as f: # writeable
+                tracker_file = csv.writer(f)
+                tracker_file.writerows(fileData) # rewrite data to tracker file
+            
+            self.set_TRACKER_COUNT_ROWS(self.TRACKER_COUNT_ROWS-deleted)
+
             print("Deleted {} files".format(deleted))
 
-        with open(const.TRACKER_FILEPATH, "w", newline="") as f: # writeable
-            tracker_file = csv.writer(f)
-            tracker_file.writerows(fileData) # rewrite data to tracker file
         return True
 
     def remove_metric(self, columnNumber):
@@ -354,8 +359,8 @@ class GlobalFile:
         if columnNumber < len(const.TRACKER_BARE_MINIMUM.split(",")):
             raise ValueError("Parameter 'columnNumber' cannot be less than {}"
                                 .format(len(const.TRACKER_BARE_MINIMUM.split(","))))
-        elif columnNumber > self.TRACKER_COUNT_COLUMNS:
-            raise ValueError("Parameter 'columnNumber' must be less than {}"
+        elif columnNumber >= self.TRACKER_COUNT_COLUMNS:
+            raise ValueError("Parameter 'columnNumber' cannot be greater than {}"
                                 .format(self.TRACKER_COUNT_COLUMNS))
 
         with open(const.TRACKER_FILEPATH) as f: # read only
@@ -379,6 +384,8 @@ class GlobalFile:
             tracker_file = csv.writer(f)
             tracker_file.writerows(fileData) # rewrite data to tracker file
         
+        self.set_TRACKER_COUNT_COLUMNS(self.TRACKER_COUNT_COLUMNS-1)
+
         print("Deleted column", columnNumber)
 
         return True
@@ -391,11 +398,10 @@ class GlobalFile:
             healthStatus (int): health status associated with the file
 
         Returns:
-            int: indicates successful completion of method
+            bool: indicates successful completion of method
         """
 
-        self.write_to_file(fileName, 1, healthStatus)
-        return 1
+        return self.write_to_file(fileName, 1, healthStatus)
 
     def get_health_status(self, fileName):
         """Checks if a file is marked as healthy in the global tracker file.
@@ -418,7 +424,7 @@ class GlobalFile:
                 if row[0] == fileName:
                     return int(row[1]) # get the health status of the file
                     
-            print("File '{}' not found".format(fileName))
+            print("File '{}' not found in tracker".format(fileName))
             return -1
     
     def is_file_recorded(self, fileName):
@@ -487,6 +493,31 @@ class GlobalFile:
             tracker_file = csv.writer(f)
             tracker_file.writerows(fileData) # write amended data to tracker file
         return True
+
+
+    def __add_row(self, fileName):
+        """Private method to add a single row to the bottom of the CSV file.
+
+        Creates an empty list of the correct length, and sets the first 
+        element to the file name. This gets appended to the file.
+
+        Args:
+            fileName (str): name of the file to be recorded
+
+        Returns:
+            int: to signify completion of method
+        """
+
+        dataToWrite = [""] * self.TRACKER_COUNT_COLUMNS # one item for each column in file
+        dataToWrite[0] = fileName # first element of list is first column of file
+        # append data to file
+        with open(const.TRACKER_FILEPATH, "a") as f:
+            f.write("\n")
+            f.write(", ".join(dataToWrite))
+
+        self.set_TRACKER_COUNT_ROWS(self.TRACKER_COUNT_ROWS + 1)
+
+        return 1
 
     def __check_tracker_full(self):
         """Checks that the global tracker file can be found and opened, and that 
@@ -591,25 +622,3 @@ class GlobalFile:
             self.set_TRACKER_COUNT_COLUMNS(len(next(tracker_file)))
 
             f.close()
-
-    def __add_row(self, fileName):
-        """Private method to add a single row to the bottom of the CSV file.
-
-        Creates an empty list of the correct length, and sets the first 
-        element to the file name. This gets appended to the file.
-
-        Args:
-            fileName (str): name of the file to be recorded
-
-        Returns:
-            int: to signify completion of method
-        """
-
-        dataToWrite = [""] * self.TRACKER_COUNT_COLUMNS # one item for each column in file
-        dataToWrite[0] = fileName # first element of list is first column of file
-        # append data to file
-        with open(const.TRACKER_FILEPATH, "a") as f:
-            f.write("\n")
-            f.write(", ".join(dataToWrite))
-
-        return 1
