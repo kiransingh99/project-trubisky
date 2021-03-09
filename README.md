@@ -19,7 +19,7 @@ This system is embedded into the ball. It is comprised of:
 - BNO055 (9 DOF IMU) measures linear acceleration, angular velocity, orientation
 - Micro SD Breakout Board: stores data onboard
 
-This system collectes data from the two sensors and writes it to a file on the SD card. Each throw of the ball requires the corresponding data to be saved in a new file. Using user inputs, the system can be reset, and the data can be transmitted or deleted. The data is saved to a file as this is faster than transmitting it as it is measured, so this allows for a higher frequency of data readings. The accelerometer and gyroscope together track 6 degrees of freedom, which completely describes a rigid body; therefore these sensors are sufficient to fully monitor the ball's motion.
+This system collectes data from the two sensors and writes it to a file on the SD card. Each throw of the ball requires the corresponding data to be saved in a new file. Using user inputs, the system can be reset, and the data can be transmitted or deleted. The data is saved to a file as this is faster than transmitting it as it is measured, so this allows for a higher frequency of data readings. The accelerometer and gyroscope together track 6 degrees of freedom, which, when combined with a 3 axis magnetometer, whcih gives us information about orientation (which is required in a gravitational field) completely describes a rigid body; therefore these sensors are sufficient to fully monitor the ball's motion.
 
 ### Offboard system
 This system is not connected to the ball, but is connected to a PC. It is comprised of:
@@ -45,6 +45,26 @@ Each file can be passed to a function which generates data about the throws and 
 
 ## Interpreting the data
 
+### Raw data files
+
+The raw data files are in CSV file formats, and the file names begin with the prefix "RAW-". In case they were not transmitted accurately, they are 'health checked' before they get added to the tracker file (mentioned below). They have the following columns:
+
+- time - timestamp of each reading, given in milliseconds
+- acc (e_r) - linear acceleration in the direction the ball points in (along the major axis)
+- acc (e_1) - linear acceleration along one of the minor axes
+- acc (e_2) - linear acceleration along the other minor axis
+- w (e_r) - angular velocity in the direction of the major axis
+- w (e_1) - angular velocity in the direction of the first minor axis
+- w (e_2) - angular velocity in the direction of the second minor axis
+- euler (alpha) - change in bearing since sensors initialised
+- euler (beta) - change in elevation/ pitch since sensors initialised
+- euler (gamma) - change in orientation since sensors intiialised
+
+This file should not be given too much focus as the processed data files contain the same information and more.
+
+### Processed data files
+TO DO
+
 ### Global tracker file
 
 The global tracker file is the summary of the data of each of the throws of the ball. Each column gives the value of another metric for each file listed in the tracker. An explanation of the columns are as follows:
@@ -67,10 +87,10 @@ The onboard system is intended for a Arduino Nano Every, though it will work on 
 
 |   Arduino Nano   |    Device name and pin    |
 |------------------|---------------------------|
-| **5V**           | *ADXL345* **Vin**         |
-| **GND**          | *ADXL345* **GND**         |
-| **A4**           | *ADXL345* **SDA**         |
-| **A5**           | *ADXL345* **SCL**         |
+| **5V**           | *BNO055* **Vin**          |
+| **GND**          | *BNO055* **GND**          |
+| **A4**           | *BNO055* **SDA**          |
+| **A5**           | *BNO055* **SCL**          |
 | **5V**           | *Micro SD Module* **5V**  |
 | **GND**          | *Micro SD Module* **GND** |
 | **D10**          | *Micro SD Module* **CS**  |
@@ -131,6 +151,7 @@ This is only an increase of 0.18%, and therefore will have a negligible effect o
 		- add inputs to create a processed file for one/all raw data file (ie update all files)
 	- processed data files
 		- remove any given column
+		- discard zero readings as sensors haven't been set up properly
 		- smooth/low pass filter data
 		- calculate speed in ball centred coordinates
 		- calculate speed in x-y coordinates
