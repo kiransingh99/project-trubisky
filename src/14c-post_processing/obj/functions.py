@@ -30,8 +30,28 @@ def add_data_directory(fileName):
     path = dataDirectory + fileName
     return path
 
-def raw_to_processed(fileName): # DOCSTRING
+def raw_to_processed(fileName):
+    """Takes a raw data file name (according to definition in functions.py) and 
+    finds the name of the equivalent processed data file.
+
+    Args:
+        fileName (str): name of raw data file
+
+    Returns:
+        str: name of equivalent processed data file
+    """
+
     return fileName.replace(const.RAW_DATA_PREFIX, const.PROCESSED_DATA_PREFIX)
 
-def processed_to_raw(fileName): # DOCSTRING
+def processed_to_raw(fileName):
+    """Takes a processed data file name (according to definition in 
+    functions.py) and finds the name of the equivalent raw data file.
+
+    Args:
+        fileName (str): name of processed data file
+
+    Returns:
+        str: name of equivalent raw data file
+    """
+    
     return fileName.replace(const.PROCESSED_DATA_PREFIX, const.RAW_DATA_PREFIX)
