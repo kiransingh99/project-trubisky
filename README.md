@@ -97,11 +97,24 @@ The onboard system is intended for a Arduino Nano Every, though it will work on 
 | **D11**          | *Micro SD Module* **DI**  |
 | **D12**          | *Micro SD Module* **DO**  |
 | **D13**          | *Micro SD Module* **CLK** |
-| **A4**           | *Offboard system* **A4**  |
-| **A5**           | *Offboard system* **A5**  |
-| **GND**          | *Offboard system* **GND** |
 
 Note that this diagram does not include the onboard power supply.
+
+The offboard system has a Molex connector, which allows control of the system within the ball. The connections are as folows:
+
+| #  | Colour |  Connection on-board  |         Connection          |            Function           |
+|----|--------|-----------------------|-----------------------------|-------------------------------|
+| 1  | blue   | **A4**                | **A4** on off-board system  | Tx data wire                  |
+| 2  | purple | **A5**                | **A5** on off-board system  | Tx data wire                  |
+| 3  | grey   | **GND**               | **GND** on off-board system | Ground reference for Tx       |
+| 4  | white  | **Delete pin (D4)**   | #5                          | Triggers delete function      |
+| 5  | black  | **GND**               | Either #4 or #6             | Pulls #4 or #6 down to ground |
+| 6  | brown  | **Transmit pin (D5)** | #5                          | Triggers transmit function    |
+| 7  | red    | **Vin**               | #8a                         | Power circuit                 |
+| 8a | orange | **Battery (+ve)**     | #7                          | Power circuit                 |
+| 8b | orange | **Battery (+ve)**     | Battery charger (+ve)       | Charge battery                |
+
+Note that when charging, the negative terminal of the battery should be connected to either of the ground pins.
 
 #### Offboard system
 
@@ -150,9 +163,10 @@ This is only an increase of 0.18%, and therefore will have a negligible effect o
 	- interface
 		- add inputs to create a processed file for one/all raw data file (ie update all files)
 	- processed data files
+		- remove offsets and convert units (m/s/s, rad/s, rad)
+		- low pass filter/smoother - set parameters at beginning of method
 		- remove any given column
 		- discard zero readings as sensors haven't been set up properly
-		- smooth/low pass filter data
 		- calculate speed in ball centred coordinates
 		- calculate speed in x-y coordinates
 		- calculate position in x-y coordinates
