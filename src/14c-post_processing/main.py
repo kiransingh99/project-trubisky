@@ -72,6 +72,7 @@ def sanitise_file_name(addDataDirectory = False):
     Returns:
         str: sanitised file name
     """
+
     print("Enter file name (in format '{}')".format(const.RAW_DATA_TITLE_FORMAT))
     # remove white space and everything before the last "\"
     userinput = input().strip().split(sep="\\")[-1] 
@@ -240,13 +241,12 @@ def main():
                 level = "1c"
                 continue
         elif level == "1bc": # assess a specific file
-            fileName = sanitise_file_name(False)
-            filePath = const.DATA_DIRECTORY + fileName
-            H.check_one_file(filePath)
+            fileName = sanitise_file_name(True)
+            H.check_one_file(fileName)
             level = level[:-1]
             print("Recommended to create processed data file. Create? (y/n)")
             if input() == "y":
-                level = "1cc"
+                level = "1c"
                 continue
         elif level == "1c": # health
             print("Set parameters:") # set parameters before creating objects
@@ -408,21 +408,6 @@ def main():
             break
 
 
-# calculations
-calculations = {
-    "all": None,
-    "duplicate": processed_data.ProcessedData().individual.calculations.duplicate,
-    "q": None
-}
-
-# metric
-metrics = {
-    "all": None,
-    "time of throw": processed_data.ProcessedData().metrics.total_time,
-    "spiral rate": processed_data.ProcessedData().metrics.spiral_rate,
-    "q": None
-}
-
 # menus
 level1 = {
     "a": "View architecture of interface",
@@ -474,6 +459,23 @@ level1eb = {
     "a": "*Graph metrics against each other",
     "q": "Quit 'Population analysis'"
 }
+
+
+# calculations
+calculations = {
+    "all": None,
+    "duplicate": processed_data.ProcessedData().individual.calculations.duplicate,
+    "q": None
+}
+
+# metric
+metrics = {
+    "all": None,
+    "time of throw": processed_data.ProcessedData().metrics.total_time,
+    "spiral rate": processed_data.ProcessedData().metrics.spiral_rate,
+    "q": None
+}
+
 
 if __name__ == "__main__":
     main()
