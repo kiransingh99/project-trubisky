@@ -336,32 +336,26 @@ class GlobalFile:
 
         return True
 
-    def remove_metric(self, columnNumber):
+    def remove_metric(self, columnHeading):
         """Removes a column from the tracker file.
 
-        Iterates through the global tracker file and stores each column as part 
-        of a list. The column with index 'columnNumber' is removed from the 
-        list. Then the list gets rewritten to the file, overwriting previous 
-        data.
+        Determines which column has the given heading. Then, iterates through 
+        the global tracker file and stores each column as part of a list. The 
+        column with heading 'columHeading' is removed from the list. Then the 
+        new list gets rewritten to the file, overwriting previous data.
 
         Args:
-            columnNumber (int): index of column to be removed
-
-        Raises:
-            ValueError: raised if 'columnNumber' refers to one of the first two 
-                columns, or too a non existent column (too big)
+            columnHeading (str): name of column to be removed
 
         Returns:
             bool: signifying successful completion of method
         """
 
-        # check that the first two columns are not targeted
-        if columnNumber < len(const.TRACKER_BARE_MINIMUM.split(",")):
-            raise ValueError("Parameter 'columnNumber' cannot be less than {}"
-                                .format(len(const.TRACKER_BARE_MINIMUM.split(","))))
-        elif columnNumber >= self.TRACKER_COUNT_COLUMNS:
-            raise ValueError("Parameter 'columnNumber' cannot be greater than {}"
-                                .format(self.TRACKER_COUNT_COLUMNS))
+        try:
+            columnNumber = self.get_column_number(columnHeading)
+        except ValueError as e: # if column not found
+            print(e)
+            return False
 
         with open(const.TRACKER_FILEPATH) as f: # read only
             tracker_file = csv.reader(f)

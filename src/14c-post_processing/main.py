@@ -339,19 +339,11 @@ def main():
                 for key in metrics.keys():
                     if key == "all" or key == "q":
                         continue
-                    try:
-                        columnNumber = G.get_column_number(key)
-                    except ValueError as e: # if column not found
-                        print(e)
-                    else:
-                        G.remove_metric(columnNumber)
+                    if G.remove_metric(key):
+                        print("Removed column " + key)
             else:
-                try:
-                    columnNumber = G.get_column_number(column_header)
-                except ValueError as e: # if column not found
-                    print(e)
-                else:
-                    G.remove_metric(columnNumber)
+                if G.remove_metric(column_header):
+                    print("Removed column " + column_header)
             level = level[:-1]
         elif level == "1e": # analysis
             pass
