@@ -302,7 +302,7 @@ def main():
             if G.is_file_recorded(fileName):
                 print("File ({}) is listed in tracker".format(fileName))
             else:
-                print("File ({}) is not listed in tracker".format(filePath))
+                print("File ({}) is not listed in tracker".format(fileName))
             level = level[:-1]
         elif level == "1dc": # remove deleted files from tracker
             G.remove_deleted()
