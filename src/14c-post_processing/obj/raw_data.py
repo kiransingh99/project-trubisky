@@ -21,18 +21,14 @@ class RawData:
             should be overwritten if it is incorrect, otherwise set as 'False'
         showWarnings (bool): should be 'True' if the user wants any warnings 
             from the test outputted to the terminal
-
         fileName (str): file name (without path) to raw data file to analyse
 
     Methods:
         __init__ : class constructor
         health : (property) groups the 'health' methods
-        individual : (property) groups the 'individual' methods
     """
 
-    def __init__(self, 
-                    overwrite=True, showWarnings=True,
-                    fileName=""):
+    def __init__(self, overwrite=True, showWarnings=True):
         """Constructor for class, sets the class attributes based on the 
         parameters passed in.
 
@@ -41,15 +37,11 @@ class RawData:
                 has already been listed in the file. Defaults to True.
             showWarnings (bool, optional): whether or not to print warnings 
                 from the tests to the terminal. Defaults to True.
-            fileName (str): name of file for analysis and processing. Required 
-                if using 'individual' methods.
         """
         
         # define class variables            
         self.overwrite = overwrite
         self.showWarnings = showWarnings
-
-        self.fileName = fileName
 
     @property
     def health(self):
