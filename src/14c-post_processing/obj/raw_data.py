@@ -7,25 +7,24 @@ import os.path
 import sys
 
 class RawData:
-    """Main class for handling the raw data files transmitted from the ball.
+    """Main class for handling the raw data files received from the ball.
 
-    The methods of this class is divided into two sections: 'health', which 
-    handles everything to do with checking the 'health' of one or more raw data 
-    files, and 'individual', which deals with just one file at a time, primarily 
-    to process and display the data within it. The first three attributes are 
-    relevant to the 'health' methods, and the last one is relevant to the 
-    'individual' methods.
+    The methods of this class are divided into two sections: 
+        - 'health': handles everything to do with checking the 'health' of one 
+        or more raw data files
+        - 'individual': deals with just one file at a time, primarily to process 
+        and display the data within it
 
     Attributes:
         overWrite (bool): set as 'True' if data in the global tracker file 
-            should be overwritten if it is incorrect, otherwise set as 'False'
+            should be overwritten if it is incorrect, otherwise set as 'False'.
         showWarnings (bool): should be 'True' if the user wants any warnings 
-            from the test outputted to the terminal
-        fileName (str): file name (without path) to raw data file to analyse
+            from the test outputted to the terminal.
+        fileName (str): file name (without path) to raw data file to analyse.
 
     Methods:
-        __init__ : class constructor
-        health : (property) groups the 'health' methods
+        __init__ : class constructor.
+        health (property) : groups the 'health' methods.
     """
 
     def __init__(self, overwrite=True, showWarnings=True):
@@ -70,48 +69,49 @@ class _RawDataHealthChecker:
 
     Attributes:
         __THROW_TIME_WARNING_THRESHOLD (int): constant to store the threshold 
-            for throw time, that, if exceeded, raises a warning
+            for throw time, that, if exceeded, raises a warning.
         __ACCELEROMETER_WARNING_THRESHOLD (int): constant to store the threshold 
             for acceleration across each axis, that, if exceeded, raises a 
-            warning
+            warning.
         __GYRO_WARNING_THRESHOLD (int): constant to store the threshold for 
             angular velocity across each axis, that, if exceeded, raises a 
-            warning
+            warning.
         __warningsRaised (bool): a flag that stores if a warning has been raised 
-            for the raw data file currently being checked
+            for the raw data file currently being checked.
         overWrite (bool): set as 'True' if data in the global tracker file 
-            should be overwritten if it is incorrect, otherwise set as 'False'
+            should be overwritten with changes, otherwise set as 'False'.
         showWarnings (bool): should be 'True' if the user wants any warnings 
-            from the test outputted to the terminal
+            from the test outputted to the terminal.
 
     Methods:
-        __init__ : class constructor
-        __del__ : class destructor
+        __init__ : class constructor.
+        __del__ : class destructor.
         DATA_DIRECTORY : {property) returns the constant of the same names. 
-            Takes its value from the const.py file
+            Takes its value from the const.py file.
         NUMBER_OF_COLUMNS : {property) returns the constant of the same name. 
-            Takes its value from the const.py file
+            Takes its value from the const.py file.
         THROW_TIME_WARNING_THRESHOLD : {property) returns the constant of 
-            the same name
+            the same name.
         ACCELEROMETER_WARNING_THRESHOLD : {property) returns the constant of 
-            the same name
+            the same name.
         GYRO_WARNING_THRESHOLD : {property) returns the constant of the same 
-            name
+            name.
         check_all_files : iterates through all files in the folder and passes 
-            each one through to 'check_one_file'
+            each one through to 'check_one_file'.
         check_one_file : runs each test on each row of the given raw data file
         __add_file_to_tracker : adds a given file and its health status to the 
-            global tracker, after testing it and determining its health status
+            global tracker, after testing it and determining its health status.
         __check_columns : asserts that the number of columns in each row is 
-            correct
-        __check_values : asserts that the values in the raw data file are usable 
-        __check_times : asserts that the recorded time strictly increases 
+            correct.
+        __check_values : asserts that the values in the raw data file are 
+            usable.
+        __check_times : asserts that the recorded time strictly increases .
         __is_in_tracker : determines if a given file has already been logged in 
-            the global tracker
+            the global tracker.
     """
 
     def __init__(self, overwrite, showWarnings):
-        """Constructor for class, defines constants and  class attributes.
+        """Constructor for class, defines constants and class attributes.
 
         Args:
             overwrite (bool): whether or not to overwrite data if it 
@@ -149,53 +149,58 @@ class _RawDataHealthChecker:
 
     @property
     def DATA_DIRECTORY(self):
-        """Getter for constant of the same name.
+        """Getter for constant of the same name. Path to the directory that 
+        stores the data files.
 
         Returns:
-            str: the path to the directory that stores the data files
+            str: the path to the directory that stores the data files.
         """
         
         return const.DATA_DIRECTORY
 
     @property
     def NUMBER_OF_COLUMNS(self):
-        """Getter for constant of the same name.
+        """Getter for constant of the same name. Expected number of columns in 
+        the raw data files
 
         Returns:
-            int: expected number of columns in the raw data files
+            int: expected number of columns in the raw data files.
         """
         
         return const.NUMBER_OF_COLUMNS
 
     @property
     def THROW_TIME_WARNING_THRESHOLD(self):
-        """Getter for constant of the same name.
+        """Getter for constant of the same name. Threshold for warning about 
+        maximum time of throw.
 
         Returns:
             int: constant to store the threshold for throw time, that, if 
-                exceeded, raises a warning
+                exceeded, raises a warning.
         """
 
         return self.__THROW_TIME_WARNING_THRESHOLD
 
     @property
     def ACCELEROMETER_WARNING_THRESHOLD(self):
-        """Getter for constant of the same name.
+        """Getter for constant of the same name. Threshold for warning about 
+        maximum acceleration reading.
 
         Returns:
             int: constant to store the threshold for acceleration across each 
-                axis, that, if exceeded, raises a warning
+                axis, that, if exceeded, raises a warning.
         """
         
         return self.__ACCELEROMETER_WARNING_THRESHOLD
 
     @property
     def GYRO_WARNING_THRESHOLD(self):
-        """Getter for constant of the same name.
+        """Getter for constant of the same name. Threshold for warning about 
+        maximum gyroscope reading.
 
         Returns:
             int: constant to store the threshold for angular velocity across 
-                each axis, that, if exceeded, raises a warning
+                each axis, that, if exceeded, raises a warning.
         """
 
         return self.__GYRO_WARNING_THRESHOLD
@@ -212,7 +217,7 @@ class _RawDataHealthChecker:
         testing all the files, results are displayed.
 
         Returns:
-            int: returns 1 if method completed successfully
+            int: returns 1 if method completed successfully.
         """
 
         # variables for keeping track during the loop
@@ -270,11 +275,11 @@ class _RawDataHealthChecker:
         messages resulting from failed tests get outputted.
 
         Args:
-            filePath (str): full absolute file path to the file to be checked
+            filePath (str): full absolute file path to the file to be checked.
 
         Returns:
-            int: health status, which summarises the results of the tests
-            str: failure message if test failed, NoneType otherwise
+            int: health status, which summarises the results of the tests.
+            str: failure message if test failed, NoneType otherwise.
         """
 
         # shorten file path
@@ -335,12 +340,12 @@ class _RawDataHealthChecker:
         been recorded, or adds the file altogether if it has not been recorded.
 
         Args:
-            fileName (str): raw data file to be added
+            fileName (str): raw data file to be added.
             healthStatus (int): the health status to be written. Defaults to 
                 const.untested.
 
         Returns:
-            int: returns 1 if completed successfully
+            int: returns 1 if completed successfully.
         """
 
         G = global_tracker.GlobalFile(fullInitialisation = False)
@@ -358,10 +363,10 @@ class _RawDataHealthChecker:
         is the expected value, as defined in the class constants.
 
         Args:
-            row (list): row object from the CSV file
+            row (list): row object from the CSV file.
 
         Returns:
-            NoneType: signifies completion, and no assertion error
+            NoneType: signifies completion, and no assertion error.
         """
 
         assert len(row) == self.NUMBER_OF_COLUMNS,\
@@ -379,10 +384,10 @@ class _RawDataHealthChecker:
         not, raises a warning.
 
         Args:
-            row (list): row object from the CSV file
+            row (list): row object from the CSV file.
 
         Returns:
-            NoneType: signifies completion, and no assertion error
+            NoneType: signifies completion, and no assertion error.
         """
 
         # iterate through each element in the row
@@ -430,11 +435,11 @@ class _RawDataHealthChecker:
         time has not remained constant either.
 
         Args:
-            row (list): row object from the CSV file
-            previousTime (int): the time recorded on the previous row
+            row (list): row object from the CSV file.
+            previousTime (int): the time recorded on the previous row.
 
         Returns:
-            int: time recorded on this row
+            int: time recorded on this row.
         """
 
         assert int(row[0]) >= previousTime,\
@@ -453,7 +458,7 @@ class _RawDataHealthChecker:
         method in there, and returns the result.
 
         Args:
-            fileName (str): raw data file to be checked
+            fileName (str): raw data file to be checked.
 
         Returns:
             int: returns 1 if the file has been recorded, and 0 if the file has 

@@ -9,10 +9,10 @@ def get_prompt(level):
     selection.
 
     Args:
-        level (str): Current menu level
+        level (str): Current menu level.
 
     Returns:
-        str: the new level based on the current level and the user's input
+        str: the new level based on the current level and the user's input.
     """
 
     options = {} # empty dictionary
@@ -52,10 +52,10 @@ def get_input(keys):
     valid option.
 
     Args:
-        keys (list[str]): available input options
+        keys (list[str]): available input options.
 
     Returns:
-        str: user's input
+        str: user's input.
     """
 
     while True:
@@ -70,7 +70,7 @@ def sanitise_file_name(addDataDirectory = False):
     upper/lower cases in the file name.
 
     Returns:
-        str: sanitised file name
+        str: sanitised file name.
     """
 
     print("Enter file name (in format '{}')".format(const.RAW_DATA_TITLE_FORMAT))
@@ -94,8 +94,8 @@ def print_architecture(level, menu):
     """Prints architecture of the entire menu at all levels.
 
     Args:
-        level (str): the current level of menu to print
-        menu (dict): the menu at the current level
+        level (str): the current level of menu to print.
+        menu (dict): the menu at the current level.
     """
 
     for (key, val) in menu.items():
@@ -127,8 +127,8 @@ def set_parameters_health(overwrite = True, showWarnings = True):
         showWarnings (bool, optional): value for class. Defaults to True.
 
     Returns:
-        bool: value of overwrite
-        bool: value of showWarnings
+        bool: value of overwrite.
+        bool: value of showWarnings.
     """
     
     # set possible values for overwrite
@@ -183,7 +183,7 @@ def set_parameters_processed(overwrite = False):
         showWarnings (bool, optional): value for class. Defaults to True.
 
     Returns:
-        bool: value of overwrite
+        bool: value of overwrite.
     """
     
     # set possible values for overwrite

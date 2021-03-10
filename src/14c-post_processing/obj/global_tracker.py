@@ -8,46 +8,48 @@ class GlobalFile:
 
     Attributes:
         __TRACKER_EXISTS (bool): 'True' if the tracker has been found and opened 
-            since the object was constructed
-        __TRACKER_COUNT_ROWS (int): the number of rows in the tracker file
-        __TRACKER_COUNT_COLUMNS (int): the number of columns in the tracker file
+            since the object was constructed.
+        __TRACKER_COUNT_ROWS (int): the number of rows in the tracker file.
+        __TRACKER_COUNT_COLUMNS (int): the number of columns in the tracker 
+            file.
 
     Methods:
-        __init__ : class constructor
-        __del__ : class destructor
-        TRACKER_EXISTS : (property) getter for the attribute of the same name
-        TRACKER_COUNT_ROWS : (property) getter for the attribute of the same  
-            name
-        TRACKER_COUNT_COLUMNS : (property) getter for the attribute of the same  
-            name
-        set_TRACKER_EXISTS : setter for attribute of the same name
-        set_TRACKER_COUNT_ROWS : setter for attribute of the same name
-        set_TRACKER_COUNT_COLUMNS : setter for attribute of the same name
-        add_file : lists a raw data file in the global tracker
-        add_metric : adds a new column to the global tracker file
-        get_column_number : returns the column number of a given heading
+        __init__ : class constructor.
+        __del__ : class destructor.
+        TRACKER_EXISTS (property) : getter for the attribute of the same name.
+        TRACKER_COUNT_ROWS (property) : getter for the attribute of the same  
+            name.
+        TRACKER_COUNT_COLUMNS (property) : getter for the attribute of the same  
+            name.
+        set_TRACKER_EXISTS : setter for attribute of the same name.
+        set_TRACKER_COUNT_ROWS : setter for attribute of the same name.
+        set_TRACKER_COUNT_COLUMNS : setter for attribute of the same name.
+        add_file : lists a raw data file in the global tracker.
+        add_metric : adds a new column to the global tracker file.
+        get_column_number : returns the column number of a given heading.
         populate_metric : populates/ updates an existing column in the global 
-            tracker file
+            tracker file.
         remove_deleted : removes a file from the tracker if the file has been 
-            deleted
-        remove_metric : removes a column from the tracker file
+            deleted.
+        remove_metric : removes a column from the tracker file.
         change_health_status : change the health status of an entry already 
-            logged
-        get_health_status : checks if a file is marked as healthy in the global tracker
+            logged.
+        get_health_status : checks if a file is marked as healthy in the global 
+            tracker.
         is_file_recorded : checks if a given file has been recorded in the 
-            tracker already
+            tracker already.
         write_to_file : overwrites a metric for an entry already listed in the 
-            file
+            file.
         __check_tracker_full : sets up the tracker fully - required for in-depth 
-            processing
+            processing.
         __check_tracker_partial : partially sets uo the tracker - less 
-            computationally expensive
-        __add_row : adds a row to the bottom of the tracker
+            computationally expensive.
+        __add_row : adds a row to the bottom of the tracker.
     """
 
 
     def __init__(self, fullInitialisation = True):
-        """Constructor for class. sets the class parameters.
+        """Constructor for class. Sets the class parameters.
 
         Initialisation of class can be full, or partial. When in doubt, use 
         full, but be aware this iterates through every row of the file, and can 
@@ -77,60 +79,64 @@ class GlobalFile:
 
     @property
     def TRACKER_EXISTS(self):
-        """Getter for attribute of the same name.
+        """Getter for attribute of the same name. Checks if tracker file exists.
 
         Returns:
             bool: 'True' if tracker file has been open since the initialisation 
-                of this object
+                of this object.
         """
 
         return self.__TRACKER_EXISTS
 
     @property
     def TRACKER_COUNT_ROWS(self):
-        """Getter for attribute of the same name.
+        """Getter for attribute of the same name. Tracks the number of rows in 
+        the tracker.
 
         Returns:
-            int: the number of rows in the global tracker file
+            int: the number of rows in the global tracker file.
         """
 
         return self.__TRACKER_COUNT_ROWS
 
     @property
     def TRACKER_COUNT_COLUMNS(self):
-        """Getter for attribute of the same name.
+        """Getter for attribute of the same name. Tracks the number of columns 
+        in the tracker.
 
         Returns:
-            int: the number of columns in the global tracker file
+            int: the number of columns in the global tracker file.
         """
 
         return self.__TRACKER_COUNT_COLUMNS
 
     def set_TRACKER_EXISTS(self, value):
-        """Setter for attribute of the same name.
+        """Setter for attribute of the same name. Checks if tracker file exists.
 
         Returns:
-            bool: the new value of the variable
+            bool: the new value of the variable.
         """
 
         self.__TRACKER_EXISTS = value
         return self.__TRACKER_EXISTS
 
     def set_TRACKER_COUNT_ROWS(self, value):
-        """Setter for attribute of the same name.
+        """Setter for attribute of the same name. Tracks the number of rows in 
+        the tracker.
 
         Returns:
-            int: the new value of the variable
+            int: the new value of the variable.
         """
 
         self.__TRACKER_COUNT_ROWS = value
         return self.__TRACKER_COUNT_ROWS
 
     def set_TRACKER_COUNT_COLUMNS(self, value):
-        """Setter for attribute of the same name.
+        """Setter for attribute of the same name. Tracks the number of columns 
+        in the tracker.
 
         Returns:
-            int: the new value of the variable
+            int: the new value of the variable.
         """
 
         self.__TRACKER_COUNT_COLUMNS = value
@@ -144,12 +150,12 @@ class GlobalFile:
         added. If it has already been recorded, the entry is updated.
 
         Args:
-            fileName (str): name of file to be added to the tracker file
-            healthStatus (int, optional): health status associated with the file. 
-                Defaults to const.untested.
+            fileName (str): name of file to be added to the tracker file.
+            healthStatus (int, optional): health status associated with the 
+                file. Defaults to const.untested.
 
         Returns:
-            bool: 'True' if file has been added successfully. 'False' otherwise
+            bool: 'True' if file has been added successfully. 'False' otherwise.
         """
 
         if self.is_file_recorded(fileName):
@@ -173,10 +179,10 @@ class GlobalFile:
 
         Args:
             operation (method (str)): the method that calculates the metric for 
-                the entry
+                the entry.
 
         Returns:
-            int: 1 to signify completion of method
+            int: 1 to signify completion of method.
         """
 
         with open(const.TRACKER_FILEPATH) as f: # read only
@@ -218,13 +224,13 @@ class GlobalFile:
         ValueError is raised.
 
         Args:
-            columnHeading (str): name of column to be found
+            columnHeading (str): name of column to be found.
 
         Raises:
-            ValueError: raised if the column is not found in the header
+            ValueError: raised if the column is not found in the header.
 
         Returns:
-            int: index of column
+            int: index of column.
         """
 
         with open(const.TRACKER_FILEPATH) as f:
@@ -250,10 +256,10 @@ class GlobalFile:
 
         Args:
             operation (method (str)): the method that calculates the metric for 
-                the entry
+                the entry.
 
         Returns:
-            int: 1 to signify completion of method, 0 otherwise
+            int: 1 to signify completion of method, 0 otherwise.
         """
 
         self.remove_deleted()
@@ -292,7 +298,7 @@ class GlobalFile:
         end, the list gets written back to the file.
 
         Returns:
-            bool: signifies completion of method
+            bool: signifies completion of method.
         """
 
         with open(const.TRACKER_FILEPATH) as f: # read only
@@ -345,10 +351,10 @@ class GlobalFile:
         new list gets rewritten to the file, overwriting previous data.
 
         Args:
-            columnHeading (str): name of column to be removed
+            columnHeading (str): name of column to be removed.
 
         Returns:
-            bool: signifying successful completion of method
+            bool: signifying successful completion of method.
         """
 
         try:
@@ -388,26 +394,26 @@ class GlobalFile:
         """Changes the health status of a given file in the tracker.
 
         Args:
-            fileName (str): name of file whose entry is to be updated
-            healthStatus (int): health status associated with the file
+            fileName (str): name of file whose entry is to be updated.
+            healthStatus (int): health status associated with the file.
 
         Returns:
-            bool: indicates successful completion of method
+            bool: indicates successful completion of method.
         """
 
         return self.write_to_file(fileName, 1, healthStatus)
 
     def get_health_status(self, fileName):
-        """Checks if a file is marked as healthy in the global tracker file.
+        """Gets the health status of the given raw data file.
 
         Healthy is defined as the file having passed all tests, but may or may 
         not have had warnings raised.
 
         Args:
-            fileName (str): name of the file to check health status of
+            fileName (str): name of the file to check health status of.
 
         Returns:
-            int: value of health status, or -1 if file not found
+            int: value of health status, or -1 if file not found.
         """
     
         with open(const.TRACKER_FILEPATH) as f: 
@@ -429,10 +435,10 @@ class GlobalFile:
         method.
 
         Args:
-            fileName (str): name of file to find in tracker file
+            fileName (str): name of file to find in tracker file.
 
         Returns:
-            bool: 'True' if the file is listed, 'False' otherwise
+            bool: 'True' if the file is listed, 'False' otherwise.
         """
         
         with open(const.TRACKER_FILEPATH) as f:
@@ -448,16 +454,16 @@ class GlobalFile:
         method.
 
         Locates the correct row in the file by finding the entry dictated by the 
-        'fileName' parameter. The row is saved as a list, and the entry is 
+        'fileName' parameter. The file is saved as a list, and the entry is 
         changed, before writing the list back to the file.
 
         Args:
-            fileName (str): name of file whose entry is to be updated
-            columnNumber (int): the column in the row to be overwritten
-            data (any): data to write into file, gets cast into a string
+            fileName (str): name of file whose entry is to be updated.
+            columnNumber (int): the column in the row to be overwritten.
+            data (any): data to write into file, gets cast into a string.
 
         Returns:
-            bool: signifies complete execution of method
+            bool: signifies complete execution of method.
         """
 
         if data == None:
@@ -496,10 +502,10 @@ class GlobalFile:
         element to the file name. This gets appended to the file.
 
         Args:
-            fileName (str): name of the file to be recorded
+            fileName (str): name of the file to be recorded.
 
         Returns:
-            int: to signify completion of method
+            int: to signify completion of method.
         """
 
         dataToWrite = [""] * self.TRACKER_COUNT_COLUMNS # one item for each column in file

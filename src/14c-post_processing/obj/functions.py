@@ -4,10 +4,10 @@ def isFloat(value):
     """Checks if a string can be converted into a floating point value.
 
     Args:
-	    value (str): test if this object can be converted into a float
+	    value (str): test if this object can be converted into a float.
 
     Returns:
-	    bool: true if 'value' can be converted into a float, false otherwise
+	    bool: true if 'value' can be converted into a float, false otherwise.
     """
   
     try:
@@ -20,10 +20,10 @@ def add_data_directory(fileName):
     """Prepends the data directory to a given file name.
 
     Args:
-        fileName (str): name of file
+        fileName (str): name of file.
 
     Returns:
-        str: file with prepended data directory
+        str: file with prepended data directory.
     """
 
     dataDirectory = const.DATA_DIRECTORY[-const.LENGTH_OF_DATA_DIR:]
@@ -35,10 +35,10 @@ def raw_to_processed(fileName):
     finds the name of the equivalent processed data file.
 
     Args:
-        fileName (str): name of raw data file
+        fileName (str): name of raw data file.
 
     Returns:
-        str: name of equivalent processed data file
+        str: name of equivalent processed data file.
     """
 
     return fileName.replace(const.RAW_DATA_PREFIX, const.PROCESSED_DATA_PREFIX)
@@ -48,10 +48,10 @@ def processed_to_raw(fileName):
     functions.py) and finds the name of the equivalent raw data file.
 
     Args:
-        fileName (str): name of processed data file
+        fileName (str): name of processed data file.
 
     Returns:
-        str: name of equivalent raw data file
+        str: name of equivalent raw data file.
     """
     
     return fileName.replace(const.PROCESSED_DATA_PREFIX, const.RAW_DATA_PREFIX)
