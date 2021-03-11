@@ -2,6 +2,7 @@ from . import const
 from . import functions
 from . import global_tracker
 import csv
+import numpy as np
 import os.path
 
 class ProcessedData:
@@ -18,7 +19,7 @@ class ProcessedData:
         the contents of the processed data file
 
     Attributes:
-        overWrite (bool): set as 'True' if data in the processed data files 
+        overwrite (bool): set as 'True' if data in the processed data files 
             should be overwritten with changes otherwise set as 'False'.
         fileName (str): name of the processed data file to be worked on.
         
@@ -146,11 +147,12 @@ class ProcessedData:
         print("Finished: {} processed data files created".format(count))
         return count
 
-    def create_single_processed_data_file(self, rawFileName): # TO DO (ADD SMOOTHER AND CHANGE UNITS)
+    def create_single_processed_data_file(self, rawFileName):
         """Creates a processed data file for any given raw data file.
 
-        Stores the from the raw data file in an array, and operates on it. Then 
-        writes it to the corresponding processed data file.
+        Stores the from the raw data file in an array, and changes the units of 
+        the data to make it more usable. Then writes this amended dataset to the 
+        corresponding processed data file.
 
         Args:
             rawFileName (str): name of the raw data file.
@@ -158,7 +160,6 @@ class ProcessedData:
         Returns:
             str: name of the new processed data file.
         """
-
 
         fileName = rawFileName.split("\\")[-1][const.LENGTH_OF_DATA_DIR-2:]
 
@@ -168,18 +169,24 @@ class ProcessedData:
         rawFilePath = const.DATA_DIRECTORY + rawFileName[const.LENGTH_OF_DATA_DIR:]
         processedFilePath = const.DATA_DIRECTORY + processedFileName[const.LENGTH_OF_DATA_DIR:]
 
-        with open(rawFilePath) as f:
-            with open(processedFilePath, "w") as g:
-                g.write(",".join(const.COLUMN_HEADERS))
-                g.write("\n")
-                for line in f:
-                    g.write(line)
-            G = global_tracker.GlobalFile(False)
-            G.write_to_file(rawFileName, 2, processedFileName)
-
-        print("  Created " + processedFileName)
-
-        return processedFileName
+        try:
+            with open(rawFilePath) as f:
+                raw_file = csv.reader(f)
+                with open(processedFilePath, "w") as g:
+                    header = " [raw],".join(const.COLUMN_HEADERS) + " (raw)"
+                    header = const.COLUMN_HEADERS[0] + header[len(const.COLUMN_HEADERS[0])+6:]
+                    g.write(header)
+                    g.write("\n")
+                    for line in raw_file:
+                        newData = self.__convert_units(line)
+                        g.write(",".join(newData))
+                        g.write("\n")
+                G = global_tracker.GlobalFile(False)
+                G.write_to_file(rawFileName, 2, processedFileName)
+            print("  Created " + processedFileName)
+            return processedFileName
+        except FileNotFoundError as e:
+            print("Raw data file could not be found:", e)
       
     def get_all_processed_files(self):
         """Returns a list of all processed data files in the data directory.
@@ -198,6 +205,40 @@ class ProcessedData:
                 files.append(functions.add_data_directory(entry))
 
         return files
+
+    def __convert_units(self, data):
+        """Converts the units of the raw data file to ones that are more 
+        appropriate for the usage.
+
+        Args:
+            data (list[str]): a line of data read from the raw data file.
+
+        Returns:
+            list[str]: the data in the correct units for the processed data 
+                file.
+        """
+
+        # convert data from strings into numerical values
+        for i in range(len(data)):
+            if i == 0:
+                data[i] = int(data[i])
+            else:
+                data[i] = float(data[i])
+        
+        # change the units
+        newData = []
+        
+        newData.append(data[0]) # time stays in milliseconds
+        newData.extend(data[1:4]) # linear acceleration stays in m/s^2
+        newData.extend(data[4:7]) # angular velocity stays in rad/s
+        newData.extend(np.deg2rad(data[7:])) # euler angles change from degrees to radians
+
+        # convert each element back into a string
+        for i in range(len(data)):
+            newData[i] = str(newData[i])
+
+        return newData
+
 
 
 class _Individual:
@@ -509,6 +550,9 @@ class _Calculations:
         return self.fileName
 
 
+    def smooth(self, fileName=None):
+        pass
+
     def duplicate(self, fileName=None, heading=False): # DUMMY FUNCTION
         if heading:
             return "duplicate" # title of column in tracker file
@@ -529,7 +573,6 @@ class _Calculations:
                 return data
         except:
             print("Couldn't open file:", fileName)
-            print("Try again if you think this is a mistake.")
 
 
 
@@ -666,7 +709,6 @@ class _Metrics:
                 return time
         except:
             print("Couldn't open file:", fileName)
-            print("Try again if you think this is a mistake.")
 
     def spiral_rate(self, fileName=None, heading=False):
         """Calculates a metric (rate of the spiral) for a given throw.
@@ -705,4 +747,3 @@ class _Metrics:
                 return max
         except FileNotFoundError:
             print("Couldn't open file:", fileName)
-            print("Try again if you think this is a mistake.")

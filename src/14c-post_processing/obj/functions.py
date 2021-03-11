@@ -1,4 +1,5 @@
 from . import const
+import numpy as np
 
 def isFloat(value):
     """Checks if a string can be converted into a floating point value.
@@ -55,3 +56,19 @@ def processed_to_raw(fileName):
     """
     
     return fileName.replace(const.PROCESSED_DATA_PREFIX, const.RAW_DATA_PREFIX)
+
+def moving_average(data, window_size):
+    """Calculates a moving average using the given parameters.
+
+    Calculates this by convolving the data with a list of ones.
+
+    Args:
+        data (list): the data to be smoothed.
+        window_size (int): how many terms to include in the moving average - 
+            equivalently, the window size of the convolution.
+
+    Returns:
+        list: smoothed list
+    """
+
+    return np.convolve(data, np.ones(window_size), 'valid') / window_size
