@@ -73,7 +73,8 @@ def sanitise_file_name(addDataDirectory = False):
         str: sanitised file name.
     """
 
-    print("Enter file name (in format '{}')".format(const.RAW_DATA_TITLE_FORMAT))
+    print("Enter file name (in format '{}')".format(const.RAW_DATA_TITLE_FORMAT + 
+                                                        const.RAW_DATA_FILE_TYPE))
     # remove white space and everything before the last "\"
     userinput = input().strip().split(sep="\\")[-1] 
 
@@ -234,20 +235,20 @@ def main():
             H.showWarnings = showWarnings
             level = level[:-1]
         elif level == "1bb": # assess all files
-            H.check_all_files()
+            if H.check_all_files():
+                print("Recommended to create processed data files. Create? (y/n)")
+                if input() == "y":
+                    level = "1c"
+                    continue
             level = level[:-1]
-            print("Recommended to create processed data files. Create? (y/n)")
-            if input() == "y":
-                level = "1c"
-                continue
         elif level == "1bc": # assess a specific file
             fileName = sanitise_file_name(True)
-            H.check_one_file(fileName)
+            if H.check_one_file(fileName) >= const.passedWithWarnings:
+                print("Recommended to create processed data file. Create? (y/n)")
+                if input() == "y":
+                    level = "1c"
+                    continue
             level = level[:-1]
-            print("Recommended to create processed data file. Create? (y/n)")
-            if input() == "y":
-                level = "1c"
-                continue
         elif level == "1c": # health
             print("Set parameters:") # set parameters before creating objects
             overwrite = set_parameters_processed()
@@ -256,16 +257,19 @@ def main():
             print("Set parameters:") # set parameters before creating objects
             overwrite = set_parameters_processed(overwrite)
             # update class attributes
-            P.overWrite = overwrite
+            P.overwrite = overwrite
             level = level[:-1]
         elif level == "1cb": # create processed data files for all raw data files
             if P.create_all_processed_data_files():
                 print("Completed successfully")
             level = level[:-1]
-        elif level == "1cc": # create processed a data file for a specific raw data files
+        elif level == "1cc": # create a processed data file for a specific raw data file
             fileName = sanitise_file_name(False)
-            print("Added file " + 
-                P.create_single_processed_data_file(functions.add_data_directory(fileName)))
+            newFile = P.create_single_processed_data_file(functions.add_data_directory(fileName))
+            if newFile:
+                print("Added file " + newFile)
+            else:
+                print("File {} could not be added".format(fileName))
             level = level[:-1]
         elif level == "1cd": # calculate an operation for all files
             I = P.individual
@@ -286,7 +290,11 @@ def main():
                         print("  Calculating '{}'...".format(key))
                         I.add_column(calculations[key])
             else:
-                I.add_column(calculations[column_header])
+                print("  Calculating '{}'...".format(column_header))
+                for entry in P.get_all_processed_files():
+                    I.set_file_name(entry)
+                    print("File: " + entry)
+                    I.add_column(calculations[column_header])
             level = level[:-1]
         elif level == "1d": # tracker
             G = global_tracker.GlobalFile(True)
@@ -352,6 +360,7 @@ def main():
             fileName = functions.raw_to_processed(sanitise_file_name(True))
             P = processed_data.ProcessedData()
             I = P.individual
+            I.set_file_name(fileName)
 
             healthStatus = I.get_health_status()
 
@@ -420,7 +429,7 @@ level1b = {
 level1c = {
     "a": "Change parameters",
     "b": "Create processed data files for all raw data files",
-    "c": "Create processed a data file for a specific raw data files",
+    "c": "Create a processed data file for a specific raw data file",
     "d": "Add/update an operation for all files",
     "q": "Quit 'Processed files'"
 }
