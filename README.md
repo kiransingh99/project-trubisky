@@ -160,9 +160,10 @@ This is only an increase of 0.18%, and therefore will have a negligible effect o
 
 ## To Do
 - Post processing code
-	- interface
-		- add inputs to create a processed file for one/all raw data file (ie update all files)
+	- raw data files
+		- delete raw data file when it's removed from tracker - delete processed data file too
 	- processed data files
+		- dereference processed data file from tracker if it gets deleted
 		- remove offsets and convert units (m/s/s, rad/s, rad)
 		- low pass filter/smoother - set parameters at beginning of method
 		- remove any given column
@@ -170,6 +171,7 @@ This is only an increase of 0.18%, and therefore will have a negligible effect o
 		- calculate speed in ball centred coordinates
 		- calculate speed in x-y coordinates
 		- calculate position in x-y coordinates
+		- spiral rating (variance of spiral)
 		- calculate angle of elevation
 		- calculate angle wrt direction of throw
 		- include a function that updates files already listed
