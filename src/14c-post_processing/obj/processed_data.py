@@ -2,6 +2,7 @@ from . import const
 from . import functions
 from . import global_tracker
 import csv
+import matplotlib.pyplot as plt
 import numpy as np
 import os.path
 
@@ -460,6 +461,62 @@ class _Individual:
 
         G = global_tracker.GlobalFile(fullInitialisation = False)
         return G.get_health_status(rawFileName)
+
+    def graph_sensor_data(self, filtered=True, unfiltered=True): # COMPLETE, DOCSTRING
+        if not filtered and not unfiltered:
+            print("No data to be plotted. Check parameters.")
+            return None
+        
+        for i in range(0, 7, 3):
+            with open(self.file_path) as f:
+                csv_file = csv.reader(f)
+                time = []
+            
+                data =  [[] for j in range(3 * (filtered+unfiltered))]
+                for row in csv_file:
+                    if csv_file.line_num == 1:
+                        time.append(row[0])
+                        if filtered:
+                            data[0].append(row[i+10])
+                            data[1].append(row[i+11])
+                            data[2].append(row[i+12])
+                        if unfiltered:
+                            data[-3].append(row[i+1])
+                            data[-2].append(row[i+2])
+                            data[-1].append(row[i+3])
+                    else:
+                        time.append(float(row[0]))
+                        if filtered:
+                            data[0].append(float(row[i+10]))
+                            data[1].append(float(row[i+11]))
+                            data[2].append(float(row[i+12]))
+                        if unfiltered:
+                            data[-3].append(float(row[i+1]))
+                            data[-2].append(float(row[i+2]))
+                            data[-1].append(float(row[i+3]))
+
+                #plot linear acceleration and angular velocity separately
+                fig, (er, e1, e2) = plt.subplots(3, sharex=True)
+                if filtered:
+                    er.plot(time[1:], data[0][1:], label=const.COLUMN_HEADERS[i+1])
+                    e1.plot(time[1:], data[1][1:], label=const.COLUMN_HEADERS[i+2])
+                    e2.plot(time[1:], data[2][1:], label=const.COLUMN_HEADERS[i+3])
+                if unfiltered:
+                    er.plot(time[1:], data[-3][1:], label=const.COLUMN_HEADERS[i+1])
+                    e1.plot(time[1:], data[-2][1:], label=const.COLUMN_HEADERS[i+2])
+                    e2.plot(time[1:], data[-1][1:], label=const.COLUMN_HEADERS[i+3])
+
+
+                fig.suptitle("Sensor Data against Time")
+                er.legend()
+                e1.legend()
+                e2.legend()
+                fig.show()           
+
+        return 1
+
+
+
 
     def populate_column(self, operation):
         """Populates/updates an existing column in the processed data file with 

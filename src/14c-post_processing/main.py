@@ -211,7 +211,64 @@ def set_parameters_processed(overwrite = False):
     print("  - overwrite = {}".format(overwrite))
 
     return overwrite
+
+# 1eab
+def set_parameters_graph_sensor_data(filtered = True, unfiltered = False):
+    """Allows the user to set parameters to run the 
+    '_individual.graph_sensor_data' method.
+
+    Args:
+        filtered (bool, optional): value for method. Defaults to True.
+        unfiltered (bool, optional): value for method. Defaults to False.
+
+    Returns:
+        bool: value of filteredwrite.
+        bool: value of unfiltered.
+    """
     
+    # set possible values for overwrite
+    options = {
+        "0": False,
+        "1": True
+    }
+
+    print("Set 'filtered' (default is '{}')".format(filtered))
+    for (key, val) in options.items():
+        print(str(key) + ") " + str(val))
+    
+    while True:
+        choice = input().lower()
+        if choice == "": # if blank, don't change value
+            break
+        elif choice in options.keys():
+            filtered = options[choice]
+            break
+        else:
+            print("Invalid input")
+
+    # options don't change for 'unfiltered
+
+    print("Set 'unfiltered' (default is '{}')".format(unfiltered))
+    for (key, val) in options.items():
+        print(str(key) + ") " + str(val))
+    
+    while True:
+        choice = input().lower()
+        if choice == "": # if blank, don't overwrite value
+            break
+        elif choice in options.keys():
+            unfiltered = options[choice]
+            break
+        else:
+            print("Invalid input")
+
+    print("Parameters chosen:")
+    print("  - filtered = {}".format(filtered))
+    print("  - unfiltered = {}".format(unfiltered))
+
+    return filtered, unfiltered
+    
+
 
 def main():
     print("\n\n")
@@ -354,7 +411,8 @@ def main():
                     print("Removed column " + column_header)
             level = level[:-1]
         elif level == "1e": # analysis
-            pass
+            filtered = True
+            unfiltered = False
         elif level == "1ea": # individual file analysis
             print("Set parameters:")
             fileName = functions.raw_to_processed(sanitise_file_name(True))
@@ -384,7 +442,10 @@ def main():
                         .format(fileName))
             level = level[:-1]
         elif level == "1eab": # graph of raw sensor values
-            I.graph_raw_sensor_data()
+            print("Set parameters:") # set parameters before creating objects
+            filtered, unfiltered = set_parameters_graph_sensor_data(filtered=filtered, 
+                                                                    unfiltered=unfiltered)
+            I.graph_sensor_data(filtered=filtered, unfiltered=unfiltered)
             level = level[:-1]
         elif level == "1eac": # graph flight path
             I.graph_flight_path()
