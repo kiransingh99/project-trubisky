@@ -1,4 +1,5 @@
 from . import const
+from . import processed_data
 from . import raw_data
 import csv
 import sys
@@ -306,7 +307,8 @@ class GlobalFile:
 
             # for tracking during loop
             fileData = []
-            deleted = 0
+            deletedRaw = 0
+            deletedProcessed = 0
 
             for row in tracker_file:
                 # skip blank lines
@@ -324,21 +326,25 @@ class GlobalFile:
                         g = open(filePath)
                     except FileNotFoundError:
                         print("Deleted: ", fileName)
-                        deleted += 1
+                        deletedRaw += 1
+                        I = processed_data.ProcessedData().individual
+                        # delete processed data file if it exists and tally
+                        deletedProcessed += I.delete_file(filePath)
                     else:
                         g.close()
                         fileData.append(list(row)) # if found, add it to list
                 else:
                     fileData.append(list(row)) # add header to list
 
-        if deleted > 0:
+        if deletedRaw > 0:
             with open(const.TRACKER_FILEPATH, "w", newline="") as f: # writeable
                 tracker_file = csv.writer(f)
                 tracker_file.writerows(fileData) # rewrite data to tracker file
             
-            self.set_TRACKER_COUNT_ROWS(self.TRACKER_COUNT_ROWS-deleted)
+            self.set_TRACKER_COUNT_ROWS(self.TRACKER_COUNT_ROWS-deletedRaw)
 
-            print("Deleted {} files".format(deleted))
+            print("Deleted {} raw data files and {} processed data files"
+                .format(deletedRaw, deletedProcessed))
 
         return True
 
