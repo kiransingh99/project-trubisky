@@ -23,11 +23,18 @@ COLUMN_HEADERS = ["time", "acc (e_r)", "acc (e_1)", "acc (e_2)",
 COLOURS = ['', '#1f77b4', '#ff7f0e', '#26a02c', 
                 '#d62728', '#9467bd', '#8c564b',
                 '#e377c2', '#7f7f7f', '#bcbd22']
+SENSOR_OFFSETS = [0, -0.033, 0.004, -0.053, 
+                        0.003, 0.000, 0.000, 
+                        0.000, 0.000, 0.000]
+
 NUMBER_OF_COLUMNS = len(COLUMN_HEADERS) # number of columns in raw data csv files
 
 assert len(COLOURS) == NUMBER_OF_COLUMNS, \
     "Fatal (const.py):There are {} listed column colours; there should be {}."\
         .format(len(COLOURS), NUMBER_OF_COLUMNS)
+assert len(SENSOR_OFFSETS) == NUMBER_OF_COLUMNS, \
+    "Fatal (const.py):There are {} listed sensor offsets; there should be {}."\
+        .format(len(SENSOR_OFFSETS), NUMBER_OF_COLUMNS)
 
 # for raw data files
 RAW_DATA_PREFIX = "RAW-"

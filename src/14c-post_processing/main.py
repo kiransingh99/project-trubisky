@@ -118,7 +118,7 @@ def print_architecture(level, menu):
             elif key == "b":
                 print_architecture("1eb", level1c)
 
-#1ba
+# 1ba
 def set_parameters_health(overwrite = True, showWarnings = True):
     """Allows the user to set parameters to initialise the 'RawData.health' 
     object.
@@ -174,7 +174,7 @@ def set_parameters_health(overwrite = True, showWarnings = True):
 
     return overwrite, showWarnings
     
-#1ca
+# 1ca
 def set_parameters_processed(overwrite = False):
     """Allows the user to set parameters to initialise the 'P.health' 
     object.
@@ -465,7 +465,7 @@ level1eb = {
 # calculations
 calculations = {
     "all": None,
-    "duplicate": processed_data.ProcessedData().individual.calculations.duplicate,
+    "smooth": processed_data.ProcessedData().individual.calculations.smooth,
     "q": None
 }
 

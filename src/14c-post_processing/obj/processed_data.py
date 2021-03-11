@@ -150,9 +150,10 @@ class ProcessedData:
     def create_single_processed_data_file(self, rawFileName):
         """Creates a processed data file for any given raw data file.
 
-        Stores the from the raw data file in an array, and changes the units of 
-        the data to make it more usable. Then writes this amended dataset to the 
-        corresponding processed data file.
+        Stores the from the raw data file in an array, removes any offset from 
+        the sensors, and changes the units of the data to make it more usable. 
+        Then writes this amended dataset to the corresponding processed data 
+        file.
 
         Args:
             rawFileName (str): name of the raw data file.
@@ -173,12 +174,25 @@ class ProcessedData:
             with open(rawFilePath) as f:
                 raw_file = csv.reader(f)
                 with open(processedFilePath, "w") as g:
-                    header = " [raw],".join(const.COLUMN_HEADERS) + " (raw)"
-                    header = const.COLUMN_HEADERS[0] + header[len(const.COLUMN_HEADERS[0])+6:]
+                    header = ",[raw] ".join(const.COLUMN_HEADERS)
                     g.write(header)
                     g.write("\n")
+
+                    sensorsInitialised = [False, False, False]
+                    allSensorsInitialised = False
+                    
                     for line in raw_file:
-                        newData = self.__convert_units(line)
+                        if not allSensorsInitialised:
+                            if line[1:4] != ["0.00", "0.00", "0.00"]:
+                                sensorsInitialised[0] = True
+                            if line[4:7] != ["0.00", "0.00", "0.00"]:
+                                sensorsInitialised[1] = True
+                            if line[7:10] != ["0.00", "0.00", "0.00"]:
+                                sensorsInitialised[2] = True
+                            if sensorsInitialised == [True, True, True]:
+                                allSensorsInitialised = True
+
+                        newData = self.__convert_units(line, sensorsInitialised)
                         g.write(",".join(newData))
                         g.write("\n")
                 G = global_tracker.GlobalFile(False)
@@ -206,12 +220,14 @@ class ProcessedData:
 
         return files
 
-    def __convert_units(self, data):
+    def __convert_units(self, data, sensorsInitialised):
         """Converts the units of the raw data file to ones that are more 
         appropriate for the usage.
 
         Args:
             data (list[str]): a line of data read from the raw data file.
+            sensorsInitialised (list[bool]): tracks whether each sensor has been 
+                initialised yet, and therefore if it is outputting values.
 
         Returns:
             list[str]: the data in the correct units for the processed data 
@@ -225,6 +241,14 @@ class ProcessedData:
             else:
                 data[i] = float(data[i])
         
+        # subtract offsets
+        if sensorsInitialised[0]:
+            data[1:4] = np.subtract(data[1:4], const.SENSOR_OFFSETS[1:4])
+        if sensorsInitialised[1]:
+            data[4:7] = np.subtract(data[4:7], const.SENSOR_OFFSETS[4:7])
+        if sensorsInitialised[2]:
+            data[7:10] = np.subtract(data[7:10], const.SENSOR_OFFSETS[7:10])
+
         # change the units
         newData = []
         
@@ -340,10 +364,12 @@ class _Individual:
         """Adds another column to the processed data file and populates it with 
         values returned from the 'operation' method.
 
-        Iterates through each line and saves the data in a list. For the header, 
-        the name of the new heading gets appended, and for every other row, the 
-        value from the operation gets appended. Then the data get written back 
-        to the processed data file.
+        First checks what the operation is - for all operations this method 
+        iterates once, but for 'smooth', it iterates 10 times, one for each 
+        column. Iterates through each line and saves the data in a list. For the 
+        header, the name of the new heading gets appended, and for every other 
+        row, the value from the operation gets appended. Then the data get 
+        written back to the processed data file.
 
         Args:
             operation (method (str)): the method that calculates the metric for 
@@ -353,34 +379,44 @@ class _Individual:
             int: 1 to signify completion of method.
         """
 
-        with open(self.file_path) as f: # read only
-            processed_file = csv.reader(f)
+        header = operation(heading=True)
+        if operation.__name__ == "smooth":
+            iterations = len(const.COLUMN_HEADERS)
+        else:
+            iterations = 1
 
-            # if heading not in top row, add heading
-            if operation(heading=True) not in f.read():
-                f.seek(0)
+        for i in range (1, iterations):
 
-                # for tracking during loop
-                fileData = []
+            header = operation(heading=True)
 
-                for row in processed_file:
+            with open(self.file_path) as f: # read only
+                processed_file = csv.reader(f)
 
-                    # ignore blank rows
-                    if len(row) < const.NUMBER_OF_COLUMNS:
-                        continue
+                # if heading not in top row, add heading
+                if "," + header not in next(f):
+                    f.seek(0)
 
-                    # add another empty column, and a new heading only if on the first line
-                    fileData.append(list(row))
-                    if processed_file.line_num == 1:
-                        fileData[0].append(operation(heading=True))
-                    else:
-                        fileData[-1].append("")
+                    # for tracking during loop
+                    fileData = []
 
-                with open(self.filePath, "w", newline="") as f: # writeable
-                    processed_file = csv.writer(f)
-                    processed_file.writerows(fileData) # write amended data to tracker file
+                    for row in processed_file:
 
-        return self.populate_column(operation)
+                        # ignore blank rows
+                        if len(row) < const.NUMBER_OF_COLUMNS:
+                            continue
+
+                        # add another empty column, and a new heading only if on the first line
+                        fileData.append(list(row))
+                        if processed_file.line_num == 1:
+                            fileData[0].append(operation(heading=True))
+                        else:
+                            fileData[-1].append("")
+
+                    with open(self.filePath, "w", newline="") as f: # writeable
+                        processed_file = csv.writer(f)
+                        processed_file.writerows(fileData) # write amended data to tracker file
+                
+                self.populate_column(operation)
 
     def get_column_number(self, columnHeading):
         """Returns the column number associated with a given heading.
@@ -441,9 +477,8 @@ class _Individual:
             int: 1 to signify completion of method, 0 otherwise.
         """
 
-        values = operation(self.fileName) # needs to return a list with the same length as number of rows in the file
-
         columnHeading = operation(heading=True)
+        values = operation(self.fileName)
         
         # get column number of given header
         try:
@@ -505,11 +540,15 @@ class _Calculations:
     Attributes:
         fileName (str): name of the processed data file to be worked on.
         filePath (str): full file path to the given processed data file.
+        columnNumber (int): the number of the column to smooth (should be 
+            between 1 and 10 inclusive).
         
     Methods:
         __init__ : class constructor.
         file_path (property) : getter for the attribute of the same name.
         set_file_name : setter for attribute of the same name.
+        smooth : runs the raw sensor data through a low pass filter to smooth 
+            it.
     """
 
     def __init__(self, fileName=""):
@@ -520,6 +559,7 @@ class _Calculations:
                 Defaults to "".
         """
         self.fileName = fileName
+        self.columnNumber = 1
     
     @property
     def file_path(self):
@@ -550,8 +590,57 @@ class _Calculations:
         return self.fileName
 
 
-    def smooth(self, fileName=None):
-        pass
+    def smooth(self, fileName=None, heading=False):
+        """Smoothens one of the columns of the processed data file and adds the 
+        data as a new column.
+
+        If the 'heading' parameter is 'True', the method simply returns the 
+        heading for this column. Otherwise, the values for this column are 
+        calculated.
+
+        Args:
+            fileName (str): name of the file to do calculations for.
+            heading (bool): set this to 'True' if only the heading title is 
+                wanted. Set 'False' to actually calculate the value. Defaults to 
+                False.
+
+        Returns:
+            list[float]: smoothed values of the same dimension as the input 
+                data.
+        """
+
+        columnNumber = self.columnNumber
+
+        if heading:
+            return const.COLUMN_HEADERS[columnNumber]
+
+        if fileName == None:
+            fileName = self.fileName
+        else:
+            self.set_file_name(fileName)
+        
+        data = []
+
+        try:
+            with open(self.file_path) as f:
+                csv_file = csv.reader(f)
+                for row in csv_file:
+                    if csv_file.line_num == 1: # header row
+                        data.append(0)
+                    else:
+                        data.append(float(row[columnNumber]))
+        except FileNotFoundError:
+            print("Couldn't open file:", fileName)
+        else:
+            windowSize = 4
+            smoothed = functions.moving_average(data, windowSize)
+
+            self.columnNumber += 1
+            if self.columnNumber == const.NUMBER_OF_COLUMNS:
+                self.columnNumber -= const.NUMBER_OF_COLUMNS
+
+            return [0] * (windowSize-1) + list(smoothed)
+
 
     def duplicate(self, fileName=None, heading=False): # DUMMY FUNCTION
         if heading:
@@ -567,7 +656,6 @@ class _Calculations:
         try:
             with open(self.file_path) as f:
                 csv_file = csv.reader(f)
-                # get to end of file
                 for row in csv_file:
                     data.append(row[0])
                 return data
