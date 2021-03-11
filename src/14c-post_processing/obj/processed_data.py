@@ -4,7 +4,7 @@ from . import global_tracker
 import csv
 import matplotlib.pyplot as plt
 import numpy as np
-import os.path
+import os
 
 class ProcessedData:
     """Main class for handling the processed data files based on the raw data 
@@ -408,8 +408,9 @@ class _Individual:
 
                         # add another empty column, and a new heading only if on the first line
                         fileData.append(list(row))
+
                         if processed_file.line_num == 1:
-                            fileData[0].append(operation(heading=True))
+                            fileData[0].append(header)
                         else:
                             fileData[-1].append("")
 
@@ -418,6 +419,15 @@ class _Individual:
                         processed_file.writerows(fileData) # write amended data to tracker file
                 
                 self.populate_column(operation)
+
+    def delete_file(self, filePath): #COMPLETE, DOCSTRING
+
+        filePath = functions.raw_to_processed(filePath)
+        if os.path.exists(filePath):
+            os.remove(filePath)
+            return 1
+        else:
+            return 0
 
     def get_column_number(self, columnHeading):
         """Returns the column number associated with a given heading.
@@ -476,46 +486,48 @@ class _Individual:
                 for row in csv_file:
                     if csv_file.line_num == 1:
                         time.append(row[0])
-                        if filtered:
-                            data[0].append(row[i+10])
-                            data[1].append(row[i+11])
-                            data[2].append(row[i+12])
                         if unfiltered:
                             data[-3].append(row[i+1])
                             data[-2].append(row[i+2])
                             data[-1].append(row[i+3])
+                        if filtered:
+                            data[0].append(row[i+10])
+                            data[1].append(row[i+11])
+                            data[2].append(row[i+12])
                     else:
                         time.append(float(row[0]))
-                        if filtered:
-                            data[0].append(float(row[i+10]))
-                            data[1].append(float(row[i+11]))
-                            data[2].append(float(row[i+12]))
                         if unfiltered:
                             data[-3].append(float(row[i+1]))
                             data[-2].append(float(row[i+2]))
                             data[-1].append(float(row[i+3]))
+                        if filtered:
+                            data[0].append(float(row[i+10]))
+                            data[1].append(float(row[i+11]))
+                            data[2].append(float(row[i+12]))
 
                 #plot linear acceleration and angular velocity separately
                 fig, (er, e1, e2) = plt.subplots(3, sharex=True)
-                if filtered:
-                    er.plot(time[1:], data[0][1:], label=const.COLUMN_HEADERS[i+1])
-                    e1.plot(time[1:], data[1][1:], label=const.COLUMN_HEADERS[i+2])
-                    e2.plot(time[1:], data[2][1:], label=const.COLUMN_HEADERS[i+3])
                 if unfiltered:
-                    er.plot(time[1:], data[-3][1:], label=const.COLUMN_HEADERS[i+1])
-                    e1.plot(time[1:], data[-2][1:], label=const.COLUMN_HEADERS[i+2])
-                    e2.plot(time[1:], data[-1][1:], label=const.COLUMN_HEADERS[i+3])
+                    er.plot(time[1:], data[-3][1:], label=data[-3][0])
+                    e1.plot(time[1:], data[-2][1:], label=data[-2][0])
+                    e2.plot(time[1:], data[-1][1:], label=data[-1][0])
+                if filtered:
+                    er.plot(time[1:], data[0][1:], label=data[0][0])
+                    e1.plot(time[1:], data[1][1:], label=data[1][0])
+                    e2.plot(time[1:], data[2][1:], label=data[2][0])
 
-
-                fig.suptitle("Sensor Data against Time")
+                if filtered and unfiltered:
+                        fig.suptitle("Filtered and Unfiltered Sensor Data Against Time")
+                elif filtered:
+                    fig.suptitle("Filtered Sensor Data against Time")
+                elif unfiltered:
+                    fig.suptitle("Unfiltered Sensor Data against Time")
                 er.legend()
                 e1.legend()
                 e2.legend()
                 fig.show()           
 
         return 1
-
-
 
 
     def populate_column(self, operation):
@@ -666,6 +678,10 @@ class _Calculations:
                 data.
         """
 
+
+        if self.columnNumber == const.NUMBER_OF_COLUMNS:
+            self.columnNumber = 1
+
         columnNumber = self.columnNumber
 
         if heading:
@@ -683,7 +699,7 @@ class _Calculations:
                 csv_file = csv.reader(f)
                 for row in csv_file:
                     if csv_file.line_num == 1: # header row
-                        data.append(0)
+                        data.append(0) # append any numerical value - this will be discarded
                     else:
                         data.append(float(row[columnNumber]))
         except FileNotFoundError:
@@ -693,8 +709,7 @@ class _Calculations:
             smoothed = functions.moving_average(data, windowSize)
 
             self.columnNumber += 1
-            if self.columnNumber == const.NUMBER_OF_COLUMNS:
-                self.columnNumber -= const.NUMBER_OF_COLUMNS
+            
 
             return [0] * (windowSize-1) + list(smoothed)
 
