@@ -319,7 +319,12 @@ def main():
         elif level == "1cb": # create processed data files for all raw data files
             if P.create_all_processed_data_files():
                 print("Completed successfully")
+                print("Recommended to smooth sensor readings. (y/n)")
+                if input() == "y":
+                    level = "1cd"
+                    continue
             level = level[:-1]
+            print("Recommended to ")
         elif level == "1cc": # create a processed data file for a specific raw data file
             fileName = sanitise_file_name(False)
             newFile = P.create_single_processed_data_file(functions.add_data_directory(fileName))

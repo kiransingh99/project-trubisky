@@ -328,7 +328,8 @@ class _RawDataHealthChecker:
                     self.__add_file_to_tracker(fileName, healthStatus)
             
         except FileNotFoundError as e:
-            print("Raw data file could not be found:", e)     
+            print("Raw data file could not be found:", e)
+            return -1
 
 
     def __add_file_to_tracker(self, fileName, healthStatus=const.untested):

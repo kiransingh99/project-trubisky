@@ -28,7 +28,7 @@ def add_data_directory(fileName):
     """
 
     dataDirectory = const.DATA_DIRECTORY[-const.LENGTH_OF_DATA_DIR:]
-    path = dataDirectory + fileName
+    path = dataDirectory + fileName.split("\\")[-1]
     return path
 
 def raw_to_processed(fileName):
@@ -63,7 +63,7 @@ def moving_average(data, window_size):
     Calculates this by convolving the data with a list of ones.
 
     Args:
-        data (list): the data to be smoothed.
+        data (list[float]): the data to be smoothed.
         window_size (int): how many terms to include in the moving average - 
             equivalently, the window size of the convolution.
 

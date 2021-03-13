@@ -159,15 +159,17 @@ This is only an increase of 0.18%, and therefore will have a negligible effect o
 	- **README.md**
 
 ## To Do
+- README
+	- add list of dependencies
 - Post processing code
 	- processed data files
+		- remove angular acceleration component from linear acceleration
 		- calculate speed in ball centred coordinates
 		- calculate speed in x-y coordinates
 		- calculate position in x-y coordinates
 		- spiral rating (variance of spiral)
 		- calculate angle of elevation
 		- calculate angle wrt direction of throw
-		- include a function that updates files already listed
 		- graph any variables against each other (unspecified number of independent and dependent variables)
 	- add more operations (metrics) - dependent on processed data
 		- time of launch (when acceleration (without g) stops increasing)
@@ -179,5 +181,5 @@ This is only an increase of 0.18%, and therefore will have a negligible effect o
 		- plot speed against time
 		- plot path in x-y coordinates
 		- angle of attack
-	- comments and docstrings (assume all docstrings are wrong - especially RE raw vs processed data)
+	- comments and docstrings
 	- finish interface for main python file
