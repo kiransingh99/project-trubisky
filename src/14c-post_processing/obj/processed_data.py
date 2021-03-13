@@ -29,14 +29,21 @@ class ProcessedData:
         ensemble (property) : TO DO
         individual (property) : groups the 'individual' methods.
         metrics (property) : groups the 'metric' methods.
-        DATA_DIRECTORY (property) : returns the constant of the same names. 
+        DATA_DIRECTORY (property) : getter for the constant of the same names. 
             Takes its value from the const.py file.
+        file_name (property) : getter for the attribute of the same name.
+        set_file_name : setter for the attribute of the same name.
         create_all_processed_data_files : creates processed data files for all 
             raw data files marked as healthy.
         create_single_processed_data_file : creates a processed data file for 
             any one raw data file.
         get_all_processed_files : gets a list of all the processed data files 
             created.
+        __convert_units : changes the units of the sensor output to make 
+            calculations easier.
+        __remove_angular_acceleration : removes the angular acceleration 
+            component from the linear acceleration.
+        __ write_data_to_file : writes a column of data to processed data file.
     """
 
     def __init__(self, overwrite=True, fileName=""):
@@ -71,7 +78,7 @@ class ProcessedData:
             _Individual object: instance of class.
         """
 
-        return _Individual(self.fileName)
+        return _Individual(self.file_name)
 
     @property
     def metrics(self):
@@ -98,6 +105,31 @@ class ProcessedData:
         """
         
         return const.DATA_DIRECTORY
+
+    @property
+    def file_name(self):
+        """Getter for the arribute of the same name. Name of the processed data 
+        file.
+
+        Returns:
+            str: name of processed data file.
+        """
+
+        return self.fileName
+
+    
+    def set_file_name(self, value):
+        """Setter for the attribute of the same name. Name of the processed data 
+        file.
+
+        Args:
+            value (str): new value for attribute.
+
+        Returns:
+            str: new value of attribute.
+        """
+        self.fileName = value
+        return self.fileName
 
 
     def create_all_processed_data_files(self):
@@ -163,45 +195,70 @@ class ProcessedData:
             str: name of the new processed data file.
         """
 
+        # get raw and processed data file names
         fileName = rawFileName.split("\\")[-1][const.LENGTH_OF_DATA_DIR-2:]
-
         processedFileName = "\\" + rawFileName.split("\\")[1] + "\\" + \
                             const.PROCESSED_DATA_PREFIX + fileName
-
         rawFilePath = const.DATA_DIRECTORY + rawFileName[const.LENGTH_OF_DATA_DIR:]
         processedFilePath = const.DATA_DIRECTORY + processedFileName[const.LENGTH_OF_DATA_DIR:]
 
+        # check files exists
         try:
-            with open(rawFilePath) as f:
-                raw_file = csv.reader(f)
-                with open(processedFilePath, "w") as g:
-                    header = ",[raw] ".join(const.COLUMN_HEADERS)
-                    g.write(header)
-                    g.write("\n")
-
-                    sensorsInitialised = [False, False, False]
-                    allSensorsInitialised = False
-                    
-                    for line in raw_file:
-                        if not allSensorsInitialised:
-                            if line[1:4] != ["0.00", "0.00", "0.00"]:
-                                sensorsInitialised[0] = True
-                            if line[4:7] != ["0.00", "0.00", "0.00"]:
-                                sensorsInitialised[1] = True
-                            if line[7:10] != ["0.00", "0.00", "0.00"]:
-                                sensorsInitialised[2] = True
-                            if sensorsInitialised == [True, True, True]:
-                                allSensorsInitialised = True
-
-                        newData = self.__convert_units(line, sensorsInitialised)
-                        g.write(",".join(newData))
-                        g.write("\n")
-                G = global_tracker.GlobalFile(False)
-                G.write_to_file(rawFileName, 2, processedFileName)
-            print("  Created " + processedFileName)
-            return processedFileName
+            f = open(rawFilePath)
         except FileNotFoundError as e:
             print("Raw data file could not be found:", e)
+
+        raw_file = csv.reader(f)
+        self.set_file_name(processedFileName)
+        
+        try:
+            g = open(processedFilePath, "w")
+        except FileNotFoundError as e:
+            print("Processed data file could not be found:", e)
+
+        # add header, but prefix all sensor columns with '[raw]
+        header = ",[raw] ".join(const.COLUMN_HEADERS)
+        g.write(header)
+        g.write("\n")
+
+        # process sensor data only if sensors have initialised
+        sensorsInitialised = [False, False, False]
+        allSensorsInitialised = False
+        
+        for line in raw_file:
+            if not allSensorsInitialised:
+                if line[1:4] != ["0.00", "0.00", "0.00"]:
+                    sensorsInitialised[0] = True
+                if line[4:7] != ["0.00", "0.00", "0.00"]:
+                    sensorsInitialised[1] = True
+                if line[7:10] != ["0.00", "0.00", "0.00"]:
+                    sensorsInitialised[2] = True
+                if sensorsInitialised == [True, True, True]:
+                    allSensorsInitialised = True
+
+            newData = self.__convert_units(line, sensorsInitialised)
+            
+            g.write(",".join(newData))
+            g.write("\n")
+
+        # close raw and processed data files
+        g.close()
+        f.close()
+
+        # calculate timesteps between samples and write to file
+        self.individual.add_column(self.individual.calculations.delta_time)
+        
+        # remove angular acceleration component from linear acceleration readings
+        newData = self.__remove_angular_acceleration()
+        for i in range(0, len(newData)):
+            self.__write_data_to_file(newData[i][0], newData[i][1:])
+
+        # add name of processed data file to tracker
+        G = global_tracker.GlobalFile(False)
+        G.write_to_file(rawFileName, 2, processedFileName)
+        
+        print("  Created " + processedFileName)
+        return processedFileName
       
     def get_all_processed_files(self):
         """Returns a list of all processed data files in the data directory.
@@ -264,6 +321,86 @@ class ProcessedData:
 
         return newData
 
+    def __remove_angular_acceleration(self):
+        """Removes component of angular acceleration from the linear 
+        acceleration readings.
+
+        Stores all the timestamps in a list, and stores all the data from the 
+        accelerometers and gyroscopes in a two-dimensional list. Then 
+        approximates angular acceleration (angular velocity / time) and 
+        subtracts that from the acceleration data.
+
+        Returns:
+            list[float]: acceleration data without angular acceleration 
+                component.
+        """
+
+        filePath = const.DATA_DIRECTORY + self.file_name.split("\\")[-1]
+        with open(filePath) as f:
+            csv_file = csv.reader(f)
+            delta_time = []
+            sensorData = [[] for i in range(6)]
+        
+            for row in csv_file:
+                if csv_file.line_num == 1:
+                    delta_time.append(row[self.individual.get_column_number("delta time")])
+                    for i in range(0, 6):
+                        sensorData[i].append(row[i+1])
+                else:
+                    delta_time.append(int(row[self.individual.get_column_number("delta time")]))
+                    for i in range(0, 6):
+                        sensorData[i].append(float(row[i+1]))
+            
+            data = [[sensorData[i][0][6:], 0.0, 0.0] for i in range(3)] # just column headings
+
+            for i in range(0, 3): # just the linear accelerations
+                for j in range(2, len(delta_time)): # for every sample
+                    angularAcceleration = sensorData[i+3][j]/delta_time[j]
+                    data[i].append(sensorData[i][j] - angularAcceleration)
+            
+            return data
+
+    def __write_data_to_file(self, header, data):
+        """Writes a column of data to the processed data file.
+
+        File to write to is decided by the attribute 'fileName'. The contents of 
+        the file is stored in a list and the relevant data is appended to the 
+        list. Then the new list is written back to the file.
+
+        Args:
+            header (str): name of column header.
+            data (list[str]): data to write to the file.
+
+        Returns:
+            int: '1' signifies successful completion of method.
+        """
+
+        filePath = const.DATA_DIRECTORY + self.file_name.split("\\")[-1]
+
+        with open(filePath) as f: # read only
+            processed_file = csv.reader(f)
+
+            # for tracking during loop
+            fileData = []
+
+            for row in processed_file:
+                # ignore blank rows
+                if len(row) < const.NUMBER_OF_COLUMNS:
+                    continue
+
+                # add another empty column, and a new heading only if on the first line
+                fileData.append(list(row))
+
+                if processed_file.line_num == 1:
+                    fileData[0].append(header)
+                else:
+                    fileData[-1].append(str(data[processed_file.line_num-1]))
+
+            with open(filePath, "w", newline="") as f: # writeable
+                processed_file = csv.writer(f)
+                processed_file.writerows(fileData) # write amended data to tracker file
+            
+            return 1
 
 
 class _Individual:
@@ -287,9 +424,12 @@ class _Individual:
             corresponding to the processed data file.
         set_file_name : setter for attribute of the same name.
         add_column : adds a new column to the processed data file.
+        delete_file : deletes a given processed data file
         get_column_number : returns the column number of a given heading.
         get_health_status : checks if a raw data file is marked as healthy in 
             the global tracker.
+        graph_sensor_data : produces graphs of raw (unfiltered) and/or filtered 
+            (smoothened) sensor data.
         populate_column : populates/ updates an existing column in the processed 
             data file.
         write_to_file : overwrites an entry already listed in the file.
@@ -386,7 +526,7 @@ class _Individual:
         else:
             iterations = 1
 
-        for i in range (1, iterations):
+        for i in range (0, iterations):
 
             header = operation(heading=True)
 
@@ -420,9 +560,19 @@ class _Individual:
                 
                 self.populate_column(operation)
 
-    def delete_file(self, filePath): #COMPLETE, DOCSTRING
+    def delete_file(self, filePath):
+        """Deletes a given processed data file.
 
+        Args:
+            filePath (str): path to raw/processed data file
+
+        Returns:
+            int: '1' if file was deleted, '0' otherwise
+        """
+
+        # ensure we're using processed data file, not raw data
         filePath = functions.raw_to_processed(filePath)
+
         if os.path.exists(filePath):
             os.remove(filePath)
             return 1
@@ -472,7 +622,24 @@ class _Individual:
         G = global_tracker.GlobalFile(fullInitialisation = False)
         return G.get_health_status(rawFileName)
 
-    def graph_sensor_data(self, filtered=True, unfiltered=True): # COMPLETE, DOCSTRING
+    def graph_sensor_data(self, filtered=True, unfiltered=False):
+        """Produces graphs of raw (unfiltered) and/or filtered (smoothened) 
+        sensor data from the processed data file.
+
+        Opens the processed data file, and depending on the input arguments, 
+        creates a list containing all the data to be plotted. Then this dataset 
+        is displayed to the user.
+
+        Args:
+            filtered (bool, optional): set to 'True' if filtered sensor data 
+                should be plotted. Set to 'False' otherwise. Defaults to True.
+            unfiltered (bool, optional): set to 'True' if unfiltered sensor data 
+                should be plotted. Set to 'False' otherwise Defaults to False.
+
+        Returns:
+            int: signifies successful completion of method.
+        """
+        
         if not filtered and not unfiltered:
             print("No data to be plotted. Check parameters.")
             return None
@@ -528,7 +695,6 @@ class _Individual:
                 fig.show()           
 
         return 1
-
 
     def populate_column(self, operation):
         """Populates/updates an existing column in the processed data file with 
@@ -616,6 +782,7 @@ class _Calculations:
         __init__ : class constructor.
         file_path (property) : getter for the attribute of the same name.
         set_file_name : setter for attribute of the same name.
+        delta_time : calculates the time step between each sample.
         smooth : runs the raw sensor data through a low pass filter to smooth 
             it.
     """
@@ -678,7 +845,7 @@ class _Calculations:
                 data.
         """
 
-
+        # make sure columnNumber is within range
         if self.columnNumber == const.NUMBER_OF_COLUMNS:
             self.columnNumber = 1
 
@@ -695,24 +862,77 @@ class _Calculations:
         data = []
 
         try:
+            f = open(self.file_path)
+        except FileNotFoundError:
+            print("Couldn't open file:", fileName)
+            return None
+
+        csv_file = csv.reader(f)
+        for row in csv_file:
+            if csv_file.line_num == 1: # header row
+                data.append(0) # any numerical value - this will be discarded
+            else:
+                # for acceleration data, use values with angular acceleration removed
+                if columnNumber < 4:
+                    data.append(float(row[columnNumber+const.NUMBER_OF_COLUMNS]))
+                else:
+                    data.append(float(row[columnNumber]))
+        f.close()
+
+        self.columnNumber += 1 # increment
+
+        # smooth data
+        windowSize = 4
+        smoothed = functions.moving_average(data, windowSize)       
+        return [0] * (windowSize-1) + list(smoothed)
+
+    def delta_time(self, fileName=None, heading=False):
+        """Calculates the time step between consecutive samples of sensor data.
+
+        If the 'heading' parameter is 'True', the method simply returns the 
+        heading for this column. Otherwise, the values for this column are 
+        calculated.
+
+        Args:
+            fileName (str): name of the file to do calculations for.
+            heading (bool): set this to 'True' if only the heading title is 
+                wanted. Set 'False' to actually calculate the value. Defaults to 
+                False.
+
+        Returns:
+            list[float]: time steps between samples, maintaining the same 
+                dimension as the input data.
+        """
+
+        if heading:
+            return "delta time" # title of column in tracker file
+
+        if fileName == None:
+            fileName = self.fileName
+        else:
+            self.set_file_name(fileName)
+    
+        data = []
+
+        try:
             with open(self.file_path) as f:
                 csv_file = csv.reader(f)
                 for row in csv_file:
-                    if csv_file.line_num == 1: # header row
-                        data.append(0) # append any numerical value - this will be discarded
+                    if csv_file.line_num == 1:
+                        data.append(row[0])
                     else:
-                        data.append(float(row[columnNumber]))
+                        data.append(int(row[0]))
+
+            output = [0, 0]
+            for i in range(2, len(data)):
+                output.append(data[i]-data[i-1])
+
+            return output
         except FileNotFoundError:
             print("Couldn't open file:", fileName)
-        else:
-            windowSize = 4
-            smoothed = functions.moving_average(data, windowSize)
 
-            self.columnNumber += 1
-            
-
-            return [0] * (windowSize-1) + list(smoothed)
-
+    def integrate(self, times, data): # COMPLETE, DOCSTRING
+        pass
 
     def duplicate(self, fileName=None, heading=False): # DUMMY FUNCTION
         if heading:

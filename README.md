@@ -163,7 +163,6 @@ This is only an increase of 0.18%, and therefore will have a negligible effect o
 	- add list of dependencies
 - Post processing code
 	- processed data files
-		- remove angular acceleration component from linear acceleration
 		- calculate speed in ball centred coordinates
 		- calculate speed in x-y coordinates
 		- calculate position in x-y coordinates
