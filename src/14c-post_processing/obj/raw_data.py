@@ -311,16 +311,21 @@ class _RawDataHealthChecker:
                     return(const.untested, e.args[0].split(":"))
 
                 else:
+                    if self.__warningsRaised and self.showWarnings:
+                        print() # adjust output formatting if displaying warnings
                     if self.__warningsRaised:
                         healthStatus = const.passedWithWarnings
-                        # adjust output formatting if warnings have been raised
-                        print("\nAll tests passed with healtstatus {}\n"
-                                .format(healthStatus))
-                        self.__warningsRaised = False
+                        
                     else:
                         healthStatus = const.passed
-                        print("All tests passed with healthstatus", healthStatus)
-
+                    
+                    print("All tests passed with healthstatus", healthStatus, end="")
+                    if healthStatus != const.passed:
+                        print("*")
+                    else:
+                        print()
+                        
+                    self.__warningsRaised = False
                     return(healthStatus, None)
 
                 finally:
