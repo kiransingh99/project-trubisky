@@ -293,11 +293,9 @@ class ProcessedData:
         """
 
         # convert data from strings into numerical values
-        for i in range(len(data)):
-            if i == 0:
-                data[i] = int(data[i])
-            else:
-                data[i] = float(data[i])
+        data[0] = int(data[0])
+        for i in range(1, len(data)):
+            data[i] = float(data[i])
         
         # subtract offsets
         if sensorsInitialised[0]:
@@ -341,15 +339,16 @@ class ProcessedData:
             delta_time = []
             sensorData = [[] for i in range(6)]
         
+            firstLine = f.readline().split(",")
+
+            delta_time.append("delta time")
+            for i in range(0, 6):
+                sensorData[i].append(firstLine[i+1])
+                        
             for row in csv_file:
-                if csv_file.line_num == 1:
-                    delta_time.append(row[self.individual.get_column_number("delta time")])
-                    for i in range(0, 6):
-                        sensorData[i].append(row[i+1])
-                else:
-                    delta_time.append(int(row[self.individual.get_column_number("delta time")]))
-                    for i in range(0, 6):
-                        sensorData[i].append(float(row[i+1]))
+                delta_time.append(int(row[self.individual.get_column_number("delta time")]))
+                for i in range(0, 6):
+                    sensorData[i].append(float(row[i+1]))
             
             data = [[sensorData[i][0][6:], 0.0, 0.0] for i in range(3)] # just column headings
 
@@ -383,18 +382,18 @@ class ProcessedData:
             # for tracking during loop
             fileData = []
 
+            # store first line of file in list - remove line break and split into a list
+            fileData.append(f.readline()[:-1].split(","))
+            fileData[0].append(header)
+
             for row in processed_file:
                 # ignore blank rows
                 if len(row) < const.NUMBER_OF_COLUMNS:
                     continue
 
-                # add another empty column, and a new heading only if on the first line
+                # add another empty column
                 fileData.append(list(row))
-
-                if processed_file.line_num == 1:
-                    fileData[0].append(header)
-                else:
-                    fileData[-1].append(str(data[processed_file.line_num-1]))
+                fileData[-1].append(str(data[processed_file.line_num-1]))
 
             with open(filePath, "w", newline="") as f: # writeable
                 processed_file = csv.writer(f)
@@ -540,19 +539,18 @@ class _Individual:
                     # for tracking during loop
                     fileData = []
 
-                    for row in processed_file:
+                    # store first line of file in list - remove line break and split into a list
+                    fileData.append(f.readline()[:-1].split(","))
+                    fileData[0].append(header)
 
+                    for row in processed_file:
                         # ignore blank rows
                         if len(row) < const.NUMBER_OF_COLUMNS:
                             continue
 
-                        # add another empty column, and a new heading only if on the first line
+                        # add another empty column
                         fileData.append(list(row))
-
-                        if processed_file.line_num == 1:
-                            fileData[0].append(header)
-                        else:
-                            fileData[-1].append("")
+                        fileData[-1].append("")
 
                     with open(self.filePath, "w", newline="") as f: # writeable
                         processed_file = csv.writer(f)
@@ -645,54 +643,64 @@ class _Individual:
             return None
         
         for i in range(0, 7, 3):
-            with open(self.file_path) as f:
-                csv_file = csv.reader(f)
-                time = []
-            
-                data =  [[] for j in range(3 * (filtered+unfiltered))]
-                for row in csv_file:
-                    if csv_file.line_num == 1:
-                        time.append(row[0])
-                        if unfiltered:
-                            data[-3].append(row[i+1])
-                            data[-2].append(row[i+2])
-                            data[-1].append(row[i+3])
-                        if filtered:
-                            data[0].append(row[i+10])
-                            data[1].append(row[i+11])
-                            data[2].append(row[i+12])
-                    else:
-                        time.append(float(row[0]))
-                        if unfiltered:
-                            data[-3].append(float(row[i+1]))
-                            data[-2].append(float(row[i+2]))
-                            data[-1].append(float(row[i+3]))
-                        if filtered:
-                            data[0].append(float(row[i+10]))
-                            data[1].append(float(row[i+11]))
-                            data[2].append(float(row[i+12]))
+            try:
+                f = open(self.file_path)
+            except FileNotFoundError as e:
+                print("Processed data file could not be found:", e)
+                return 0
 
-                #plot linear acceleration and angular velocity separately
-                fig, (er, e1, e2) = plt.subplots(3, sharex=True)
+            csv_file = csv.reader(f)
+            time = []
+            # three sublists for filtered data, three for unfiltered
+            data =  [[] for j in range(3 * (filtered+unfiltered))]
+
+            # read first line and add headings to a list
+            firstLine = f.readline()[:-1].split(",")
+            time.append(firstLine[0])
+            if unfiltered:
+                data[-3].append(firstLine[i+1])
+                data[-2].append(firstLine[i+2])
+                data[-1].append(firstLine[i+3])
+            if filtered:
+                data[0].append(firstLine[i+11])
+                data[1].append(firstLine[i+12])
+                data[2].append(firstLine[i+13])
+        
+            # add data from the rest of the file to the list so it can be plotted
+            for row in csv_file:
+                time.append(float(row[0]))
                 if unfiltered:
-                    er.plot(time[1:], data[-3][1:], label=data[-3][0])
-                    e1.plot(time[1:], data[-2][1:], label=data[-2][0])
-                    e2.plot(time[1:], data[-1][1:], label=data[-1][0])
+                    data[-3].append(float(row[i+1]))
+                    data[-2].append(float(row[i+2]))
+                    data[-1].append(float(row[i+3]))
                 if filtered:
-                    er.plot(time[1:], data[0][1:], label=data[0][0])
-                    e1.plot(time[1:], data[1][1:], label=data[1][0])
-                    e2.plot(time[1:], data[2][1:], label=data[2][0])
+                    data[0].append(float(row[i+11]))
+                    data[1].append(float(row[i+12]))
+                    data[2].append(float(row[i+13]))
 
-                if filtered and unfiltered:
-                        fig.suptitle("Filtered and Unfiltered Sensor Data Against Time")
-                elif filtered:
-                    fig.suptitle("Filtered Sensor Data against Time")
-                elif unfiltered:
-                    fig.suptitle("Unfiltered Sensor Data against Time")
-                er.legend()
-                e1.legend()
-                e2.legend()
-                fig.show()           
+            f.close()
+
+            #plot linear acceleration and angular velocity separately
+            fig, (er, e1, e2) = plt.subplots(3, sharex=True)
+            if unfiltered:
+                er.plot(time[1:], data[-3][1:], label=data[-3][0])
+                e1.plot(time[1:], data[-2][1:], label=data[-2][0])
+                e2.plot(time[1:], data[-1][1:], label=data[-1][0])
+            if filtered:
+                er.plot(time[1:], data[0][1:], label=data[0][0])
+                e1.plot(time[1:], data[1][1:], label=data[1][0])
+                e2.plot(time[1:], data[2][1:], label=data[2][0])
+
+            if filtered and unfiltered:
+                    fig.suptitle("Filtered and Unfiltered Sensor Data Against Time")
+            elif filtered:
+                fig.suptitle("Filtered Sensor Data against Time")
+            elif unfiltered:
+                fig.suptitle("Unfiltered Sensor Data against Time")
+            er.legend()
+            e1.legend()
+            e2.legend()
+            fig.show()           
 
         return 1
 
@@ -868,15 +876,17 @@ class _Calculations:
             return None
 
         csv_file = csv.reader(f)
+
+        # skip header and add any numerical value in its place in list
+        data.append(0)
+        next(f)
+
         for row in csv_file:
-            if csv_file.line_num == 1: # header row
-                data.append(0) # any numerical value - this will be discarded
+            # for acceleration data, use values with angular acceleration removed
+            if columnNumber < 4:
+                data.append(float(row[columnNumber+const.NUMBER_OF_COLUMNS]))
             else:
-                # for acceleration data, use values with angular acceleration removed
-                if columnNumber < 4:
-                    data.append(float(row[columnNumber+const.NUMBER_OF_COLUMNS]))
-                else:
-                    data.append(float(row[columnNumber]))
+                data.append(float(row[columnNumber]))
         f.close()
 
         self.columnNumber += 1 # increment
@@ -917,11 +927,10 @@ class _Calculations:
         try:
             with open(self.file_path) as f:
                 csv_file = csv.reader(f)
+                firstLine = f.readline()[:-1].split(",")
+                data.append(firstLine[0])
                 for row in csv_file:
-                    if csv_file.line_num == 1:
-                        data.append(row[0])
-                    else:
-                        data.append(int(row[0]))
+                    data.append(int(row[0]))
 
             output = [0, 0]
             for i in range(2, len(data)):

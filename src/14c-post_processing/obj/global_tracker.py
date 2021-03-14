@@ -196,18 +196,19 @@ class GlobalFile:
                 # for tracking during loop
                 fileData = []
 
+                # store first line of file in list - remove line break and split into a list
+                fileData.append(f.readline()[:-1].split(","))
+                fileData[0].append(operation(heading=True))
+
                 for row in tracker_file:
 
                     # ignore blank rows
                     if len(row) < const.TRACKER_BARE_MINIMUM_LENGTH:
                         continue
 
-                    # add another empty column, and a new heading only if on the first line
+                    # add another empty column
                     fileData.append(list(row))
-                    if tracker_file.line_num == 1:
-                        fileData[0].append(operation(heading=True))
-                    else:
-                        fileData[-1].append("")
+                    fileData[-1].append("")
 
                 with open(const.TRACKER_FILEPATH, "w", newline="") as f: # writeable
                     tracker_file = csv.writer(f)
@@ -392,7 +393,7 @@ class GlobalFile:
         
         self.set_TRACKER_COUNT_COLUMNS(self.TRACKER_COUNT_COLUMNS-1)
 
-        print("Deleted column", columnNumber)
+        # print("Deleted column", columnNumber)
 
         return True
 
