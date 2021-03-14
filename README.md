@@ -43,6 +43,42 @@ This system is just made up of Python scripts running on a PC, with access to al
 
 Each file can be passed to a function which generates data about the throws and adds relevant data to another csv file, which summarises all the data, so it doesnt need to be recalculated every time a graph summarising all the data is generated.
 
+## Software
+
+### Dependencies
+The external libraries used by this software are: 
+
+- Onboard
+	- Adafruit_Sensor
+	- Adafruit_BNO055
+	- utility/imumaths
+	- SD
+	- Wire
+- Offboard
+	- C++ (run on Arduino)
+		- Wire
+	- python (run on PC)
+		- datetime
+		- os
+		- serial
+		- signal
+- Post-processing
+	- csv
+	- matplotlib
+	- numpy
+	- os
+	- sys
+
+### Structure of repository
+
+- **project-trubisky/** *#root directory*
+	- **.vscode/** *#config files for running system from VS Code*
+	- **data/** *#both raw and processed data are saved here*
+	- **src/** *#code is stored here*
+	- **.gitignore**
+	- **README.md**
+
+
 ## Interpreting the data
 
 ### Raw data files
@@ -149,18 +185,7 @@ $I_\text{elec}\simeq4.03\times10^{-6}\text{kgm}^{-1}$
 
 This is only an increase of 0.18%, and therefore will have a negligible effect on the results.
 
-## Structure of repository
-
-- **project-trubisky/** *#root directory*
-	- **.vscode/** *#config files for running system from VS Code*
-	- **data/** *#both raw and processed data are saved here*
-	- **src/** *#code is stored here*
-	- **.gitignore**
-	- **README.md**
-
 ## To Do
-- README
-	- add list of dependencies
 - Post processing code
 	- processed data files
 		- calculate speed in ball centred coordinates
