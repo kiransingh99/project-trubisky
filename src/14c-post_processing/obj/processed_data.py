@@ -519,14 +519,18 @@ class _Individual:
             int: 1 to signify completion of method.
         """
 
-        header = operation(heading=True)
+        # exception is thrown upon completion of group operations
+        try:
+            header = operation(fileName=self.fileName, heading=True)
+        except Exception:
+            return 1
+
         if operation.__name__ == "smooth":
             iterations = len(const.COLUMN_HEADERS)
         else:
             iterations = 1
 
-        for i in range (0, iterations):
-
+        for _ in range (0, iterations):
             header = operation(heading=True)
 
             with open(self.file_path) as f: # read only
@@ -793,6 +797,16 @@ class _Calculations:
         delta_time : calculates the time step between each sample.
         smooth : runs the raw sensor data through a low pass filter to smooth 
             it.
+        ball_centred_velocities : calculates the velocities of the ball in 
+            ball-centered coordinates.
+        __integrate : does numerical integration on a dataset using the 
+            trapezium rule.
+        __vel_e_r : integrates acceleration values (e_r) to get the velocity in 
+            that direction.
+        __vel_e_1 : integrates acceleration values (e_1) and (e_2) to get the 
+            velocity in the vertical direction.
+        __vel_e_2 : integrates acceleration values (e_1) and (e_2) to get the 
+            velocity in the horizontal direction.
     """
 
     def __init__(self, fileName=""):
@@ -915,7 +929,7 @@ class _Calculations:
         """
 
         if heading:
-            return "delta time" # title of column in tracker file
+            return "delta time" # title of column in processed data file
 
         if fileName == None:
             fileName = self.fileName
@@ -923,47 +937,259 @@ class _Calculations:
             self.set_file_name(fileName)
     
         data = []
+        columnNumber = 0
 
         try:
             with open(self.file_path) as f:
                 csv_file = csv.reader(f)
                 firstLine = f.readline()[:-1].split(",")
-                data.append(firstLine[0])
+                data.append(firstLine[columnNumber])
                 for row in csv_file:
-                    data.append(int(row[0]))
-
-            output = [0, 0]
-            for i in range(2, len(data)):
-                output.append(data[i]-data[i-1])
-
-            return output
+                    data.append(int(row[columnNumber]))
         except FileNotFoundError:
             print("Couldn't open file:", fileName)
+            return 0
 
-    def integrate(self, times, data): # COMPLETE, DOCSTRING
-        pass
+        output = [0, 0]
+        for i in range(2, len(data)):
+            output.append(data[i]-data[i-1])
 
-    def duplicate(self, fileName=None, heading=False): # DUMMY FUNCTION
-        if heading:
-            return "duplicate" # title of column in tracker file
+        return output
+
+    def ball_centred_velocities(self, fileName=None, **kwargs):
+        """Runs the separate operations that calculate the ball-centered 
+        velocities.
+
+        Sets the name of the file to operated on, amd then calls the methods 
+        for each of the individual operations. Raises an exception to stop 
+        execution of individual.add_column method with this method as an 
+        argument.
+
+        Args:
+            fileName (str, optional): name of the file to do calculations for.
+
+        Raises:
+            Exception: raised in order to terminate execution of 
+                individual.add_column method with this operation as an argument
+        """
 
         if fileName == None:
             fileName = self.fileName
         else:
             self.set_file_name(fileName)
-    
+
+        I = ProcessedData().individual
+        I.set_file_name(fileName)
+
+        I.add_column(self.__vel_e_r)
+        I.add_column(self.__vel_e_1)
+        I.add_column(self.__vel_e_2)
+
+        raise Exception
+
+
+
+    def __integrate(self, data, timesteps, initialValue=0):
+        """Calculates numerical integration for a given dataset using the 
+        trapezium rule.
+
+        Args:
+            data (list[float]): data to be integrated.
+            timesteps (list[int]): time between each sample of 'data'.
+            initialValue (float, optional): initial offset for integration. 
+                Defaults to 0.
+
+        Returns:
+            list[float]: integrated values
+        """
+
+        output = [initialValue]
+        value = initialValue
+
+        for i in range (1, len(timesteps)):
+            value += (data[i-1] + data[i])/2 * timesteps[i]/1000
+            output.append(value)
+
+        return output  
+
+    def __vel_e_r(self, fileName=None, heading=False):
+        """Calculates the e_r velocity (ball-centred coordinates) between 
+        consecutive samples of sensor data.
+
+        If the 'heading' parameter is 'True', the method simply returns the 
+        heading for this column. Otherwise, the values for this column are 
+        calculated.
+
+        Args:
+            fileName (str): name of the file to do calculations for.
+            heading (bool): set this to 'True' if only the heading title is 
+                wanted. Set 'False' to actually calculate the value. Defaults to 
+                False.
+
+        Returns:
+            list[float]: velocity at each sample, maintaining the same 
+                dimension as the input data.
+        """
+
+        if heading:
+            return "vel (e_r)" # title of column in processed data file
+
+        if fileName == None:
+            fileName = self.fileName
+        else:
+            self.set_file_name(fileName)
+
+        P = ProcessedData().individual
+        P.set_file_name(fileName)
+        columnNumber_time = P.get_column_number("delta time")
+        columnNumber = P.get_column_number("acc (e_r)")
+        timesteps = []
         data = []
 
+        # store file data in a list
         try:
             with open(self.file_path) as f:
                 csv_file = csv.reader(f)
+                next(f)
                 for row in csv_file:
-                    data.append(row[0])
-                return data
-        except:
+                    timesteps.append(int(row[columnNumber_time]))
+                    data.append(float(row[columnNumber]))
+        except FileNotFoundError:
             print("Couldn't open file:", fileName)
 
+        output = [0] # this value will be skipped over
 
+        output.extend(self.__integrate(data, timesteps)) # integrate acceleration data
+        return output
+
+    def __vel_e_1(self, fileName=None, heading=False):
+        """Calculates the e_1 velocity (ball-centred coordinates) between 
+        consecutive samples of sensor data.
+
+        If the 'heading' parameter is 'True', the method simply returns the 
+        heading for this column. Otherwise, the values for this column are 
+        calculated.
+
+        Args:
+            fileName (str): name of the file to do calculations for.
+            heading (bool): set this to 'True' if only the heading title is 
+                wanted. Set 'False' to actually calculate the value. Defaults to 
+                False.
+
+        Returns:
+            list[float]: velocity at each sample, maintaining the same 
+                dimension as the input data.
+        """
+
+        if heading:
+            return "vel (e_1)" # title of column in processed data file
+
+        if fileName == None:
+            fileName = self.fileName
+        else:
+            self.set_file_name(fileName)
+
+        P = ProcessedData().individual
+        P.set_file_name(fileName)
+        columnNumber_time = P.get_column_number("delta time")
+        columnNumber_1 = P.get_column_number("acc (e_1)")
+        columnNumber_2 = P.get_column_number("acc (e_2)")
+        columnNumber_euler = P.get_column_number("euler (beta)")
+        timesteps = []
+        acc_1 = []
+        acc_2 = []
+        euler_angles = [0] # this value will be skipped over
+
+        # store file data in a list
+        try:
+            with open(self.file_path) as f:
+                csv_file = csv.reader(f)
+                next(f)
+                for row in csv_file:
+                    timesteps.append(int(row[columnNumber_time]))
+                    acc_1.append(float(row[columnNumber_1]))
+                    acc_2.append(float(row[columnNumber_2]))
+                    euler_angles.append(float(row[columnNumber_euler]))
+        except FileNotFoundError:
+            print("Couldn't open file:", fileName)
+
+        output_1 = [0] # this value will be skipped over
+        output_1.extend(self.__integrate(acc_1, timesteps)) # integrate acceleration data
+        output_2 = [0] # this value will be skipped over
+        output_2.extend(self.__integrate(acc_2, timesteps)) # integrate acceleration Data
+
+        output = []
+
+        for i in range(0, len(output_1)):
+            output.append(output_1[i] * np.cos(euler_angles[i]) + 
+                            output_2[i] * np.sin(euler_angles[i]))
+
+        return output
+
+    def __vel_e_2(self, fileName=None, heading=False):
+        """Calculates the e_2 velocity (ball-centred coordinates) between 
+        consecutive samples of sensor data.
+
+        If the 'heading' parameter is 'True', the method simply returns the 
+        heading for this column. Otherwise, the values for this column are 
+        calculated.
+
+        Args:
+            fileName (str): name of the file to do calculations for.
+            heading (bool): set this to 'True' if only the heading title is 
+                wanted. Set 'False' to actually calculate the value. Defaults to 
+                False.
+
+        Returns:
+            list[float]: velocity at each sample, maintaining the same 
+                dimension as the input data.
+        """
+
+        if heading:
+            return "vel (e_2)" # title of column in processed data file
+
+        if fileName == None:
+            fileName = self.fileName
+        else:
+            self.set_file_name(fileName)
+
+        P = ProcessedData().individual
+        P.set_file_name(fileName)
+        columnNumber_time = P.get_column_number("delta time")
+        columnNumber_1 = P.get_column_number("acc (e_1)")
+        columnNumber_2 = P.get_column_number("acc (e_2)")
+        columnNumber_euler = P.get_column_number("euler (beta)")
+        timesteps = []
+        acc_1 = []
+        acc_2 = []
+        euler_angles = [0] # this value will be skipped over
+
+        # store file data in a list
+        try:
+            with open(self.file_path) as f:
+                csv_file = csv.reader(f)
+                next(f)
+                for row in csv_file:
+                    timesteps.append(int(row[columnNumber_time]))
+                    acc_1.append(float(row[columnNumber_1]))
+                    acc_2.append(float(row[columnNumber_2]))
+                    euler_angles.append(float(row[columnNumber_euler]))
+        except FileNotFoundError:
+            print("Couldn't open file:", fileName)
+
+        output_1 = [0] # this value will be skipped over
+        output_1.extend(self.__integrate(acc_1, timesteps)) # integrate acceleration data
+        output_2 = [0] # this value will be skipped over
+        output_2.extend(self.__integrate(acc_2, timesteps)) # integrate acceleration Data
+
+        output = []
+
+        for i in range(0, len(output_1)):
+            output.append(output_1[i] * np.sin(euler_angles[i]) - 
+                            output_2[i] * np.cos(euler_angles[i]))
+
+        return output
+     
 
 """
 class _Ensemble: # DOCSTRING

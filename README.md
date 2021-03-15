@@ -86,20 +86,24 @@ The external libraries used by this software are:
 The raw data files are in CSV file formats, and the file names begin with the prefix "RAW-". In case they were not transmitted accurately, they are 'health checked' before they get added to the tracker file (mentioned below). They have the following columns:
 
 - time - timestamp of each reading, given in milliseconds
-- acc (e_r) - linear acceleration in the direction the ball points in (along the major axis)
-- acc (e_1) - linear acceleration along one of the minor axes
-- acc (e_2) - linear acceleration along the other minor axis
-- w (e_r) - angular velocity in the direction of the major axis
-- w (e_1) - angular velocity in the direction of the first minor axis
-- w (e_2) - angular velocity in the direction of the second minor axis
-- euler (alpha) - change in bearing since sensors initialised
-- euler (beta) - change in elevation/ pitch since sensors initialised
-- euler (gamma) - change in orientation since sensors intiialised
+- acc (e_r) - linear acceleration in the direction the ball points in (along the major axis) (m/s^2)
+- acc (e_1) - linear acceleration along one of the minor axes (m/s^2)
+- acc (e_2) - linear acceleration along the other minor axis (m/s^2)
+- w (e_r) - angular velocity in the direction of the major axis (rad)
+- w (e_1) - angular velocity in the direction of the first minor axis (rad)
+- w (e_2) - angular velocity in the direction of the second minor axis (rad)
+- euler (alpha) - change in bearing since sensors initialised (deg)
+- euler (beta) - change in elevation/ pitch since sensors initialised (deg)
+- euler (gamma) - change in orientation since sensors intiialised (deg)
 
 This file should not be given too much focus as the processed data files contain the same information and more.
 
 ### Processed data files
-TO DO
+The processed data files have the same first columns as the raw data files, but each of the headings are prefixed by '[raw] '. They are complete replications of the raw data files, except the units of measurement have been converted to more usable ones, where appropriate. The next column contains the time in milliseconds between each sample. The next columns contain the same sensor data, but after having been smoothened (low pass filtered). The order of these columns should not be changed
+
+Following that, the columns contain data at each timestep of the throw as listed below. Note that these columns can be in any order, provided they follow the first set of columns:
+
+- velocities (e_r), (e_1), (e_2) - the velocity of the ball in ball-centred coordinates. Note that e_1 and e_2 are not aligned with the rotating sensor axes any more, and instead remain a static orthonormal set relative to the centre of the ball
 
 ### Global tracker file
 
@@ -186,9 +190,12 @@ $I_\text{elec}\simeq4.03\times10^{-6}\text{kgm}^{-1}$
 This is only an increase of 0.18%, and therefore will have a negligible effect on the results.
 
 ## To Do
+- README
+	- how to interpret processed data files
 - Post processing code
 	- processed data files
-		- calculate speed in ball centred coordinates
+		- smoother coefficients depend on timesteps
+		- calculate distances in ball centred coordinates (1)
 		- calculate speed in x-y coordinates
 		- calculate position in x-y coordinates
 		- spiral rating (variance of spiral)
@@ -200,10 +207,9 @@ This is only an increase of 0.18%, and therefore will have a negligible effect o
 		- launch speed
 		- spiral rate
 		- angle of attack (at launch)
-		- angle wrt direction of throw (at launch)
+		- angle wrt direction of throw (at launch) (linked to (1)?)
 	- add more functions for individual file analysis
 		- plot speed against time
 		- plot path in x-y coordinates
-		- angle of attack
 	- comments and docstrings
 	- finish interface for main python file

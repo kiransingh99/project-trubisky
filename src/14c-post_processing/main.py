@@ -319,17 +319,20 @@ def main():
         elif level == "1cb": # create processed data files for all raw data files
             if P.create_all_processed_data_files():
                 print("Completed successfully")
-                print("Recommended to smooth sensor readings. (y/n)")
+                print("Recommended to run operations (e.g. smooth sensor readings). Do it? (y/n)")
                 if input() == "y":
                     level = "1cd"
                     continue
             level = level[:-1]
-            print("Recommended to ")
         elif level == "1cc": # create a processed data file for a specific raw data file
             fileName = sanitise_file_name(False)
             newFile = P.create_single_processed_data_file(functions.add_data_directory(fileName))
             if newFile:
                 print("Added file " + newFile)
+                print("Recommended to run operations (e.g. smooth sensor readings). Do it? (y/n)")
+                if input() == "y":
+                    level = "1cd"
+                    continue
             else:
                 print("File {} could not be added".format(fileName))
             level = level[:-1]
@@ -410,10 +413,10 @@ def main():
                     if key == "all" or key == "q":
                         continue
                     if G.remove_metric(key):
-                        print("Removed column " + key)
+                        print("Removed column '{}'".format(key))
             else:
                 if G.remove_metric(column_header):
-                    print("Removed column " + column_header)
+                    print("Removed column '{}'".format(column_header))
             level = level[:-1]
         elif level == "1e": # analysis
             filtered = True
@@ -468,6 +471,8 @@ def main():
             try: del H
             except: pass
             try: del I
+            except: pass
+            try: del P
             except: pass
             try: del R
             except: pass
@@ -532,6 +537,7 @@ level1eb = {
 calculations = {
     "all": None,
     "smooth": processed_data.ProcessedData().individual.calculations.smooth,
+    "ball centred velocity": processed_data.ProcessedData().individual.calculations.ball_centred_velocities,
     "q": None
 }
 
