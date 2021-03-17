@@ -1,4 +1,5 @@
 from . import const
+from .exceptions import UniqueCaseException
 from . import functions
 from . import global_tracker
 import csv
@@ -474,7 +475,7 @@ class _Individual:
         # exception is thrown upon completion of group operations
         try:
             header = operation(fileName=self.fileName, heading=True)
-        except Exception:
+        except UniqueCaseException:
             return 1
 
         if operation.__name__ == "smooth":
@@ -939,8 +940,8 @@ class _Calculations:
         I.add_column(self.__vel_e_theta)
         I.add_column(self.__vel_e_phi)
 
-        raise Exception
-    
+        raise UniqueCaseException
+
 
     def __integrate(self, data, timesteps, initialValue=0):
         """Calculates numerical integration for a given dataset using the 
