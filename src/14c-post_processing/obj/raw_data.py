@@ -2,7 +2,7 @@ from . import const
 from . import functions
 from . import global_tracker
 import csv
-import inspect
+# import inspect
 import os.path
 import sys
 
@@ -441,20 +441,20 @@ class _RawDataHealthChecker:
         time has not remained constant either.
 
         Args:
-            row (list): row object from the CSV file.
-            previousTime (int): the time recorded on the previous row.
+            row (list[str]): row object from the CSV file.
+            previousTime (float): the time recorded on the previous row.
 
         Returns:
-            int: time recorded on this row.
+            float: time recorded on this row.
         """
 
-        assert int(row[0]) >= previousTime,\
+        assert float(row[0]) >= previousTime,\
                 "Check times: row {} has time less than previous row ({} -> {})"\
                 .format(line_num, row[0], previousTime)
-        assert int(row[0]) > previousTime,\
+        assert float(row[0]) > previousTime,\
                 "Check times: row {} has time equal to previous row ({})"\
                 .format(line_num, row[0])
-        return int(row[0])
+        return float(row[0])
 
     def __is_in_tracker(self, fileName):
         """Checks if a given raw data file has been logged in the global tracker 

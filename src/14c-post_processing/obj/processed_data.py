@@ -41,8 +41,6 @@ class ProcessedData:
             created.
         __convert_units : changes the units of the sensor output to make 
             calculations easier.
-        __remove_angular_acceleration : removes the angular acceleration 
-            component from the linear acceleration.
         __ write_data_to_file : writes a column of data to processed data file.
     """
 
@@ -248,11 +246,6 @@ class ProcessedData:
         # calculate timesteps between samples and write to file
         self.individual.add_column(self.individual.calculations.delta_time)
         
-        # remove angular acceleration component from linear acceleration readings
-        newData = self.__remove_angular_acceleration()
-        for i in range(0, len(newData)):
-            self.__write_data_to_file(newData[i][0], newData[i][1:])
-
         # add name of processed data file to tracker
         G = global_tracker.GlobalFile(False)
         G.write_to_file(rawFileName, 2, processedFileName)
@@ -293,8 +286,7 @@ class ProcessedData:
         """
 
         # convert data from strings into numerical values
-        data[0] = int(data[0])
-        for i in range(1, len(data)):
+        for i in range(0, len(data)):
             data[i] = float(data[i])
         
         # subtract offsets
@@ -308,7 +300,7 @@ class ProcessedData:
         # change the units
         newData = []
         
-        newData.append(data[0]) # time stays in milliseconds
+        newData.append(data[0]/1000) # time stays in milliseconds
         newData.extend(data[1:4]) # linear acceleration stays in m/s^2
         newData.extend(data[4:7]) # angular velocity stays in rad/s
         newData.extend(np.deg2rad(data[7:])) # euler angles change from degrees to radians
@@ -318,46 +310,6 @@ class ProcessedData:
             newData[i] = str(newData[i])
 
         return newData
-
-    def __remove_angular_acceleration(self):
-        """Removes component of angular acceleration from the linear 
-        acceleration readings.
-
-        Stores all the timestamps in a list, and stores all the data from the 
-        accelerometers and gyroscopes in a two-dimensional list. Then 
-        approximates angular acceleration (angular velocity / time) and 
-        subtracts that from the acceleration data.
-
-        Returns:
-            list[float]: acceleration data without angular acceleration 
-                component.
-        """
-
-        filePath = const.DATA_DIRECTORY + self.file_name.split("\\")[-1]
-        with open(filePath) as f:
-            csv_file = csv.reader(f)
-            delta_time = []
-            sensorData = [[] for i in range(6)]
-        
-            firstLine = f.readline().split(",")
-
-            delta_time.append("delta time")
-            for i in range(0, 6):
-                sensorData[i].append(firstLine[i+1])
-                        
-            for row in csv_file:
-                delta_time.append(int(row[self.individual.get_column_number("delta time")]))
-                for i in range(0, 6):
-                    sensorData[i].append(float(row[i+1]))
-            
-            data = [[sensorData[i][0][6:], 0.0, 0.0] for i in range(3)] # just column headings
-
-            for i in range(0, 3): # just the linear accelerations
-                for j in range(2, len(delta_time)): # for every sample
-                    angularAcceleration = sensorData[i+3][j]/delta_time[j]
-                    data[i].append(sensorData[i][j] - angularAcceleration)
-            
-            return data
 
     def __write_data_to_file(self, header, data):
         """Writes a column of data to the processed data file.
@@ -760,7 +712,11 @@ class _Individual:
             # for tracking during loop
             fileData = []
             
-            for i, row in enumerate(processed_file):
+            
+            firstLine = f.readline()[:-1].split(",")
+            fileData.append(firstLine)
+
+            for i, row in enumerate(processed_file, start=1):
                 # ignore blank rows
                 if len(row) < const.NUMBER_OF_COLUMNS:
                     continue
@@ -896,11 +852,7 @@ class _Calculations:
         next(f)
 
         for row in csv_file:
-            # for acceleration data, use values with angular acceleration removed
-            if columnNumber < 4:
-                data.append(float(row[columnNumber+const.NUMBER_OF_COLUMNS]))
-            else:
-                data.append(float(row[columnNumber]))
+            data.append(float(row[columnNumber]))
         f.close()
 
         self.columnNumber += 1 # increment
@@ -945,7 +897,7 @@ class _Calculations:
                 firstLine = f.readline()[:-1].split(",")
                 data.append(firstLine[columnNumber])
                 for row in csv_file:
-                    data.append(int(row[columnNumber]))
+                    data.append(float(row[columnNumber]))
         except FileNotFoundError:
             print("Couldn't open file:", fileName)
             return 0
@@ -1007,7 +959,7 @@ class _Calculations:
         value = initialValue
 
         for i in range (1, len(timesteps)):
-            value += (data[i-1] + data[i])/2 * timesteps[i]/1000
+            value += (data[i-1] + data[i])/2 * timesteps[i]
             output.append(value)
 
         return output  
@@ -1052,7 +1004,7 @@ class _Calculations:
                 csv_file = csv.reader(f)
                 next(f)
                 for row in csv_file:
-                    timesteps.append(int(row[columnNumber_time]))
+                    timesteps.append(float(row[columnNumber_time]))
                     data.append(float(row[columnNumber]))
         except FileNotFoundError:
             print("Couldn't open file:", fileName)
@@ -1106,7 +1058,7 @@ class _Calculations:
                 csv_file = csv.reader(f)
                 next(f)
                 for row in csv_file:
-                    timesteps.append(int(row[columnNumber_time]))
+                    timesteps.append(float(row[columnNumber_time]))
                     acc_1.append(float(row[columnNumber_1]))
                     acc_2.append(float(row[columnNumber_2]))
                     euler_angles.append(float(row[columnNumber_euler]))
@@ -1170,7 +1122,7 @@ class _Calculations:
                 csv_file = csv.reader(f)
                 next(f)
                 for row in csv_file:
-                    timesteps.append(int(row[columnNumber_time]))
+                    timesteps.append(float(row[columnNumber_time]))
                     acc_1.append(float(row[columnNumber_1]))
                     acc_2.append(float(row[columnNumber_2]))
                     euler_angles.append(float(row[columnNumber_euler]))
@@ -1320,7 +1272,7 @@ class _Metrics:
                 # get to end of file
                 for row in csv_file:
                     pass
-                time = int(row[0])
+                time = float(row[0])
                 return time
         except:
             print("Couldn't open file:", fileName)

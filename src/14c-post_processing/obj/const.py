@@ -17,8 +17,8 @@ TRACKER_BARE_MINIMUM = "name,health status,processed file" # bare minimum conten
 TRACKER_BARE_MINIMUM_LENGTH = len(TRACKER_BARE_MINIMUM.split(","))
 
 # for all data files
-COLUMN_HEADERS = ["time", "acc (e_r)", "acc (e_1)", "acc (e_2)", 
-                            "w (e_r)", "w (e_1)", "w (e_2)", 
+COLUMN_HEADERS = ["time", "acc (e_r)", "acc (e_theta)", "acc (e_phi)", 
+                            "w (e_r)", "w (e_theta)", "w (e_phi)", 
                             "euler (alpha)", "euler (beta)", "euler (gamma)"]
 COLOURS = ['', '#1f77b4', '#ff7f0e', '#26a02c', 
                 '#d62728', '#9467bd', '#8c564b',
