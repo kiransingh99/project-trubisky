@@ -302,7 +302,7 @@ class ProcessedData:
         
         newData.append(data[0]/1000) # time stays in milliseconds
         newData.extend(data[1:4]) # linear acceleration stays in m/s^2
-        newData.extend(data[4:7]) # angular velocity stays in rad/s
+        newData.extend(np.deg2rad(data[4:7])) # angular velocity stays in rad/s
         newData.extend(np.deg2rad(data[7:])) # euler angles change from degrees to radians
 
         # convert each element back into a string
@@ -755,14 +755,16 @@ class _Calculations:
             it.
         ball_centred_velocities : calculates the velocities of the ball in 
             ball-centered coordinates.
+        cartesian_velocities : calculates the velocities of the ball in 
+            cartesian coordinates.
         __integrate : does numerical integration on a dataset using the 
             trapezium rule.
         __vel_e_r : integrates acceleration values (e_r) to get the velocity in 
             that direction.
-        __vel_e_1 : integrates acceleration values (e_1) and (e_2) to get the 
-            velocity in the vertical direction.
-        __vel_e_2 : integrates acceleration values (e_1) and (e_2) to get the 
-            velocity in the horizontal direction.
+        __vel_e_theta : integrates acceleration values (e_theta) and (e_phi) to 
+            get the velocity in the vertical direction.
+        __vel_e_phi : integrates acceleration values (e_theta) and (e_phi) to 
+            get the velocity in the horizontal direction.
     """
 
     def __init__(self, fileName=""):
@@ -934,12 +936,11 @@ class _Calculations:
         I.set_file_name(fileName)
 
         I.add_column(self.__vel_e_r)
-        I.add_column(self.__vel_e_1)
-        I.add_column(self.__vel_e_2)
+        I.add_column(self.__vel_e_theta)
+        I.add_column(self.__vel_e_phi)
 
         raise Exception
-
-
+    
 
     def __integrate(self, data, timesteps, initialValue=0):
         """Calculates numerical integration for a given dataset using the 
@@ -991,10 +992,10 @@ class _Calculations:
         else:
             self.set_file_name(fileName)
 
-        P = ProcessedData().individual
-        P.set_file_name(fileName)
-        columnNumber_time = P.get_column_number("delta time")
-        columnNumber = P.get_column_number("acc (e_r)")
+        I = ProcessedData().individual
+        I.set_file_name(fileName)
+        columnNumber_time = I.get_column_number("delta time")
+        columnNumber = I.get_column_number("acc (e_r)")
         timesteps = []
         data = []
 
@@ -1014,8 +1015,8 @@ class _Calculations:
         output.extend(self.__integrate(data, timesteps)) # integrate acceleration data
         return output
 
-    def __vel_e_1(self, fileName=None, heading=False):
-        """Calculates the e_1 velocity (ball-centred coordinates) between 
+    def __vel_e_theta(self, fileName=None, heading=False):
+        """Calculates the e_theta velocity (ball-centred coordinates) between 
         consecutive samples of sensor data.
 
         If the 'heading' parameter is 'True', the method simply returns the 
@@ -1034,23 +1035,19 @@ class _Calculations:
         """
 
         if heading:
-            return "vel (e_1)" # title of column in processed data file
+            return "vel (e_theta)" # title of column in processed data file
 
         if fileName == None:
             fileName = self.fileName
         else:
             self.set_file_name(fileName)
 
-        P = ProcessedData().individual
-        P.set_file_name(fileName)
-        columnNumber_time = P.get_column_number("delta time")
-        columnNumber_1 = P.get_column_number("acc (e_1)")
-        columnNumber_2 = P.get_column_number("acc (e_2)")
-        columnNumber_euler = P.get_column_number("euler (beta)")
+        I = ProcessedData().individual
+        I.set_file_name(fileName)
+        columnNumber_time = I.get_column_number("delta time")
+        columnNumber = I.get_column_number("acc (e_theta)")
         timesteps = []
-        acc_1 = []
-        acc_2 = []
-        euler_angles = [0] # this value will be skipped over
+        data = []
 
         # store file data in a list
         try:
@@ -1059,27 +1056,17 @@ class _Calculations:
                 next(f)
                 for row in csv_file:
                     timesteps.append(float(row[columnNumber_time]))
-                    acc_1.append(float(row[columnNumber_1]))
-                    acc_2.append(float(row[columnNumber_2]))
-                    euler_angles.append(float(row[columnNumber_euler]))
+                    data.append(float(row[columnNumber]))
         except FileNotFoundError:
             print("Couldn't open file:", fileName)
 
-        output_1 = [0] # this value will be skipped over
-        output_1.extend(self.__integrate(acc_1, timesteps)) # integrate acceleration data
-        output_2 = [0] # this value will be skipped over
-        output_2.extend(self.__integrate(acc_2, timesteps)) # integrate acceleration Data
+        output = [0] # this value will be skipped over
 
-        output = []
-
-        for i in range(0, len(output_1)):
-            output.append(output_1[i] * np.cos(euler_angles[i]) + 
-                            output_2[i] * np.sin(euler_angles[i]))
-
+        output.extend(self.__integrate(data, timesteps)) # integrate acceleration data
         return output
 
-    def __vel_e_2(self, fileName=None, heading=False):
-        """Calculates the e_2 velocity (ball-centred coordinates) between 
+    def __vel_e_phi(self, fileName=None, heading=False):
+        """Calculates the e_phi velocity (ball-centred coordinates) between 
         consecutive samples of sensor data.
 
         If the 'heading' parameter is 'True', the method simply returns the 
@@ -1098,23 +1085,19 @@ class _Calculations:
         """
 
         if heading:
-            return "vel (e_2)" # title of column in processed data file
+            return "vel (e_phi)" # title of column in processed data file
 
         if fileName == None:
             fileName = self.fileName
         else:
             self.set_file_name(fileName)
 
-        P = ProcessedData().individual
-        P.set_file_name(fileName)
-        columnNumber_time = P.get_column_number("delta time")
-        columnNumber_1 = P.get_column_number("acc (e_1)")
-        columnNumber_2 = P.get_column_number("acc (e_2)")
-        columnNumber_euler = P.get_column_number("euler (beta)")
+        I = ProcessedData().individual
+        I.set_file_name(fileName)
+        columnNumber_time = I.get_column_number("delta time")
+        columnNumber = I.get_column_number("acc (e_phi)")
         timesteps = []
-        acc_1 = []
-        acc_2 = []
-        euler_angles = [0] # this value will be skipped over
+        data = []
 
         # store file data in a list
         try:
@@ -1123,25 +1106,15 @@ class _Calculations:
                 next(f)
                 for row in csv_file:
                     timesteps.append(float(row[columnNumber_time]))
-                    acc_1.append(float(row[columnNumber_1]))
-                    acc_2.append(float(row[columnNumber_2]))
-                    euler_angles.append(float(row[columnNumber_euler]))
+                    data.append(float(row[columnNumber]))
         except FileNotFoundError:
             print("Couldn't open file:", fileName)
 
-        output_1 = [0] # this value will be skipped over
-        output_1.extend(self.__integrate(acc_1, timesteps)) # integrate acceleration data
-        output_2 = [0] # this value will be skipped over
-        output_2.extend(self.__integrate(acc_2, timesteps)) # integrate acceleration Data
+        output = [0] # this value will be skipped over
 
-        output = []
-
-        for i in range(0, len(output_1)):
-            output.append(output_1[i] * np.sin(euler_angles[i]) - 
-                            output_2[i] * np.cos(euler_angles[i]))
-
+        output.extend(self.__integrate(data, timesteps)) # integrate acceleration data
         return output
-     
+   
 
 """
 class _Ensemble: # DOCSTRING

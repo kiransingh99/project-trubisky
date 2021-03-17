@@ -89,21 +89,21 @@ The raw data files are in CSV file formats, and the file names begin with the pr
 - acc (e_r) - linear acceleration in the direction the ball points in (along the major axis) (m/s^2)
 - acc (e_1) - linear acceleration along one of the minor axes (m/s^2)
 - acc (e_2) - linear acceleration along the other minor axis (m/s^2)
-- w (e_r) - angular velocity in the direction of the major axis (rad)
-- w (e_1) - angular velocity in the direction of the first minor axis (rad)
-- w (e_2) - angular velocity in the direction of the second minor axis (rad)
-- euler (alpha) - change in bearing since sensors initialised (deg)
-- euler (beta) - change in elevation/ pitch since sensors initialised (deg)
-- euler (gamma) - change in orientation since sensors intiialised (deg)
+- w (e_r) - angular velocity in the direction of the major axis (deg/s)
+- w (e_theta) - angular velocity in the direction of the first minor axis (deg/s)
+- w (e_phi) - angular velocity in the direction of the second minor axis (deg/s)
+- euler (alpha) - change in yaw since sensors initialised (deg)
+- euler (beta) - pitch (deg)
+- euler (gamma) - roll (deg)
 
 This file should not be given too much focus as the processed data files contain the same information and more.
 
 ### Processed data files
-The processed data files have the same first columns as the raw data files, but each of the headings are prefixed by '[raw] '. They are complete replications of the raw data files, except the units of measurement have been converted to more usable ones, where appropriate. The next column contains the time in milliseconds between each sample. The next columns contain the same sensor data, but after having been smoothened (low pass filtered). The order of these columns should not be changed
+The processed data files have the same first columns as the raw data files, but each of the headings are prefixed by '[raw] '. They are complete replications of the raw data files, except the units of measurement have been converted to more usable ones, where appropriate (using radians instead of degrees). The next column contains the time in milliseconds between each sample. The next columns contain the same sensor data, but after having been smoothened (low pass filtered). The order of these columns should not be changed
 
 Following that, the columns contain data at each timestep of the throw as listed below. Note that these columns can be in any order, provided they follow the first set of columns:
 
-- velocities (e_r), (e_1), (e_2) - the velocity of the ball in ball-centred coordinates. Note that e_1 and e_2 are not aligned with the rotating sensor axes any more, and instead remain a static orthonormal set relative to the centre of the ball
+- velocities (e_r), (e_theta), (e_phi) - the velocity of the ball in ball-centred coordinates. The origin of this axis is the centre of the ball, and this orthonormal set rotates with the ball.
 
 ### Global tracker file
 
