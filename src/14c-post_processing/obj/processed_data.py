@@ -479,7 +479,7 @@ class _Individual:
             return 1
 
         if operation.__name__ == "smooth":
-            iterations = len(const.COLUMN_HEADERS)
+            iterations = len(const.COLUMN_HEADERS)-1
         else:
             iterations = 1
 
@@ -598,8 +598,8 @@ class _Individual:
         if not filtered and not unfiltered:
             print("No data to be plotted. Check parameters.")
             return None
-        
-        for i in range(0, 7, 3):
+
+        for i in range(0, 7, 3): # repeat once for each sensor
             try:
                 f = open(self.file_path)
             except FileNotFoundError as e:
@@ -609,7 +609,7 @@ class _Individual:
             csv_file = csv.reader(f)
             time = []
             # three sublists for filtered data, three for unfiltered
-            data =  [[] for j in range(3 * (filtered+unfiltered))]
+            data =  [[] for j in range(3 * (filtered + unfiltered))]
 
             # read first line and add headings to a list
             firstLine = f.readline()[:-1].split(",")
@@ -827,7 +827,7 @@ class _Calculations:
         """
 
         # make sure columnNumber is within range
-        if self.columnNumber == const.NUMBER_OF_COLUMNS:
+        if self.columnNumber >= const.NUMBER_OF_COLUMNS:
             self.columnNumber = 1
 
         columnNumber = self.columnNumber
