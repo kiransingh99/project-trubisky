@@ -386,6 +386,7 @@ class _Individual:
         populate_column : populates/ updates an existing column in the processed 
             data file.
         write_to_file : overwrites an entry already listed in the file.
+        __make_graph : produces a graph based on parameters passed to it.
     """
 
     def __init__(self, fileName):
@@ -583,8 +584,8 @@ class _Individual:
         sensor data from the processed data file.
 
         Opens the processed data file, and depending on the input arguments, 
-        creates a list containing all the data to be plotted. Then this dataset 
-        is displayed to the user.
+        creates a list containing all the data to be plotted. Then a method is 
+        called to display this dataset to the user.
 
         Args:
             filtered (bool, optional): set to 'True' if filtered sensor data 
@@ -615,50 +616,40 @@ class _Individual:
             # read first line and add headings to a list
             firstLine = f.readline()[:-1].split(",")
             time.append(firstLine[0])
-            if unfiltered:
-                data[-3].append(firstLine[i+1])
-                data[-2].append(firstLine[i+2])
-                data[-1].append(firstLine[i+3])
-            if filtered:
-                data[0].append(firstLine[i+11])
-                data[1].append(firstLine[i+12])
-                data[2].append(firstLine[i+13])
+            for j in range(0, 3):
+                if unfiltered:
+                    data[j-3].append(firstLine[i+j+1])
+                if filtered:
+                    data[j].append(firstLine[i+len(const.COLUMN_HEADERS)+j+1])
         
             # add data from the rest of the file to the list so it can be plotted
             for row in csv_file:
                 time.append(float(row[0]))
-                if unfiltered:
-                    data[-3].append(float(row[i+1]))
-                    data[-2].append(float(row[i+2]))
-                    data[-1].append(float(row[i+3]))
-                if filtered:
-                    data[0].append(float(row[i+11]))
-                    data[1].append(float(row[i+12]))
-                    data[2].append(float(row[i+13]))
+                for j in range(0, 3):
+                    if unfiltered:
+                        data[j-3].append(float(row[i+j+1]))
+                    if filtered:
+                        data[j].append(float(row[i+len(const.COLUMN_HEADERS)+j+1]))
 
             f.close()
 
-            #plot linear acceleration and angular velocity separately
-            fig, (er, e1, e2) = plt.subplots(3, sharex=True)
-            if unfiltered:
-                er.plot(time[1:], data[-3][1:], label=data[-3][0])
-                e1.plot(time[1:], data[-2][1:], label=data[-2][0])
-                e2.plot(time[1:], data[-1][1:], label=data[-1][0])
-            if filtered:
-                er.plot(time[1:], data[0][1:], label=data[0][0])
-                e1.plot(time[1:], data[1][1:], label=data[1][0])
-                e2.plot(time[1:], data[2][1:], label=data[2][0])
+            y_data = [[] for j in range(3)]
+            
+            # restructure data for __make_graph method
+            for j in range(0, 3):
+                if unfiltered:
+                    y_data[j].append(data[j-3])
+                if filtered:
+                    y_data[j].append(data[j])
 
             if filtered and unfiltered:
-                    fig.suptitle("Filtered and Unfiltered Sensor Data Against Time")
+                title = "Filtered and Unfiltered Sensor Data Against Time"
             elif filtered:
-                fig.suptitle("Filtered Sensor Data against Time")
+                title = "Filtered Sensor Data against Time"
             elif unfiltered:
-                fig.suptitle("Unfiltered Sensor Data against Time")
-            er.legend()
-            e1.legend()
-            e2.legend()
-            fig.show()           
+                title = "Unfiltered Sensor Data against Time"
+
+            self.__make_graph(time, y_data, title)
 
         return 1
 
@@ -732,8 +723,49 @@ class _Individual:
         return True
 
 
-    def __graph_data(self, x_data, y_data):
-        pass
+    def __make_graph(self, x_data, y_data, title=""):
+        """Produces a graph based on the data passed in as parameters.
+
+        Capable of producing multiple graphs within one figure, with multiple 
+        datasets plotted on each graph. To facilitate this, y_data must be a 
+        multi-level list with the following structure:
+
+            y_data = [[[AA1, AA2, AA3, ...], [AB1, AB2, AB3, ...]],
+                        [[BA1, BA2, BA3, ...], [BB1, BB2, BB3, ...]], 
+                        ...]
+
+        where datapoints labelled Axx are plotted in the top graph in the 
+        window, and datapoints labelled AAx form a single line on the graph. The 
+        data in each of the innermost lists forms a line, the lists of lists 
+        form a graph, and the list of list of lists forms the whole window.
+
+        Args:
+            x_data (list[float]): data to plot on the horizontal axis.
+            y_data (list[list[list[float]]]): data to plot on the vertical axis. 
+            title (str, optional): main title for the graph. Defaults to "".
+
+        Returns:
+            int: signifies successful completion of the function.
+        """
+        
+        number_of_subplots = len(y_data) # number of graphs within window
+        
+        for j in range(number_of_subplots): # iterate over number of graphs
+            ax = plt.subplot(number_of_subplots, 1, j+1)
+            
+            for dataset in y_data[j]: # iterate over datasets within graph
+                ax.plot(x_data[1:], dataset[1:], label=dataset[0])
+                ax.set_xlim(xmin=0)
+                ax.set_xlabel(x_data[0])
+                plt.legend()
+
+            plt.suptitle(title)
+
+        plt.show()
+
+        return 1
+
+    
 
 class _Calculations:
     """Handles all the tasks related to individual processed data files, 
