@@ -72,3 +72,24 @@ def moving_average(data, window_size):
     """
 
     return np.convolve(data, np.ones(window_size), 'valid') / window_size
+
+def generate_dcm(yaw, pitch, roll): # DOCSTRING
+    sin_y = np.sin(yaw)
+    cos_y = np.cos(yaw)
+    sin_p = np.sin(pitch)
+    cos_p = np.cos(pitch)
+    sin_r = np.sin(roll)
+    cos_r = np.cos(roll)
+
+    dcm = np.zeros((3,3))
+    dcm[0,0] = cos_y*cos_p
+    dcm[0,1] = cos_y*sin_p*sin_r - sin_y*cos_r
+    dcm[0,2] = cos_y*sin_p*cos_r + sin_y*sin_r
+    dcm[1,0] = sin_y*cos_p
+    dcm[1,1] = sin_y*sin_p*sin_r + cos_y*cos_r
+    dcm[1,2] = sin_y*sin_p*cos_r - cos_y*sin_r
+    dcm[2,0] = -sin_p
+    dcm[2,1] = cos_p*sin_r
+    dcm[2,2] = cos_p*cos_r
+
+    return dcm

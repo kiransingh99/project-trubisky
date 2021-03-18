@@ -65,7 +65,7 @@ def get_input(keys):
         else:
             print("Invalid input")
 
-def sanitise_file_name(addDataDirectory = False):
+def sanitise_file_name(addDataDirectory=False):
     """Gets user to input name of a file, then removes whitespace and corrects 
     upper/lower cases in the file name.
 
@@ -119,7 +119,7 @@ def print_architecture(level, menu):
                 print_architecture("1eb", level1c)
 
 # 1ba
-def set_parameters_health(overwrite = True, showWarnings = True):
+def set_parameters_health(overwrite=True, showWarnings=True):
     """Allows the user to set parameters to initialise the 'RawData.health' 
     object.
 
@@ -175,7 +175,7 @@ def set_parameters_health(overwrite = True, showWarnings = True):
     return overwrite, showWarnings
     
 # 1ca
-def set_parameters_processed(overwrite = False):
+def set_parameters_processed(overwrite=False):
     """Allows the user to set parameters to initialise the 'P.health' 
     object.
 
@@ -213,7 +213,7 @@ def set_parameters_processed(overwrite = False):
     return overwrite
 
 # 1eab
-def set_parameters_graph_sensor_data(filtered = True, unfiltered = False):
+def set_parameters_graph_sensor_data(filtered=True, unfiltered=False):
     """Allows the user to set parameters to run the 
     '_individual.graph_sensor_data' method.
 
@@ -269,13 +269,11 @@ def set_parameters_graph_sensor_data(filtered = True, unfiltered = False):
     return filtered, unfiltered
     
 
-
 def main():
     print("\n\n")
     level = "1"
 
     while True:
-        
         if level == "1a": # print architecture
             print_architecture("1", level1)
             level = level[:-1] # remove last character of 'level' when task complete
@@ -306,7 +304,7 @@ def main():
                     level = "1c"
                     continue
             level = level[:-1]
-        elif level == "1c": # health
+        elif level == "1c": # processed files
             print("Set parameters:") # set parameters before creating objects
             overwrite = set_parameters_processed()
             P = processed_data.ProcessedData(overwrite)
@@ -537,7 +535,8 @@ level1eb = {
 calculations = {
     "all": None,
     "smooth": processed_data.ProcessedData().individual.calculations.smooth,
-    "ball centred velocity": processed_data.ProcessedData().individual.calculations.ball_centred_velocities,
+    "ball centred velocities": processed_data.ProcessedData().individual.calculations.ball_centred_velocities,
+    "cartesian velocities": processed_data.ProcessedData().individual.calculations.cartesian_velocities,
     "q": None
 }
 

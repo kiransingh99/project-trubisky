@@ -206,6 +206,7 @@ class ProcessedData:
             f = open(rawFilePath)
         except FileNotFoundError as e:
             print("Raw data file could not be found:", e)
+            return
 
         raw_file = csv.reader(f)
         self.set_file_name(processedFileName)
@@ -723,8 +724,7 @@ class _Individual:
                     continue
 
                 fileData.append(list(row))
-                if i > 0: # skip header
-                    fileData[i][columnNumber] = data[i]
+                fileData[i][columnNumber] = data[i]
 
         with open(self.file_path, "w", newline="") as f: # writeable
             tracker_file = csv.writer(f)
@@ -746,6 +746,8 @@ class _Calculations:
         filePath (str): full file path to the given processed data file.
         columnNumber (int): the number of the column to smooth (should be 
             between 1 and 10 inclusive).
+        columnData (list[]): can be used to store data for other methods, if 
+            necessary
         
     Methods:
         __init__ : class constructor.
@@ -763,9 +765,12 @@ class _Calculations:
         __vel_e_r : integrates acceleration values (e_r) to get the velocity in 
             that direction.
         __vel_e_theta : integrates acceleration values (e_theta) and (e_phi) to 
-            get the velocity in the vertical direction.
+            get the velocity in the e_theta direction.
         __vel_e_phi : integrates acceleration values (e_theta) and (e_phi) to 
-            get the velocity in the horizontal direction.
+            get the velocity in the e_phi direction.
+        __vel_x : returns list of velocity values in x direction
+        __vel_y : returns list of velocity values in y direction
+        __vel_z : returns list of velocity values in z direction
     """
 
     def __init__(self, fileName=""):
@@ -777,6 +782,7 @@ class _Calculations:
         """
         self.fileName = fileName
         self.columnNumber = 1
+        self.columnData = [] # empty for use as when needed
     
     @property
     def file_path(self):
@@ -791,7 +797,6 @@ class _Calculations:
         
         self.filePath = const.DATA_DIRECTORY + self.fileName[const.LENGTH_OF_DATA_DIR:]
         return self.filePath
-
 
     def set_file_name(self, value):
         """Setter for the attribute of the same name.
@@ -915,7 +920,7 @@ class _Calculations:
         """Runs the separate operations that calculate the ball-centered 
         velocities.
 
-        Sets the name of the file to operated on, amd then calls the methods 
+        Sets the name of the file to operate on, and then calls the methods 
         for each of the individual operations. Raises an exception to stop 
         execution of individual.add_column method with this method as an 
         argument.
@@ -924,7 +929,7 @@ class _Calculations:
             fileName (str, optional): name of the file to do calculations for.
 
         Raises:
-            Exception: raised in order to terminate execution of 
+            UniqueCaseException: raised to terminate execution of 
                 individual.add_column method with this operation as an argument
         """
 
@@ -936,9 +941,81 @@ class _Calculations:
         I = ProcessedData().individual
         I.set_file_name(fileName)
 
+        # call functions to calculate each velocity
         I.add_column(self.__vel_e_r)
         I.add_column(self.__vel_e_theta)
         I.add_column(self.__vel_e_phi)
+
+        raise UniqueCaseException
+
+    def cartesian_velocities(self, fileName=None, **kwargs):
+        """Calculates and produces a list of velocities at each timestep in the 
+        processed data file, and runs each of the separate operations that write 
+        the data to the appropriate processed data file.
+
+        Sets the name of the file to operate on, and then calculates the values 
+        of the operation, and stores them in a list. Then, calls the methods for 
+        each of the individual operations. Raises an exception to stop execution 
+        of individual.add_column method with this method as an argument. Note 
+        that operations are all calculated in one go to reduce algorithmic 
+        complexity.
+
+        Args:
+            fileName (str, optional): name of the file to do calculations for.
+
+        Raises:
+            UniqueCaseException: raised to terminate execution of 
+                individual.add_column method with this operation as an argument
+        """
+
+        if fileName == None:
+            fileName = self.fileName
+        else:
+            self.set_file_name(fileName)
+
+        I = ProcessedData().individual
+        I.set_file_name(fileName)
+
+        # column numbers of each column in processed data file
+        columnNumbers = [I.get_column_number("delta time"),
+                            I.get_column_number("vel (e_r)"),
+                            I.get_column_number("vel (e_theta)"),
+                            I.get_column_number("vel (e_phi)"),
+                            I.get_column_number("euler (alpha)"),
+                            I.get_column_number("euler (beta)"),
+                            I.get_column_number("euler (gamma)")]
+        
+        # variables to store data
+        timesteps = []
+        velocities = np.zeros(3)
+        angles = np.zeros(3)
+        self.columnData = [[0], [0], [0]]
+
+        try:
+            with open(self.file_path) as f:
+                csv_file = csv.reader(f)
+                next(f)
+                
+                for row in csv_file:
+                    # store time, velocities and euler angles
+                    timesteps.append(float(row[columnNumbers[0]]))
+                    for i in range(0, 3):
+                        velocities[i] = float(row[columnNumbers[i+1]])
+                        angles[i] = float(row[columnNumbers[i+4]])
+
+                    dcm = functions.generate_dcm(angles[0], angles[1], angles[2])
+                    data = velocities.dot(dcm)
+                    for i in range(0, 3):
+                        self.columnData[i].append(data[i])
+                    
+        except FileNotFoundError:
+            print("Couldn't open file:", fileName)
+
+        I.add_column(self.__vel_x)
+        I.add_column(self.__vel_y)
+        I.add_column(self.__vel_z)
+
+        self.columnData = [] # reset attribute to empty array
 
         raise UniqueCaseException
 
@@ -981,7 +1058,7 @@ class _Calculations:
                 False.
 
         Returns:
-            list[float]: velocity at each sample, maintaining the same 
+            list[float]: e_r velocity at each sample, maintaining the same 
                 dimension as the input data.
         """
 
@@ -1031,7 +1108,7 @@ class _Calculations:
                 False.
 
         Returns:
-            list[float]: velocity at each sample, maintaining the same 
+            list[float]: e_theta velocity at each sample, maintaining the same 
                 dimension as the input data.
         """
 
@@ -1081,7 +1158,7 @@ class _Calculations:
                 False.
 
         Returns:
-            list[float]: velocity at each sample, maintaining the same 
+            list[float]: e_phi velocity at each sample, maintaining the same 
                 dimension as the input data.
         """
 
@@ -1114,6 +1191,78 @@ class _Calculations:
         output = [0] # this value will be skipped over
 
         output.extend(self.__integrate(data, timesteps)) # integrate acceleration data
+        return output
+   
+    def __vel_x(self, fileName=None, heading=False):
+        """Returns the x velocity (cartesian coordinates) between consecutive 
+        samples of sensor data.
+
+        If the 'heading' parameter is 'True', the method simply returns the 
+        heading for this column. Otherwise, the precalculated values for this 
+        column are returned.
+
+        Args:
+            fileName (str): name of the file to do calculations for.
+            heading (bool): set this to 'True' if only the heading title is 
+                wanted. Set 'False' to return the value. Defaults to False.
+
+        Returns:
+            list[float]: x velocity at each sample, maintaining the same 
+                dimension as the input data.
+        """
+
+        if heading:
+            return "vel (x)" # title of column in processed data file
+
+        output = self.columnData[0]
+        return output
+    
+    def __vel_y(self, fileName=None, heading=False):
+        """Returns the y velocity (cartesian coordinates) between consecutive 
+        samples of sensor data.
+
+        If the 'heading' parameter is 'True', the method simply returns the 
+        heading for this column. Otherwise, the precalculated values for this 
+        column are returned.
+
+        Args:
+            fileName (str): name of the file to do calculations for.
+            heading (bool): set this to 'True' if only the heading title is 
+                wanted. Set 'False' to return the value. Defaults to False.
+
+        Returns:
+            list[float]: y velocity at each sample, maintaining the same 
+                dimension as the input data.
+        """
+
+        if heading:
+            return "vel (y)" # title of column in processed data file
+
+        output = self.columnData[1]
+        return output
+    
+    def __vel_z(self, fileName=None, heading=False):
+        """Returns the z velocity (cartesian coordinates) between consecutive 
+        samples of sensor data.
+
+        If the 'heading' parameter is 'True', the method simply returns the 
+        heading for this column. Otherwise, the precalculated values for this 
+        column are returned.
+
+        Args:
+            fileName (str): name of the file to do calculations for.
+            heading (bool): set this to 'True' if only the heading title is 
+                wanted. Set 'False' to return the value. Defaults to False.
+
+        Returns:
+            list[float]: z velocity at each sample, maintaining the same 
+                dimension as the input data.
+        """
+
+        if heading:
+            return "vel (z)" # title of column in processed data file
+
+        output = self.columnData[2]
         return output
    
 
