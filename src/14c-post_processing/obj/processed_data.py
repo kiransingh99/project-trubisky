@@ -920,10 +920,11 @@ class _Calculations:
         """Runs the separate operations that calculate the ball-centered 
         velocities.
 
-        Sets the name of the file to operate on, and then calls the methods 
-        for each of the individual operations. Raises an exception to stop 
-        execution of individual.add_column method with this method as an 
-        argument.
+        Sets the name of the file to operate on, and then checks to see if all 
+        the columns that are required exist within the file, and if not, gets 
+        them added. Then calls the individual methods to calculate each of the 
+        velocities. Raises an exception to stop execution of 
+        individual.add_column method with this method as an argument.
 
         Args:
             fileName (str, optional): name of the file to do calculations for.
@@ -941,6 +942,22 @@ class _Calculations:
         I = ProcessedData().individual
         I.set_file_name(fileName)
 
+        # list of columns headers that need to be in the file already
+        dependencies = {
+            "delta time": self.delta_time,
+            "acc (e_r)": self.smooth,
+            "acc (e_theta)": self.smooth,
+            "acc (e_phi)": self.smooth
+        }
+
+        # if dependency not in the file already, add them before calculating this column
+        for key, value in dependencies.items():
+            try:
+                I.get_column_number(key)
+            except ValueError:
+                print("Column '{}' missing. Adding it to tracker file".format(key))
+                I.add_column(value)
+
         # call functions to calculate each velocity
         I.add_column(self.__vel_e_r)
         I.add_column(self.__vel_e_theta)
@@ -952,12 +969,14 @@ class _Calculations:
         """Calculates and produces a list of velocities at each timestep in the 
         processed data file, and runs each of the separate operations that write 
         the data to the appropriate processed data file.
-
-        Sets the name of the file to operate on, and then calculates the values 
-        of the operation, and stores them in a list. Then, calls the methods for 
-        each of the individual operations. Raises an exception to stop execution 
-        of individual.add_column method with this method as an argument. Note 
-        that operations are all calculated in one go to reduce algorithmic 
+        
+        Sets the name of the file to operate on, and then checks to see if all 
+        the columns that are required exist within the file, and if not, gets 
+        them added. Then calculates the values of the operation, and stores them 
+        in a list. Then, calls the individual methods to calculate each of the 
+        velocities. Raises an exception to stop execution of 
+        individual.add_column method with this method as an argument. Note that 
+        operations are all calculated in one go to reduce algorithmic 
         complexity.
 
         Args:
@@ -975,6 +994,22 @@ class _Calculations:
 
         I = ProcessedData().individual
         I.set_file_name(fileName)
+
+        # list of columns headers that need to be in the file already
+        dependencies = {
+            "vel (e_r),,": self.ball_centred_velocities,
+            "vel (e_theta)": self.ball_centred_velocities,
+            "vel (e_phi)": self.ball_centred_velocities
+        }
+
+        # if dependency not in the file already, add them before calculating this column
+        for key, value in dependencies.items():
+            try:
+                I.get_column_number(key)
+            except ValueError:
+                print("Column '{}' missing. Adding it to tracker file".format(key))
+                I.add_column(value)
+        
 
         # column numbers of each column in processed data file
         columnNumbers = [I.get_column_number("delta time"),
