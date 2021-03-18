@@ -104,6 +104,7 @@ The processed data files have the same first columns as the raw data files, but 
 Following that, the columns contain data at each timestep of the throw as listed below. Note that these columns can be in any order, provided they follow the first set of columns:
 
 - velocities (e_r), (e_theta), (e_phi) - the velocity of the ball in ball-centred coordinates. The origin of this axis is the centre of the ball, and this orthonormal set rotates with the ball.
+- velocities (x), (y), (z) - the velocity of the ball in cartesian coordinates. This is relative to a stationary observer.
 
 ### Global tracker file
 
@@ -190,24 +191,15 @@ $I_\text{elec}\simeq4.03\times10^{-6}\text{kgm}^{-1}$
 This is only an increase of 0.18%, and therefore will have a negligible effect on the results.
 
 ## To Do
-- README
-	- how to interpret processed data files
 - Post processing code
 	- processed data files
-		- smoother coefficients depend on timesteps
-		- calculate distances in ball centred coordinates (1)
-		- calculate speed in x-y coordinates
 		- calculate position in x-y coordinates
-		- spiral rating (variance of spiral)
-		- calculate angle of elevation
-		- calculate angle wrt direction of throw
-		- graph any variables against each other (unspecified number of independent and dependent variables)
-	- add more operations (metrics) - dependent on processed data
-		- time of launch (when acceleration (without g) stops increasing)
+		- graph any variables against each other (unspecified number of independent and dependent variables) - convert units to simpler ones (e.g. revolutions per second)
+	- add more metrics - dependent on processed data operations
+		- time of launch (when acceleration (without g) stops increasing / when spiral reaches ~80% of max)
 		- launch speed
-		- spiral rate
+		- spiral rating (normalised variance of spiral)
 		- angle of attack (at launch)
-		- angle wrt direction of throw (at launch) (linked to (1)?)
 	- add more functions for individual file analysis
 		- plot speed against time
 		- plot path in x-y coordinates
