@@ -23,8 +23,8 @@ COLUMN_HEADERS = ["time", "acc (e_r)", "acc (e_theta)", "acc (e_phi)",
 COLOURS = ['', '#1f77b4', '#ff7f0e', '#26a02c', 
                 '#d62728', '#9467bd', '#8c564b',
                 '#e377c2', '#7f7f7f', '#bcbd22']
-SENSOR_OFFSETS = [0, -0.033, 0.004, -0.053, 
-                        0.003, 0.000, 0.000, 
+SENSOR_OFFSETS = [0, 0.002, -0.137, -0.025, 
+                        -0.012, 0.005, 0.013, 
                         0.000, 0.000, 0.000]
 
 NUMBER_OF_COLUMNS = len(COLUMN_HEADERS) # number of columns in raw data csv files
