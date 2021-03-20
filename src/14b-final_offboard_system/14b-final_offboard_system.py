@@ -140,7 +140,7 @@ while True:
 
     # if there is content in serialString
     if serialString != None:
-        print(serialString)
+        # print(serialString)
 
         if serialString[0] == "s": # start of file
             # close any file if one already exists
