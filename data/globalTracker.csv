@@ -1,6 +1,15 @@
-name,error status
-\data\RAW-2021.02.12-16.57.32.csv,3
-\data\RAW-2021.02.12-16.57.33.csv,3
-\data\RAW-2021.02.12-16.57.34.csv,3
-\data\RAW-2021.02.12-16.57.35.csv,3
-\data\RAW-2021.02.12-16.57.45.csv,1
+name,health status,processed file,time of throw
+\data\RAW-ROTA-E_PHI.csv,3,\data\PRO-ROTA-E_PHI.csv, 
+\data\RAW-ROTA-E_R.csv,2,\data\PRO-ROTA-E_R.csv, 
+\data\RAW-ROTA-E_THETA.csv,3,\data\PRO-ROTA-E_THETA.csv, 
+\data\RAW-TEST1.csv,3,\data\PRO-TEST1.csv, 
+\data\RAW-TEST2.csv,3,\data\PRO-TEST2.csv, 
+\data\RAW-TEST3.csv,3,\data\PRO-TEST3.csv, 
+\data\RAW-TEST4.csv,3,\data\PRO-TEST4.csv, 
+\data\RAW-TEST5.csv,3,\data\PRO-TEST5.csv, 
+\data\RAW-TEST6.csv,3,\data\PRO-TEST6.csv, 
+\data\RAW-TEST7.csv,3,\data\PRO-TEST7.csv, 
+\data\RAW-TEST8.csv,3,\data\PRO-TEST8.csv, 
+\data\RAW-TRANS-E_PHI.csv,3,\data\PRO-TRANS-E_PHI.csv, 
+\data\RAW-TRANS-E_R.csv,3,\data\PRO-TRANS-E_R.csv, 
+\data\RAW-TRANS-E_THETA.csv,3,\data\PRO-TRANS-E_THETA.csv, 
