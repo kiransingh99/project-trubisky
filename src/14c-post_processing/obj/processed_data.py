@@ -294,17 +294,23 @@ class ProcessedData:
         # subtract offsets
         if sensorsInitialised[0]:
             data[1:4] = np.subtract(data[1:4], const.SENSOR_OFFSETS[1:4])
+        else:
+            data[1:4] = np.multiply(data[1:4], 0)
         if sensorsInitialised[1]:
             data[4:7] = np.subtract(data[4:7], const.SENSOR_OFFSETS[4:7])
+        else:
+            data[4:7] = np.multiply(data[4:7], 0)
         if sensorsInitialised[2]:
             data[7:10] = np.subtract(data[7:10], const.SENSOR_OFFSETS[7:10])
+        else:
+            data[7:10] = np.multiply(data[7:10], 0)
 
         # change the units
         newData = []
         
-        newData.append(data[0]/1000) # time stays in milliseconds
+        newData.append(data[0]/1000) # time changes from milliseconds to seconds
         newData.extend(data[1:4]) # linear acceleration stays in m/s^2
-        newData.extend(np.deg2rad(data[4:7])) # angular velocity stays in rad/s
+        newData.extend(np.deg2rad(data[4:7])) # angular velocity changes from deg/s to rad/s
         newData.extend(np.deg2rad(data[7:])) # euler angles change from degrees to radians
 
         # convert each element back into a string
@@ -579,6 +585,55 @@ class _Individual:
         G = global_tracker.GlobalFile(fullInitialisation = False)
         return G.get_health_status(rawFileName)
 
+    def graph_flight_path(self):
+        """Produces a graph showing how height varies with horizontal distance 
+        travelled by the ball.
+
+        Opens the processed data file, and creates a list containing all the 
+        data to be plotted. Then a method is called to display this dataset to 
+        the user.
+
+        Args:
+            filtered (bool, optional): set to 'True' if filtered sensor data 
+                should be plotted. Set to 'False' otherwise. Defaults to True.
+            unfiltered (bool, optional): set to 'True' if unfiltered sensor data 
+                should be plotted. Set to 'False' otherwise Defaults to False.
+
+        Returns:
+            int: signifies successful completion of method.
+        """
+        
+        try:
+            f = open(self.file_path)
+        except FileNotFoundError as e:
+            print("Processed data file could not be found:", e)
+            return 0
+
+        columnNumber_x = self.get_column_number("pos (x)")
+        columnNumber_y = self.get_column_number("pos (y)")
+
+        csv_file = csv.reader(f)
+        x_data = []
+        y_data =  []
+
+        # read first line and add headings to a list
+        firstLine = f.readline()[:-1].split(",")
+        x_data.append(firstLine[columnNumber_x])
+        y_data.append(firstLine[columnNumber_y])
+    
+        # add data from the rest of the file to the list so it can be plotted
+        for row in csv_file:
+            x_data.append(float(row[columnNumber_x]))
+            y_data.append(float(row[columnNumber_y]))
+            
+        f.close()
+
+        title = "Flight path of Ball (Height against Distance)"
+
+        self.__make_graph(x_data, [[y_data]], title)
+
+        return 1
+
     def graph_sensor_data(self, filtered=True, unfiltered=False):
         """Produces graphs of raw (unfiltered) and/or filtered (smoothened) 
         sensor data from the processed data file.
@@ -730,8 +785,8 @@ class _Individual:
         datasets plotted on each graph. To facilitate this, y_data must be a 
         multi-level list with the following structure:
 
-            y_data = [[[AA1, AA2, AA3, ...], [AB1, AB2, AB3, ...]],
-                        [[BA1, BA2, BA3, ...], [BB1, BB2, BB3, ...]], 
+            y_data = [[["series name", AA1, AA2, ...], ["series name", AB1, AB2, ...]],
+                        [["series name", BA1, BA2, ...], ["series name", BB1, BB2, ...]], 
                         ...]
 
         where datapoints labelled Axx are plotted in the top graph in the 
