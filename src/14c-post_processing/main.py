@@ -367,7 +367,7 @@ def main():
                 print("File added to tracker successfully")
             else:
                 print("File not added to tracker")
-            level = level[:-1]
+            level = level[:-2]
         elif level == "1db": # check if a raw data file has been listed in tracker
             fileName = sanitise_file_name(True)
             if G.is_file_recorded(fileName):
@@ -431,7 +431,8 @@ def main():
             if healthStatus >= const.passedWithWarnings:
                 print("File selected: ", fileName)
             elif healthStatus == -1:
-                continue
+                print("File not found, choose another file or run a different operation.")
+                level = level[:-1]
             else:
                 print("File {} not marked as healthy, choose another or check the file first."
                         .format(fileName))
@@ -443,10 +444,11 @@ def main():
 
             if I.get_health_status() >= const.passedWithWarnings:
                 print("File selected: ", fileName)
+                level = level[:-1]
             else:
                 print("File {} not marked as healthy, choose another or check the file first."
                         .format(fileName))
-            level = level[:-1]
+                level = level[:-2]
         elif level == "1eab": # graph of raw sensor values
             print("Set parameters:") # set parameters before creating objects
             filtered, unfiltered = set_parameters_graph_sensor_data(filtered=filtered, 
@@ -459,7 +461,7 @@ def main():
         elif level == "1eb": # population analysis
             G = global_tracker.GlobalFile(True)
 
-        print("\n\n")
+        print("\n")
         level = get_prompt(level)
         
         if level == "1": # when return to the main menu
