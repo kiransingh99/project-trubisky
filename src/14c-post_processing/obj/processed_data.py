@@ -1762,7 +1762,6 @@ class _Metrics:
                         columnNumber += 1
                 raise ValueError("Column heading not found")
 
-
     def total_time(self, fileName=None, heading=False):
         """Calculates a metric (total time of recording) for a given throw.
 
