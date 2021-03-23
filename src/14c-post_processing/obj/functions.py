@@ -73,7 +73,22 @@ def moving_average(data, window_size):
 
     return np.convolve(data, np.ones(window_size), 'valid') / window_size
 
-def generate_dcm(yaw, pitch, roll): # DOCSTRING
+def generate_dcm(yaw, pitch, roll):
+    """Generates a direction cosine matrix based on the values of the Euler 
+    angles provided as parameters.
+
+    Precalculates each trigonometric function, for efficiency. Then calculates 
+    each element of the matrix by products of the functions.
+
+    Args:
+        yaw (float): yaw angle in Euler set.
+        pitch (flaot): pitch angle in Euler set.
+        roll (float): roll angle in Euler set.
+
+    Returns:
+        list[[float]]: direction cosine matrix.
+    """
+
     sin_y = np.sin(yaw)
     cos_y = np.cos(yaw)
     sin_p = np.sin(pitch)
