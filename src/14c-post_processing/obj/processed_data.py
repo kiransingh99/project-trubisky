@@ -424,14 +424,14 @@ class _Individual:
         """Getter for the attribute of the same name. Path to the processed data 
         file.
 
-        Assigns the value first, by adding the full file path to 
-        'self.fileName'.
+        Removes any existing path from the file, and then prepends the full file 
+        path. Assigns the value by adding the full file path to 'self.fileName'.
 
         Returns:
             str: path to the raw data file.
         """
         
-        self.filePath = const.DATA_DIRECTORY + self.fileName[const.LENGTH_OF_DATA_DIR:]
+        self.filePath = const.DATA_DIRECTORY + self.fileName.split("\\")[-1]
         return self.filePath
 
     @property
@@ -542,6 +542,26 @@ class _Individual:
         else:
             return 0
 
+    def get_column_headers(self):
+        """Returns a list of all the column headers in any given processed data 
+        file.
+
+        Reads the first line of a processed data file, and produces a list of 
+        the headings that were read. This list is returned.
+
+        Returns:
+            list[str]: list of headers in the file.
+        """
+
+        try:
+            with open(self.file_path) as f:
+                headers = f.readline()[:-1].split(",")
+        except FileNotFoundError:
+            print("File could not be found")
+            return []
+        else:
+            return headers
+
     def get_column_number(self, columnHeading):
         """Returns the column number associated with a given heading.
 
@@ -584,6 +604,66 @@ class _Individual:
 
         G = global_tracker.GlobalFile(fullInitialisation = False)
         return G.get_health_status(rawFileName)
+
+    def graph(self, x_title, y_titles, title=""):
+        """Produces a graph of data in a file, based on the column headers 
+        given.
+
+        Checks if the file exists, and if so, reads the headers and data from 
+        the relevant columns within it. Data for the vertical axis can have 
+        multiple datasets, so data reading is repeated accordingly.
+
+
+        Args:
+            x_title (str): title of column whose data is to be plotted on the 
+                horizontal axis
+            y_titles (str): titles of columns whose data is to be plotted on the 
+                vertical axis.
+            title (str, optional): title to display on plot windoow. 
+                If left blank, defaults to '{list of y_titles} against 
+                {x_title}'.
+
+        Returns:
+            int: signifies successful completion of function
+        """
+
+        # check if file exists
+        try:
+            f = open(self.file_path)
+        except FileNotFoundError as e:
+            print("Processed data file could not be found:", e)
+            return 0
+
+        csv_file = csv.reader(f)
+
+        # create variables to store data - vertical axis may have multiple values
+        x_data = []
+        y_data =  [[] for title in y_titles]
+        columnNumber_x = self.get_column_number(x_title)
+        columnNumbers_y = [self.get_column_number(title) for title in y_titles]
+
+        # read first line and add headings to a list
+        firstLine = f.readline()[:-1].split(",")
+        x_data.append(firstLine[columnNumber_x])
+        for i in range(len(y_titles)):
+            y_data[i].append(firstLine[columnNumbers_y[i]])
+    
+        # add data from the rest of the file to the list so it can be plotted
+        for row in csv_file:
+            x_data.append(float(row[columnNumber_x]))
+            for i in range(len(y_titles)):
+                y_data[i].append(float(row[columnNumbers_y[i]]))
+            
+        f.close()
+
+        # generate title if none is given
+        if title == "":
+            y_labels = ", ".join(y_titles)
+            title = "{} against {}".format(y_labels, x_title)
+
+        self.__make_graph(x_data, [y_data], title)
+
+        return 1
 
     def graph_flight_path(self):
         """Produces a graph showing how height varies with horizontal distance 

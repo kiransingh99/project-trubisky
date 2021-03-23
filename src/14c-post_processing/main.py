@@ -38,7 +38,7 @@ def get_prompt(level):
     for (key, val) in options.items():
         print(key + ") " + val)
 
-    option = get_input(options.keys())
+    option = get_input(options, False)
 
     if option.lower() == "q": # quit goes up a level
         newLevel = level[:-1]
@@ -47,21 +47,27 @@ def get_prompt(level):
 
     return newLevel
 
-def get_input(keys):
-    """Gets a user input to choose the next level and verifies that it is a 
-    valid option.
+def get_input(options, printMenu=True, message="\nEnter your choice:"):
+    """Prints the keys in a dictionary, then gets the user input to choose an 
+    option and verifies that it is a valid selection.
 
     Args:
-        keys (list[str]): available input options.
+        options (dict): available input options.
+        printMenu (bool, optional): 'True' if menu needs to be printed. Defaults 
+            to True.
 
     Returns:
         str: user's input.
     """
+    
+    if printMenu:
+        for key in options.keys():
+                    print(" -", key)
 
     while True:
-        choice = input("\nEnter your choice: ").lower()
-        if choice in keys:
-            return choice
+        choice = input("{} ".format(message)).lower()
+        if choice in options.keys():
+            return choice.strip()
         else:
             print("Invalid input")
 
@@ -297,8 +303,9 @@ def main():
                     continue
             level = level[:-1]
         elif level == "1bc": # assess a specific file
-            fileName = sanitise_file_name(True)
-            if H.check_one_file(fileName) >= const.passedWithWarnings:
+            fileName = const.DATA_DIRECTORY + sanitise_file_name(False)
+            health, _ = H.check_one_file(fileName)
+            if health >= const.passedWithWarnings:
                 print("Recommended to create processed data file. Create? (y/n)")
                 if input() == "y":
                     level = "1c"
@@ -337,10 +344,8 @@ def main():
         elif level == "1cd": # calculate an operation for all files
             I = P.individual
             print("Enter name of calculation, or 'q' to quit")
-            for key in calculations.keys():
-                print(" -", key)
-
-            column_header = get_input(calculations.keys())
+ 
+            column_header = get_input(calculations)
             if column_header == "q":
                 pass
             elif column_header == "all":
@@ -358,6 +363,44 @@ def main():
                     I.set_file_name(entry)
                     print("File: " + entry)
                     I.add_column(calculations[column_header])
+            level = level[:-1]
+        elif level == "1ce": # graph operations against each other
+            I = P.individual
+            fileName = sanitise_file_name(True)
+            I.set_file_name(functions.raw_to_processed(fileName))
+
+            allHeaders = I.get_column_headers()
+            if len(allHeaders) > len(const.COLUMN_HEADERS)+1:
+                headers = [allHeaders[0]] + allHeaders[len(const.COLUMN_HEADERS)+1:]
+                options = {}
+                for i in range(len(headers)):
+                    options[str(i)] = headers[i]
+
+                options["q"] = "quit graphing operations"
+
+                print("Choose values to graph:")
+                for (key, val) in options.items():
+                    print(key + ") " + val)
+
+                y_titles = []
+
+                x = get_input(options, False, "\nHorizontal axis:")
+                if x != "q":
+                    x_title = options[x]
+                    y = get_input(options, False, "Vertical axis:")
+                    while y!= "q":
+                        print("Choose another value, or enter 's' to stop selecting options.")
+                        y_titles.append(options[y])
+                        options["s"] = "stop choosing y data"
+                        y = get_input(options, False, "Vertical axis:")
+                        if y == "s":
+                            break
+                    if y != "q":
+                        title = input("Enter a title (leave blank for default): ")
+                        I.graph(x_title, y_titles, title)
+            else:
+                print("Insufficient column headers - please add some operations first.")
+
             level = level[:-1]
         elif level == "1d": # tracker
             G = global_tracker.GlobalFile(True)
@@ -381,10 +424,7 @@ def main():
         elif level == "1dd": # add/update a metric to tracker
             # print menu and store user's input
             print("Enter name of metric, or 'q' to quit")
-            for key in metrics.keys():
-                print(" -", key)
-
-            column_header = get_input(metrics.keys())
+            column_header = get_input(metrics)
             if column_header == "q":
                 pass
             elif column_header == "all":
@@ -400,10 +440,8 @@ def main():
         elif level == "1de": # remove a metric from the tracker
             # print menu and store user's input
             print("Enter name of metric, or 'q' to quit")
-            for key in metrics.keys():
-                print(" -", key)
 
-            column_header = get_input(metrics.keys())
+            column_header = get_input(metrics)
             if column_header == "q":
                 pass
             elif column_header == "all":
@@ -502,6 +540,7 @@ level1c = {
     "b": "Create processed data files for all raw data files",
     "c": "Create a processed data file for a specific raw data file",
     "d": "Add/update an operation for all files",
+    "e": "Graph operations against each other",
     "q": "Quit 'Processed files'"
 }
 

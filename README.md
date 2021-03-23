@@ -193,15 +193,11 @@ This is only an increase of 0.18%, and therefore will have a negligible effect o
 ## To Do
 - Post processing code
 	- processed data files
-		- calculate position in x-y coordinates
-		- graph any variables against each other (unspecified number of independent and dependent variables) - convert units to simpler ones (e.g. revolutions per second)
+		- get position data correct/ get DCM working
 	- add more metrics - dependent on processed data operations
 		- time of launch (when acceleration (without g) stops increasing / when spiral reaches ~80% of max)
 		- launch speed
 		- spiral rating (normalised variance of spiral)
 		- angle of attack (at launch)
-	- add more functions for individual file analysis
-		- plot speed against time
-		- plot path in x-y coordinates
+	- plot metrics in tracker (ensemble class)
 	- comments and docstrings
-	- finish interface for main python file
