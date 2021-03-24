@@ -330,7 +330,7 @@ def main():
                     continue
             level = level[:-1]
         elif level == "1cc": # create a processed data file for a specific raw data file
-            fileName = sanitise_file_name(False)
+            fileName = functions.processed_to_raw(sanitise_file_name(False))
             newFile = P.create_single_processed_data_file(functions.add_data_directory(fileName))
             if newFile:
                 print("Added file " + newFile)
@@ -363,44 +363,6 @@ def main():
                     I.set_file_name(entry)
                     print("File: " + entry)
                     I.add_column(calculations[column_header])
-            level = level[:-1]
-        elif level == "1ce": # graph operations against each other
-            I = P.individual
-            fileName = sanitise_file_name(True)
-            I.set_file_name(functions.raw_to_processed(fileName))
-
-            allHeaders = I.get_column_headers()
-            if len(allHeaders) > len(const.COLUMN_HEADERS)+1:
-                headers = [allHeaders[0]] + allHeaders[len(const.COLUMN_HEADERS)+1:]
-                options = {}
-                for i in range(len(headers)):
-                    options[str(i)] = headers[i]
-
-                options["q"] = "quit graphing operations"
-
-                print("Choose values to graph:")
-                for (key, val) in options.items():
-                    print(key + ") " + val)
-
-                y_titles = []
-
-                x = get_input(options, False, "\nHorizontal axis:")
-                if x != "q":
-                    x_title = options[x]
-                    y = get_input(options, False, "Vertical axis:")
-                    while y!= "q":
-                        print("Choose another value, or enter 's' to stop selecting options.")
-                        y_titles.append(options[y])
-                        options["s"] = "stop choosing y data"
-                        y = get_input(options, False, "Vertical axis:")
-                        if y == "s":
-                            break
-                    if y != "q":
-                        title = input("Enter a title (leave blank for default): ")
-                        I.graph(x_title, y_titles, title)
-            else:
-                print("Insufficient column headers - please add some operations first.")
-
             level = level[:-1]
         elif level == "1d": # tracker
             G = global_tracker.GlobalFile(True)
@@ -496,6 +458,40 @@ def main():
         elif level == "1eac": # graph flight path
             I.graph_flight_path()
             level = level[:-1]
+        elif level == "1ead": # graph operations against each other
+            allHeaders = I.get_column_headers()
+            if len(allHeaders) > len(const.COLUMN_HEADERS)+1:
+                headers = [allHeaders[0]] + allHeaders[len(const.COLUMN_HEADERS)+1:]
+                options = {}
+                for i in range(len(headers)):
+                    options[str(i)] = headers[i]
+
+                options["q"] = "quit graphing operations"
+
+                print("Choose values to graph:")
+                for (key, val) in options.items():
+                    print(key + ") " + val)
+
+                y_titles = []
+
+                x = get_input(options, False, "\nHorizontal axis:")
+                if x != "q":
+                    x_title = options[x]
+                    y = get_input(options, False, "Vertical axis:")
+                    while y!= "q":
+                        print("Choose another value, or enter 's' to stop selecting options.")
+                        y_titles.append(options[y])
+                        options["s"] = "stop choosing y data"
+                        y = get_input(options, False, "Vertical axis:")
+                        if y == "s":
+                            break
+                    if y != "q":
+                        title = input("Enter a title (leave blank for default): ")
+                        I.graph(x_title, y_titles, title)
+            else:
+                print("Insufficient column headers - please add some operations first.")
+
+            level = level[:-1]
         elif level == "1eb": # population analysis
             G = global_tracker.GlobalFile(True)
 
@@ -540,7 +536,6 @@ level1c = {
     "b": "Create processed data files for all raw data files",
     "c": "Create a processed data file for a specific raw data file",
     "d": "Add/update an operation for all files",
-    "e": "Graph operations against each other",
     "q": "Quit 'Processed files'"
 }
 
@@ -563,6 +558,7 @@ level1ea = {
     "a": "Update parameters",
     "b": "Graph of raw sensor values",
     "c": "Graph flight path",
+    "d": "Graph operations against each other",
     "q": "Quit 'Individual file analysis'"
 }
 
