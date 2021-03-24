@@ -311,7 +311,7 @@ class ProcessedData:
         newData.append(data[0]/1000) # time changes from milliseconds to seconds
         newData.extend(data[1:4]) # linear acceleration stays in m/s^2
         newData.extend(np.deg2rad(data[4:7])) # angular velocity changes from deg/s to rad/s
-        newData.extend(np.deg2rad(data[7:])) # euler angles change from degrees to radians
+        newData.extend([value%(2*np.pi) for value in np.deg2rad(data[7:])]) # euler angles change from degrees to radians
 
         # convert each element back into a string
         for i in range(len(data)):
@@ -1245,14 +1245,12 @@ class _Calculations:
                 data.
         """
 
-        # make sure columnNumber is within range
+        # make sure columnNumber is within range - only operate over raw data columns
         if self.columnNumber >= const.NUMBER_OF_COLUMNS:
             self.columnNumber = 1
 
-        columnNumber = self.columnNumber
-
         if heading:
-            return const.COLUMN_HEADERS[columnNumber]
+            return const.COLUMN_HEADERS[self.columnNumber]
 
         if fileName == None:
             fileName = self.fileName
@@ -1273,16 +1271,27 @@ class _Calculations:
         next(f)
 
         for row in csv_file:
-            data.append(float(row[columnNumber]))
+            data.append(float(row[self.columnNumber]))
         f.close()
 
-        self.columnNumber += 1 # increment
 
         # smooth data
         windowSize = 4
-        smoothed = functions.moving_average(data, windowSize)       
-        return [0] * (windowSize-1) + list(smoothed)
+        if self.columnNumber >= 7: # for the euler angles, choose an angle close to previous
+            for i in range(1, len(data)):
+                while data[i]-data[i-1] > np.pi:
+                    data[i] -= 2*np.pi
+                while data[i]-data[i-1] < -np.pi:
+                    data[i] += 2*np.pi
+            smoothed = [0] * (windowSize-1) + functions.moving_average(data, windowSize)
+            for i in range(len(smoothed)):
+                smoothed[i] = smoothed[i] % (2 * np.pi)
+        else:
+            smoothed = [0] * (windowSize-1) + functions.moving_average(data, windowSize)
 
+        
+        self.columnNumber += 1 # increment
+        return smoothed
 
     def __integrate(self, data, timesteps, initialValue=0):
         """Calculates numerical integration for a given dataset using the 

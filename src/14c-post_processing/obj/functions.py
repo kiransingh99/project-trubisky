@@ -71,7 +71,8 @@ def moving_average(data, window_size):
         list: smoothed list
     """
 
-    return np.convolve(data, np.ones(window_size), 'valid') / window_size
+    smoothed = np.convolve(data, np.ones(window_size), 'valid') / window_size
+    return list(smoothed)
 
 def generate_dcm(yaw, pitch, roll):
     """Generates a direction cosine matrix based on the values of the Euler 
