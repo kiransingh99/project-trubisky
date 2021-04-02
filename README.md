@@ -86,9 +86,9 @@ The external libraries used by this software are:
 The raw data files are in CSV file formats, and the file names begin with the prefix "RAW-". In case they were not transmitted accurately, they are 'health checked' before they get added to the tracker file (mentioned below). They have the following columns:
 
 - time - timestamp of each reading, given in milliseconds
-- acc (e_r) - linear acceleration in the direction the ball points in (along the major axis) (m/s^2)
-- acc (e_1) - linear acceleration along one of the minor axes (m/s^2)
-- acc (e_2) - linear acceleration along the other minor axis (m/s^2)
+- acc (e_r) - linear acceleration in the direction of the major axis (m/s^2)
+- acc (e_theta) - linear acceleration in the direction of the first minor axis (m/s^2)
+- acc (e_phi) - linear acceleration in the direction of the second minor axis (m/s^2)
 - w (e_r) - angular velocity in the direction of the major axis (deg/s)
 - w (e_theta) - angular velocity in the direction of the first minor axis (deg/s)
 - w (e_phi) - angular velocity in the direction of the second minor axis (deg/s)
