@@ -6,6 +6,7 @@ import csv
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import scipy.integrate
 
 class ProcessedData:
     """Main class for handling the processed data files based on the raw data 
@@ -931,8 +932,8 @@ class _Calculations:
         delta_time : calculates the time step between each sample.
         smooth : runs the raw sensor data through a low pass filter to smooth 
             it.
-        __integrate : does numerical integration on a dataset using the 
-            trapezium rule.
+        __integrate : does numerical integration on a dataset using Simpson's 
+            rule.
         __pos_x : integrates velocity values (x) to get the spatial coordinate 
             in that direction.
         __pos_y : integrates velocity values (y) to get the spatial coordinate 
@@ -1017,7 +1018,6 @@ class _Calculations:
 
         # list of columns headers that need to be in the file already
         dependencies = {
-            "delta time": self.delta_time,
             "acc (e_r)": self.smooth,
             "acc (e_theta)": self.smooth,
             "acc (e_phi)": self.smooth
@@ -1066,7 +1066,6 @@ class _Calculations:
 
         # list of columns headers that need to be in the file already
         dependencies = {
-            "delta time": self.delta_time,
             "vel (x)": self.cartesian_velocities,
             "vel (y)": self.cartesian_velocities,
             "vel (z)": self.cartesian_velocities
@@ -1088,7 +1087,7 @@ class _Calculations:
         raise UniqueCaseException
 
     def cartesian_velocities(self, fileName=None, **kwargs):
-        """Calculates and produces a list of velocities at each timestep in the 
+        """Calculates and produces a list of velocities at each time in the 
         processed data file, and runs each of the separate operations that write 
         the data to the appropriate processed data file.
         
@@ -1119,7 +1118,6 @@ class _Calculations:
 
         # list of columns headers that need to be in the file already
         dependencies = {
-            "delta time": self.delta_time,
             "vel (e_r)": self.ball_centred_velocities,
             "vel (e_theta)": self.ball_centred_velocities,
             "vel (e_phi)": self.ball_centred_velocities,
@@ -1147,7 +1145,7 @@ class _Calculations:
                             I.get_column_number("euler (gamma)")]
         
         # variables to store data
-        timesteps = []
+        #timesteps = []
         velocities = np.zeros(3)
         angles = np.zeros(3)
         self.columnData = [[], [], []]
@@ -1159,7 +1157,7 @@ class _Calculations:
                 
                 for row in csv_file:
                     # store time, velocities and euler angles
-                    timesteps.append(float(row[columnNumbers[0]]))
+                    #timesteps.append(float(row[columnNumbers[0]]))
                     for i in range(0, 3):
                         velocities[i] = float(row[columnNumbers[i+1]])
                         angles[i] = float(row[columnNumbers[i+4]])
@@ -1293,13 +1291,16 @@ class _Calculations:
         self.columnNumber += 1 # increment
         return smoothed
 
-    def __integrate(self, data, timesteps, initialValue=0):
-        """Calculates numerical integration for a given dataset using the 
-        trapezium rule.
+    def __integrate(self, data, times, initialValue=0.0):
+        """Calculates numerical integration for a given dataset using Simpson's 
+        rule.
+
+        For each element in the dataset, calculates the integral of the data up 
+        to that point and adds it to a list. Returns the integrated data.
 
         Args:
             data (list[float]): data to be integrated.
-            timesteps (list[int]): time between each sample of 'data'.
+            times (list[int]): time of each sample of 'data'.
             initialValue (float, optional): initial offset for integration. 
                 Defaults to 0.
 
@@ -1307,14 +1308,13 @@ class _Calculations:
             list[float]: integrated values
         """
 
-        output = [initialValue]
-        value = initialValue
+        output = []
 
-        for i in range (1, len(timesteps)):
-            value += (data[i-1] + data[i])/2 * timesteps[i]
-            output.append(value)
+        for i in range (1, len(times)+1):
+            value = scipy.integrate.simpson(data[:i], x=times[:i], even="last")
+            output.append(value+initialValue)
 
-        return output  
+        return output   
    
     def __pos_x(self, fileName=None, heading=False):
         """Calculates the x position (cartesian coordinates) at each sample of 
@@ -1344,9 +1344,9 @@ class _Calculations:
 
         I = ProcessedData().individual
         I.set_file_name(fileName)
-        columnNumber_time = I.get_column_number("delta time")
+        columnNumber_time = 0
         columnNumber = I.get_column_number("vel (x)")
-        timesteps = []
+        times = []
         data = []
 
         # store file data in a list
@@ -1355,12 +1355,12 @@ class _Calculations:
                 csv_file = csv.reader(f)
                 next(f)
                 for row in csv_file:
-                    timesteps.append(float(row[columnNumber_time]))
+                    times.append(float(row[columnNumber_time]))
                     data.append(float(row[columnNumber]))
         except FileNotFoundError:
             print("Couldn't open file:", fileName)
 
-        output = self.__integrate(data, timesteps) # integrate acceleration data
+        output = self.__integrate(data, times) # integrate acceleration data
         return output
        
     def __pos_y(self, fileName=None, heading=False):
@@ -1391,9 +1391,9 @@ class _Calculations:
 
         I = ProcessedData().individual
         I.set_file_name(fileName)
-        columnNumber_time = I.get_column_number("delta time")
+        columnNumber_time = 0
         columnNumber = I.get_column_number("vel (y)")
-        timesteps = []
+        times = []
         data = []
 
         # store file data in a list
@@ -1402,12 +1402,12 @@ class _Calculations:
                 csv_file = csv.reader(f)
                 next(f)
                 for row in csv_file:
-                    timesteps.append(float(row[columnNumber_time]))
+                    times.append(float(row[columnNumber_time]))
                     data.append(float(row[columnNumber]))
         except FileNotFoundError:
             print("Couldn't open file:", fileName)
 
-        output = self.__integrate(data, timesteps) # integrate acceleration data
+        output = self.__integrate(data, times) # integrate acceleration data
         return output
        
     def __pos_z(self, fileName=None, heading=False):
@@ -1438,9 +1438,9 @@ class _Calculations:
 
         I = ProcessedData().individual
         I.set_file_name(fileName)
-        columnNumber_time = I.get_column_number("delta time")
+        columnNumber_time = 0
         columnNumber = I.get_column_number("vel (z)")
-        timesteps = []
+        times = []
         data = []
 
         # store file data in a list
@@ -1449,12 +1449,12 @@ class _Calculations:
                 csv_file = csv.reader(f)
                 next(f)
                 for row in csv_file:
-                    timesteps.append(float(row[columnNumber_time]))
+                    times.append(float(row[columnNumber_time]))
                     data.append(float(row[columnNumber]))
         except FileNotFoundError:
             print("Couldn't open file:", fileName)
 
-        output = self.__integrate(data, timesteps) # integrate acceleration data
+        output = self.__integrate(data, times) # integrate acceleration data
         return output
   
     def __vel_e_r(self, fileName=None, heading=False):
@@ -1486,9 +1486,9 @@ class _Calculations:
 
         I = ProcessedData().individual
         I.set_file_name(fileName)
-        columnNumber_time = I.get_column_number("delta time")
+        columnNumber_time = 0
         columnNumber = I.get_column_number("acc (e_r)")
-        timesteps = []
+        times = []
         data = []
 
         # store file data in a list
@@ -1497,12 +1497,12 @@ class _Calculations:
                 csv_file = csv.reader(f)
                 next(f)
                 for row in csv_file:
-                    timesteps.append(float(row[columnNumber_time]))
+                    times.append(float(row[columnNumber_time]))
                     data.append(float(row[columnNumber]))
         except FileNotFoundError:
             print("Couldn't open file:", fileName)
 
-        output = self.__integrate(data, timesteps) # integrate acceleration data
+        output = self.__integrate(data, times) # integrate acceleration data
         return output
 
     def __vel_e_theta(self, fileName=None, heading=False):
@@ -1534,9 +1534,9 @@ class _Calculations:
 
         I = ProcessedData().individual
         I.set_file_name(fileName)
-        columnNumber_time = I.get_column_number("delta time")
+        columnNumber_time = 0
         columnNumber = I.get_column_number("acc (e_theta)")
-        timesteps = []
+        times = []
         data = []
 
         # store file data in a list
@@ -1545,12 +1545,12 @@ class _Calculations:
                 csv_file = csv.reader(f)
                 next(f)
                 for row in csv_file:
-                    timesteps.append(float(row[columnNumber_time]))
+                    times.append(float(row[columnNumber_time]))
                     data.append(float(row[columnNumber]))
         except FileNotFoundError:
             print("Couldn't open file:", fileName)
 
-        output = self.__integrate(data, timesteps) # integrate acceleration data
+        output = self.__integrate(data, times) # integrate acceleration data
         return output
 
     def __vel_e_phi(self, fileName=None, heading=False):
@@ -1582,9 +1582,9 @@ class _Calculations:
 
         I = ProcessedData().individual
         I.set_file_name(fileName)
-        columnNumber_time = I.get_column_number("delta time")
+        columnNumber_time = 0
         columnNumber = I.get_column_number("acc (e_phi)")
-        timesteps = []
+        times = []
         data = []
 
         # store file data in a list
@@ -1593,12 +1593,12 @@ class _Calculations:
                 csv_file = csv.reader(f)
                 next(f)
                 for row in csv_file:
-                    timesteps.append(float(row[columnNumber_time]))
+                    times.append(float(row[columnNumber_time]))
                     data.append(float(row[columnNumber]))
         except FileNotFoundError:
             print("Couldn't open file:", fileName)
 
-        output = self.__integrate(data, timesteps) # integrate acceleration data
+        output = self.__integrate(data, times) # integrate acceleration data
         return output
    
     def __vel_x(self, fileName=None, heading=False):
