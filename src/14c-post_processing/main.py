@@ -573,6 +573,7 @@ calculations = {
     "all": None,
     "smooth": processed_data.ProcessedData().individual.calculations.smooth,
     "ball centred velocities": processed_data.ProcessedData().individual.calculations.ball_centred_velocities,
+    "cartesian acceleration": processed_data.ProcessedData().individual.calculations.cartesian_acceleration,
     "cartesian velocities": processed_data.ProcessedData().individual.calculations.cartesian_velocities,
     "cartesian positions": processed_data.ProcessedData().individual.calculations.cartesian_positions,
     "q": None

@@ -196,9 +196,7 @@ class ProcessedData:
         """
 
         # get raw and processed data file names
-        fileName = rawFileName.split("\\")[-1][const.LENGTH_OF_DATA_DIR-2:]
-        processedFileName = "\\" + rawFileName.split("\\")[1] + "\\" + \
-                            const.PROCESSED_DATA_PREFIX + fileName
+        processedFileName = functions.raw_to_processed(rawFileName)
         rawFilePath = const.DATA_DIRECTORY + rawFileName[const.LENGTH_OF_DATA_DIR:]
         processedFilePath = const.DATA_DIRECTORY + processedFileName[const.LENGTH_OF_DATA_DIR:]
 
@@ -927,13 +925,16 @@ class _Calculations:
             ball-centered coordinates.
         cartesian_positions : calculates the position of the ball in cartesian 
             coordinates.
-        cartesian_velocities : calculates the velocities of the ball in 
+        cartesian_acceleration : calculates the acceleration of the ball in 
             cartesian coordinates.
         delta_time : calculates the time step between each sample.
         smooth : runs the raw sensor data through a low pass filter to smooth 
             it.
         __integrate : does numerical integration on a dataset using Simpson's 
             rule.
+        __acc_x : returns list of acceleration values in x direction.
+        __acc_y : returns list of acceleration values in y direction.
+        __acc_z : returns list of acceleration values in z direction.
         __pos_x : integrates velocity values (x) to get the spatial coordinate 
             in that direction.
         __pos_y : integrates velocity values (y) to get the spatial coordinate 
@@ -1038,6 +1039,96 @@ class _Calculations:
 
         raise UniqueCaseException
 
+    def cartesian_acceleration(self, fileName=None, **kwargs):
+        """Calculates and produces a list of accelerations at each time in the 
+        processed data file, and runs each of the separate operations that write 
+        the data to the appropriate processed data file.
+        
+        Sets the name of the file to operate on, and then checks to see if all 
+        the columns that are required exist within the file, and if not, gets 
+        them added. Then calculates the values of the operation, and stores them 
+        in a list. Then, calls the individual methods to calculate each of the 
+        accelerations. Raises an exception to stop execution of 
+        individual.add_column method with this method as an argument. Note that 
+        operations are all calculated in one go to reduce algorithmic 
+        complexity.
+
+        Args:
+            fileName (str, optional): name of the file to do calculations for.
+
+        Raises:
+            UniqueCaseException: raised to terminate execution of 
+                individual.add_column method with this operation as an argument
+        """
+
+        if fileName == None:
+            fileName = self.fileName
+        else:
+            self.set_file_name(fileName)
+
+        I = ProcessedData().individual
+        I.set_file_name(fileName)
+
+        # list of columns headers that need to be in the file already
+        dependencies = {
+            "acc (e_r)": self.smooth,
+            "acc (e_theta)": self.smooth,
+            "acc (e_phi)": self.smooth,
+            "euler (alpha)": self.ball_centred_velocities,
+            "euler (beta)": self.ball_centred_velocities,
+            "euler (gamma)": self.ball_centred_velocities
+        }
+
+        # if dependency not in the file already, add them before calculating this column
+        for key, value in dependencies.items():
+            try:
+                I.get_column_number(key)
+            except ValueError:
+                print("Column '{}' missing. Adding it to tracker file".format(key))
+                I.add_column(value)
+        
+
+        # column numbers of each column in processed data file
+        columnNumbers = [I.get_column_number("acc (e_r)"),
+                            I.get_column_number("acc (e_theta)"),
+                            I.get_column_number("acc (e_phi)"),
+                            I.get_column_number("euler (alpha)"),
+                            I.get_column_number("euler (beta)"),
+                            I.get_column_number("euler (gamma)")]
+        
+        # variables to store data
+        #timesteps = []
+        velocities = np.zeros(3)
+        angles = np.zeros(3)
+        self.columnData = [[], [], []]
+
+        try:
+            with open(self.file_path) as f:
+                csv_file = csv.reader(f)
+                next(f)
+                
+                for row in csv_file:
+                    # store time, velocities and euler angles
+                    for i in range(0, 3):
+                        velocities[i] = float(row[columnNumbers[i]])
+                        angles[i] = float(row[columnNumbers[i+3]])
+
+                    dcm = functions.generate_dcm(angles[0], angles[1], angles[2])
+                    data = velocities.dot(dcm)
+                    for i in range(0, 3):
+                        self.columnData[i].append(data[i])
+                    
+        except FileNotFoundError:
+            print("Couldn't open file:", fileName)
+
+        I.add_column(self.__acc_x)
+        I.add_column(self.__acc_y)
+        I.add_column(self.__acc_z)
+
+        self.columnData = [] # reset attribute to empty array
+
+        raise UniqueCaseException
+
     def cartesian_positions(self, fileName=None, **kwargs):
         """Runs the separate operations that calculate the ball's coordinates in 
         Cartesian space.
@@ -1045,7 +1136,7 @@ class _Calculations:
         Sets the name of the file to operate on, and then checks to see if all 
         the columns that are required exist within the file, and if not, gets 
         them added. Then calls the individual methods to calculate each of the 
-        velocities. Raises an exception to stop execution of 
+        coordinates. Raises an exception to stop execution of 
         individual.add_column method with this method as an argument.
 
         Args:
@@ -1079,7 +1170,7 @@ class _Calculations:
                 print("Column '{}' missing. Adding it to tracker file".format(key))
                 I.add_column(value)
 
-        # call functions to calculate each velocity
+        # call functions to calculate each position
         I.add_column(self.__pos_x)
         I.add_column(self.__pos_y)
         I.add_column(self.__pos_z)
@@ -1087,18 +1178,14 @@ class _Calculations:
         raise UniqueCaseException
 
     def cartesian_velocities(self, fileName=None, **kwargs):
-        """Calculates and produces a list of velocities at each time in the 
-        processed data file, and runs each of the separate operations that write 
-        the data to the appropriate processed data file.
-        
+        """Runs the separate operations that calculate the ball's velocities in 
+        Cartesian space.
+
         Sets the name of the file to operate on, and then checks to see if all 
         the columns that are required exist within the file, and if not, gets 
-        them added. Then calculates the values of the operation, and stores them 
-        in a list. Then, calls the individual methods to calculate each of the 
+        them added. Then calls the individual methods to calculate each of the 
         velocities. Raises an exception to stop execution of 
-        individual.add_column method with this method as an argument. Note that 
-        operations are all calculated in one go to reduce algorithmic 
-        complexity.
+        individual.add_column method with this method as an argument.
 
         Args:
             fileName (str, optional): name of the file to do calculations for.
@@ -1118,12 +1205,9 @@ class _Calculations:
 
         # list of columns headers that need to be in the file already
         dependencies = {
-            "vel (e_r)": self.ball_centred_velocities,
-            "vel (e_theta)": self.ball_centred_velocities,
-            "vel (e_phi)": self.ball_centred_velocities,
-            "euler (alpha)": self.ball_centred_velocities,
-            "euler (beta)": self.ball_centred_velocities,
-            "euler (gamma)": self.ball_centred_velocities
+            "acc (x)": self.cartesian_acceleration,
+            "acc (y)": self.cartesian_acceleration,
+            "acc (z)": self.cartesian_acceleration
         }
 
         # if dependency not in the file already, add them before calculating this column
@@ -1133,48 +1217,11 @@ class _Calculations:
             except ValueError:
                 print("Column '{}' missing. Adding it to tracker file".format(key))
                 I.add_column(value)
-        
 
-        # column numbers of each column in processed data file
-        columnNumbers = [I.get_column_number("delta time"),
-                            I.get_column_number("vel (e_r)"),
-                            I.get_column_number("vel (e_theta)"),
-                            I.get_column_number("vel (e_phi)"),
-                            I.get_column_number("euler (alpha)"),
-                            I.get_column_number("euler (beta)"),
-                            I.get_column_number("euler (gamma)")]
-        
-        # variables to store data
-        #timesteps = []
-        velocities = np.zeros(3)
-        angles = np.zeros(3)
-        self.columnData = [[], [], []]
-
-        try:
-            with open(self.file_path) as f:
-                csv_file = csv.reader(f)
-                next(f)
-                
-                for row in csv_file:
-                    # store time, velocities and euler angles
-                    #timesteps.append(float(row[columnNumbers[0]]))
-                    for i in range(0, 3):
-                        velocities[i] = float(row[columnNumbers[i+1]])
-                        angles[i] = float(row[columnNumbers[i+4]])
-
-                    dcm = functions.generate_dcm(angles[0], angles[1], angles[2])
-                    data = velocities.dot(dcm)
-                    for i in range(0, 3):
-                        self.columnData[i].append(data[i])
-                    
-        except FileNotFoundError:
-            print("Couldn't open file:", fileName)
-
+        # call functions to calculate each velocity
         I.add_column(self.__vel_x)
         I.add_column(self.__vel_y)
         I.add_column(self.__vel_z)
-
-        self.columnData = [] # reset attribute to empty array
 
         raise UniqueCaseException
 
@@ -1290,6 +1337,78 @@ class _Calculations:
         
         self.columnNumber += 1 # increment
         return smoothed
+  
+    def __acc_x(self, fileName=None, heading=False):
+        """Returns the x acceleration (cartesian coordinates) between 
+        consecutive samples of sensor data.
+
+        If the 'heading' parameter is 'True', the method simply returns the 
+        heading for this column. Otherwise, the precalculated values for this 
+        column are returned.
+
+        Args:
+            fileName (str): name of the file to do calculations for.
+            heading (bool): set this to 'True' if only the heading title is 
+                wanted. Set 'False' to return the value. Defaults to False.
+
+        Returns:
+            list[float]: x acceleration at each sample, maintaining the same 
+                dimension as the input data.
+        """
+
+        if heading:
+            return "acc (x)" # title of column in processed data file
+
+        output = self.columnData[0]
+        return output
+    
+    def __acc_y(self, fileName=None, heading=False):
+        """Returns the y acceleration (cartesian coordinates) between 
+        consecutive samples of sensor data.
+
+        If the 'heading' parameter is 'True', the method simply returns the 
+        heading for this column. Otherwise, the precalculated values for this 
+        column are returned.
+
+        Args:
+            fileName (str): name of the file to do calculations for.
+            heading (bool): set this to 'True' if only the heading title is 
+                wanted. Set 'False' to return the value. Defaults to False.
+
+        Returns:
+            list[float]: y acceleration at each sample, maintaining the same 
+                dimension as the input data.
+        """
+
+        if heading:
+            return "acc (y)" # title of column in processed data file
+
+        output = self.columnData[1]
+        return output
+    
+    def __acc_z(self, fileName=None, heading=False):
+        """Returns the z acceleration (cartesian coordinates) between 
+        consecutive samples of sensor data.
+
+        If the 'heading' parameter is 'True', the method simply returns the 
+        heading for this column. Otherwise, the precalculated values for this 
+        column are returned.
+
+        Args:
+            fileName (str): name of the file to do calculations for.
+            heading (bool): set this to 'True' if only the heading title is 
+                wanted. Set 'False' to return the value. Defaults to False.
+
+        Returns:
+            list[float]: z acceleration at each sample, maintaining the same 
+                dimension as the input data.
+        """
+
+        if heading:
+            return "acc (z)" # title of column in processed data file
+
+        output = self.columnData[2]
+        return output
 
     def __integrate(self, data, times, initialValue=0.0):
         """Calculates numerical integration for a given dataset using Simpson's 
@@ -1360,7 +1479,7 @@ class _Calculations:
         except FileNotFoundError:
             print("Couldn't open file:", fileName)
 
-        output = self.__integrate(data, times) # integrate acceleration data
+        output = self.__integrate(data, times) # integrate velocity data
         return output
        
     def __pos_y(self, fileName=None, heading=False):
@@ -1407,7 +1526,7 @@ class _Calculations:
         except FileNotFoundError:
             print("Couldn't open file:", fileName)
 
-        output = self.__integrate(data, times) # integrate acceleration data
+        output = self.__integrate(data, times) # integrate velocity data
         return output
        
     def __pos_z(self, fileName=None, heading=False):
@@ -1454,7 +1573,7 @@ class _Calculations:
         except FileNotFoundError:
             print("Couldn't open file:", fileName)
 
-        output = self.__integrate(data, times) # integrate acceleration data
+        output = self.__integrate(data, times) # integrate velocity data
         return output
   
     def __vel_e_r(self, fileName=None, heading=False):
@@ -1602,12 +1721,12 @@ class _Calculations:
         return output
    
     def __vel_x(self, fileName=None, heading=False):
-        """Returns the x velocity (cartesian coordinates) between consecutive 
-        samples of sensor data.
+        """Calculates the x velocity (cartesian coordinates) at each sample of 
+        sensor data.
 
         If the 'heading' parameter is 'True', the method simply returns the 
-        heading for this column. Otherwise, the precalculated values for this 
-        column are returned.
+        heading for this column. Otherwise, the values for this column are 
+        calculated.
 
         Args:
             fileName (str): name of the file to do calculations for.
@@ -1622,16 +1741,39 @@ class _Calculations:
         if heading:
             return "vel (x)" # title of column in processed data file
 
-        output = self.columnData[0]
+        if fileName == None:
+            fileName = self.fileName
+        else:
+            self.set_file_name(fileName)
+
+        I = ProcessedData().individual
+        I.set_file_name(fileName)
+        columnNumber_time = 0
+        columnNumber = I.get_column_number("acc (x)")
+        times = []
+        data = []
+
+        # store file data in a list
+        try:
+            with open(self.file_path) as f:
+                csv_file = csv.reader(f)
+                next(f)
+                for row in csv_file:
+                    times.append(float(row[columnNumber_time]))
+                    data.append(float(row[columnNumber]))
+        except FileNotFoundError:
+            print("Couldn't open file:", fileName)
+
+        output = self.__integrate(data, times) # integrate acceleration data
         return output
-    
+       
     def __vel_y(self, fileName=None, heading=False):
-        """Returns the y velocity (cartesian coordinates) between consecutive 
-        samples of sensor data.
+        """Calculates the y velocity (cartesian coordinates) at each sample of 
+        sensor data.
 
         If the 'heading' parameter is 'True', the method simply returns the 
-        heading for this column. Otherwise, the precalculated values for this 
-        column are returned.
+        heading for this column. Otherwise, the values for this column are 
+        calculated.
 
         Args:
             fileName (str): name of the file to do calculations for.
@@ -1646,16 +1788,39 @@ class _Calculations:
         if heading:
             return "vel (y)" # title of column in processed data file
 
-        output = self.columnData[1]
+        if fileName == None:
+            fileName = self.fileName
+        else:
+            self.set_file_name(fileName)
+
+        I = ProcessedData().individual
+        I.set_file_name(fileName)
+        columnNumber_time = 0
+        columnNumber = I.get_column_number("acc (y)")
+        times = []
+        data = []
+
+        # store file data in a list
+        try:
+            with open(self.file_path) as f:
+                csv_file = csv.reader(f)
+                next(f)
+                for row in csv_file:
+                    times.append(float(row[columnNumber_time]))
+                    data.append(float(row[columnNumber]))
+        except FileNotFoundError:
+            print("Couldn't open file:", fileName)
+
+        output = self.__integrate(data, times) # integrate acceleration data
         return output
-    
+       
     def __vel_z(self, fileName=None, heading=False):
-        """Returns the z velocity (cartesian coordinates) between consecutive 
-        samples of sensor data.
+        """Calculates the z velocity (cartesian coordinates) at each sample of 
+        sensor data.
 
         If the 'heading' parameter is 'True', the method simply returns the 
-        heading for this column. Otherwise, the precalculated values for this 
-        column are returned.
+        heading for this column. Otherwise, the values for this column are 
+        calculated.
 
         Args:
             fileName (str): name of the file to do calculations for.
@@ -1670,9 +1835,32 @@ class _Calculations:
         if heading:
             return "vel (z)" # title of column in processed data file
 
-        output = self.columnData[2]
+        if fileName == None:
+            fileName = self.fileName
+        else:
+            self.set_file_name(fileName)
+
+        I = ProcessedData().individual
+        I.set_file_name(fileName)
+        columnNumber_time = 0
+        columnNumber = I.get_column_number("acc (z)")
+        times = []
+        data = []
+
+        # store file data in a list
+        try:
+            with open(self.file_path) as f:
+                csv_file = csv.reader(f)
+                next(f)
+                for row in csv_file:
+                    times.append(float(row[columnNumber_time]))
+                    data.append(float(row[columnNumber]))
+        except FileNotFoundError:
+            print("Couldn't open file:", fileName)
+
+        output = self.__integrate(data, times) # integrate acceleration data
         return output
-   
+
 
 """
 class _Ensemble: # DOCSTRING
