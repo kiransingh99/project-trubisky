@@ -1,5 +1,6 @@
 from . import const
 import numpy as np
+import scipy.ndimage
 
 def isFloat(value):
     """Checks if a string can be converted into a floating point value.
@@ -73,6 +74,19 @@ def moving_average(data, window_size):
 
     smoothed = np.convolve(data, np.ones(window_size), 'valid') / window_size
     return list(smoothed)
+
+def gaussian_smooth(data, sigma):
+    """Smoothes the signal by convolving with a Gaussian.
+
+    Args:
+        data (list[float]): signal to be smoothed
+        sigma (float): standard deviation of gaussian kernel
+
+    Returns:
+        list[float]: smoothed signal of same dimension as input
+    """
+
+    return scipy.ndimage.gaussian_filter(input=data, sigma=sigma)
 
 def generate_dcm(yaw, pitch, roll):
     """Generates a direction cosine matrix based on the values of the Euler 

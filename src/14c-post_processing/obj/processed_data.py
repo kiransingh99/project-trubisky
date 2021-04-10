@@ -1322,7 +1322,12 @@ class _Calculations:
 
         # smooth data
         windowSize = 4
-        if self.columnNumber >= 7: # for the euler angles, choose an angle close to previous
+        if self.columnNumber <=3:
+            smoothed = functions.gaussian_smooth(data, 1)
+        elif self.columnNumber <= 6:
+            smoothed = functions.gaussian_smooth(data, 1.5)
+        else:
+            #self.columnNumber >= 7 # for the euler angles, choose an angle close to previous
             for i in range(1, len(data)):
                 while data[i]-data[i-1] > np.pi:
                     data[i] -= 2*np.pi
@@ -1331,8 +1336,8 @@ class _Calculations:
             smoothed = [0] * (windowSize-1) + functions.moving_average(data, windowSize)
             for i in range(len(smoothed)):
                 smoothed[i] = smoothed[i] % (2 * np.pi)
-        else:
-            smoothed = [0] * (windowSize-1) + functions.moving_average(data, windowSize)
+        #else:
+        #    smoothed = [0] * (windowSize-1) + functions.moving_average(data, windowSize)
 
         
         self.columnNumber += 1 # increment
