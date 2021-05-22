@@ -85,7 +85,6 @@ def gaussian_smooth(data, sigma):
     Returns:
         list[float]: smoothed signal of same dimension as input
     """
-
     return scipy.ndimage.gaussian_filter(input=data, sigma=sigma)
 
 def generate_dcm(yaw, pitch, roll):
