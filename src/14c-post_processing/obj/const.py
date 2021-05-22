@@ -23,7 +23,7 @@ COLUMN_HEADERS = ["time", "acc (e_r)", "acc (e_theta)", "acc (e_phi)",
 COLOURS = ['', '#1f77b4', '#ff7f0e', '#26a02c', 
                 '#d62728', '#9467bd', '#8c564b',
                 '#e377c2', '#7f7f7f', '#bcbd22']
-SENSOR_OFFSETS = [0, 0.002, -0.137, -0.025, 
+SENSOR_OFFSETS = [0, 0.001, -0.150, -0.013 ,
                         -0.012, 0.005, 0.013, 
                         0.000, 0.000, 0.000]
 
