@@ -7,21 +7,21 @@ The aim of this project is to collect data from an American football during flig
 The codename 'Project Trubisky' refers to Mitchell Trubisky, the Quarterback of the Chicago Bears between 2017 and 2021. Whilst he was a promising young prospect coming out of college, his lack of accuracy was one of the reasons he struggled in the NFL. This project is named to pay homage to him.
 
 This project is made up of three parts:
-- Onboard:         the system embedded in to the football to collect data
-- Offboard:        the system that receives the data transmitted from the onboard system
+- On-board:        the system embedded in to the football to collect data
+- Off-board:       the system that receives the data transmitted from the on-board system
 - Post-processing: handles the data once saved to the computer, and generates meaningful output for the user
 
 All software used in this project is available in this Github repository
 
-### Onboard system
+### On-board system
 This system is embedded into the ball. It is comprised of:
 - Arduino Nano: processor
 - BNO055 (9 DOF IMU) measures linear acceleration, angular velocity, orientation
-- Micro SD Breakout Board: stores data onboard
+- Micro SD Breakout Board: stores data on-board
 
-This system collectes data from the two sensors and writes it to a file on the SD card. Each throw of the ball requires the corresponding data to be saved in a new file. Using user inputs, the system can be reset, and the data can be transmitted or deleted. The data is saved to a file as this is faster than transmitting it as it is measured, so this allows for a higher frequency of data readings. The accelerometer and gyroscope together track 6 degrees of freedom, which, when combined with a 3 axis magnetometer, whcih gives us information about orientation (which is required in a gravitational field) completely describes a rigid body; therefore these sensors are sufficient to fully monitor the ball's motion.
+This system collectes data from the sensor and writes it to a file on the SD card. Each throw of the ball requires the corresponding data to be saved in a new file. Using user inputs, the system can be reset, and the data can be transmitted or deleted. The data is saved to a file as this is faster than transmitting it as it is measured, so this allows for a higher frequency of data readings. The accelerometer and gyroscope together track 6 degrees of freedom, which, when combined with a 3 axis magnetometer, whcih gives us information about orientation (which is required in a gravitational field) completely describes a rigid body; therefore these sensors are sufficient to fully monitor the ball's motion.
 
-### Offboard system
+### Off-board system
 This system is not connected to the ball, but is connected to a PC. It is comprised of:
 - Arduino Uno: processor
 - PC: stores data for future processing
@@ -48,13 +48,13 @@ Each file can be passed to a function which generates data about the throws and 
 ### Dependencies
 The external libraries used by this software are: 
 
-- Onboard
+- On-board
 	- Adafruit_Sensor
 	- Adafruit_BNO055
 	- utility/imumaths
 	- SD
 	- Wire
-- Offboard
+- Off-board
 	- C++ (run on Arduino)
 		- Wire
 	- python (run on PC)
@@ -120,11 +120,11 @@ The global tracker file is the summary of the data of each of the throws of the 
 - **time of throw**: the total time of recording for each file (milliseconds)
 
 ## Hardware requirements
-The onboard system is intended for a Arduino Nano Every, though it will work on a standard Arduino Nano. The offboard system functions without problem on an Arduino Uno. The post-processing system should function without problem on any commercial PC.
+The on-board system is intended for a Arduino Nano Every, though it will work on a standard Arduino Nano. The off-board system functions without problem on an Arduino Uno. The post-processing system should function without problem on any commercial PC.
 
 ### Wiring diagram
 
-#### Onboard system
+#### On-board system
 
 |   Arduino Nano   |    Device name and pin    |
 |------------------|---------------------------|
@@ -139,9 +139,9 @@ The onboard system is intended for a Arduino Nano Every, though it will work on 
 | **D12**          | *Micro SD Module* **DO**  |
 | **D13**          | *Micro SD Module* **CLK** |
 
-Note that this diagram does not include the onboard power supply.
+Note that this diagram does not include the on-board power supply.
 
-The offboard system has a Molex connector, which allows control of the system within the ball. The connections are as folows:
+The off-board system has a Molex connector, which allows control of the system within the ball. The connections are as folows:
 
 | #  | Colour |  Connection on-board  |         Connection          |            Function           |
 |----|--------|-----------------------|-----------------------------|-------------------------------|
@@ -157,16 +157,16 @@ The offboard system has a Molex connector, which allows control of the system wi
 
 Note that when charging, the negative terminal of the battery should be connected to either of the ground pins.
 
-#### Offboard system
+#### Off-board system
 
 |   Arduino Uno    |    Device name and pin    |
 |------------------|---------------------------|
 | **5V**           | *113990010 Rx* **Vcc**    |
 | **GND**          | *113990010 Rx* **GND**    |
 | **D2**           | *113990010 Rx* **DATA**   |
-| **A4**           | *Onboard system* **A4**   |
-| **A5**           | *Onboard system* **A5**   |
-| **GND**          | *Onboard system* **GND**  |
+| **A4**           | *On-board system* **A4**  |
+| **A5**           | *On-board system* **A5**  |
+| **GND**          | *On-board system* **GND** |
 
 ### Effect of mass of additional components
 Adding components with finite mass to the ball will affect the mechanics. The main concerns include the changes in the ball's mass, centre of mass, and its moment of inertia.
@@ -192,12 +192,9 @@ This is only an increase of 0.18%, and therefore will have a negligible effect o
 
 ## To Do
 - Post processing code
-	- processed data files
-		- get position data correct/ get DCM working
 	- add more metrics - dependent on processed data operations
 		- time of launch (when acceleration (without g) stops increasing / when spiral reaches ~80% of max)
 		- launch speed
 		- spiral rating (normalised variance of spiral)
 		- angle of attack (at launch)
 	- plot metrics in tracker (ensemble class)
-	- comments and docstrings
