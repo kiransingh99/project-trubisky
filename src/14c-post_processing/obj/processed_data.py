@@ -1325,7 +1325,7 @@ class _Calculations:
         if self.columnNumber <=3:
             smoothed = functions.gaussian_smooth(data, 1)
         elif self.columnNumber <= 6:
-            smoothed = functions.gaussian_smooth(data, 1.5)
+            smoothed = functions.gaussian_smooth(data, 2)
         else:
             #self.columnNumber >= 7 # for the euler angles, choose an angle close to previous
             for i in range(1, len(data)):
