@@ -298,7 +298,7 @@ def main():
         elif level == "1bb": # assess all files
             if H.check_all_files():
                 print("Recommended to create processed data files. Create? (y/n)")
-                if input() == "y":
+                if input().lower() == "y":
                     level = "1c"
                     continue
             level = level[:-1]
@@ -307,7 +307,7 @@ def main():
             health, _ = H.check_one_file(fileName)
             if health >= const.passedWithWarnings:
                 print("Recommended to create processed data file. Create? (y/n)")
-                if input() == "y":
+                if input().lower() == "y":
                     level = "1c"
                     continue
             level = level[:-1]
@@ -325,7 +325,7 @@ def main():
             if P.create_all_processed_data_files():
                 print("Completed successfully")
                 print("Recommended to run operations (e.g. smooth sensor readings). Do it? (y/n)")
-                if input() == "y":
+                if input().lower() == "y":
                     level = "1cd"
                     continue
             level = level[:-1]
@@ -335,7 +335,7 @@ def main():
             if newFile:
                 print("Added file " + newFile)
                 print("Recommended to run operations (e.g. smooth sensor readings). Do it? (y/n)")
-                if input() == "y":
+                if input().lower() == "y":
                     level = "1cd"
                     continue
             else:
