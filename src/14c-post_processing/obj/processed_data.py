@@ -459,7 +459,6 @@ class _Individual:
         self.fileName = functions.raw_to_processed(value)
         return self.fileName
 
-    
     def add_column(self, operation):
         """Adds another column to the processed data file and populates it with 
         values returned from the 'operation' method.

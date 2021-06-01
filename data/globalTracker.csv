@@ -5,3 +5,6 @@ name,health status,processed file,time of throw,spiral rate
 \data\RAW-2021.04.07-22.53.00.csv,3,\data\PRO-2021.04.07-22.53.00.csv,8.087,1.5776419999210702
 \data\RAW-FREEFALL.csv,3,\data\PRO-FREEFALL.csv, , 
 \data\RAW-2021.05.22-09.46.32.csv,2,\data\PRO-2021.05.22-09.46.32.csv, , 
+\data\RAW-DROP-E_THETA.csv,3,\data\PRO-DROP-E_THETA.csv, , 
+\data\RAW-DROP_E_R.csv,3,\data\PRO-DROP_E_R.csv, , 
+\data\RAW-DROP_E_PHI.csv,3,\data\PRO-DROP_E_PHI.csv, , 
